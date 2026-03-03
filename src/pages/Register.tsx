@@ -85,19 +85,23 @@ const Register = () => {
 
             <div className="space-y-1.5">
               <Label>Tipo de Usuario</Label>
-              <div className="grid grid-cols-2 gap-2">
-                {(['guardia', 'supervisor'] as const).map(role => (
+              <div className="grid grid-cols-3 gap-2">
+                {([
+                  { value: 'guardia' as const, label: '🛡️ Guardia' },
+                  { value: 'supervisor' as const, label: '👨‍💼 Supervisor' },
+                  { value: 'admin' as const, label: '⚙️ Admin' },
+                ]).map(role => (
                   <button
-                    key={role}
+                    key={role.value}
                     type="button"
-                    onClick={() => update('role', role)}
-                    className={`h-11 rounded-lg border-2 text-sm font-semibold transition-all ${
-                      form.role === role
+                    onClick={() => update('role', role.value)}
+                    className={`h-11 rounded-lg border-2 text-xs font-semibold transition-all ${
+                      form.role === role.value
                         ? 'border-primary bg-primary text-primary-foreground'
                         : 'border-border bg-background text-foreground hover:border-primary/50'
                     }`}
                   >
-                    {role === 'guardia' ? '🛡️ Guardia' : '👨‍💼 Supervisor'}
+                    {role.label}
                   </button>
                 ))}
               </div>

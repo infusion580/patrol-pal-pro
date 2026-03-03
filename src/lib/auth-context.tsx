@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type UserRole = 'guardia' | 'supervisor';
+export type UserRole = 'guardia' | 'supervisor' | 'admin';
 
 export interface User {
   id: string;
@@ -34,6 +34,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 const DEMO_USERS: User[] = [
   { id: '1', nombre: 'Carlos', apellido: 'López', numeroEmpleado: 'EMP001', role: 'guardia', email: 'guardia@demo.com' },
   { id: '2', nombre: 'María', apellido: 'García', numeroEmpleado: 'SUP001', role: 'supervisor', email: 'supervisor@demo.com' },
+  { id: '3', nombre: 'Roberto', apellido: 'Díaz', numeroEmpleado: 'ADM001', role: 'admin', email: 'admin@demo.com' },
 ];
 
 export function AuthProvider({ children }: { children: ReactNode }) {

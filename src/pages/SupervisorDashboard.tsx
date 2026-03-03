@@ -1,6 +1,6 @@
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, MessageCircle, BarChart3 } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings } from 'lucide-react';
 import BottomNav from '@/components/BottomNav';
 
 const guards = [
@@ -55,11 +55,12 @@ const SupervisorDashboard = () => {
         </div>
 
         {/* Quick Actions */}
-        <div className="grid grid-cols-3 gap-2 mb-6">
+        <div className="grid grid-cols-4 gap-2 mb-6">
           {[
             { icon: MapPin, label: 'Mapa', path: '/mapa' },
             { icon: FileText, label: 'Reportes', path: '/reportes-supervisor' },
             { icon: BarChart3, label: 'Métricas', path: '/metricas' },
+            { icon: Settings, label: 'Servicios', path: '/servicios' },
           ].map(a => (
             <button
               key={a.label}
