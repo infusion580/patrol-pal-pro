@@ -89,6 +89,7 @@ const Login = () => {
             <p className="font-semibold mb-1">Demo rápido:</p>
             <p>Guardia: guardia@demo.com</p>
             <p>Supervisor: supervisor@demo.com</p>
+            <p>Admin: admin@demo.com</p>
             <p className="text-muted-foreground mt-1">Cualquier contraseña funciona</p>
           </div>
         </div>

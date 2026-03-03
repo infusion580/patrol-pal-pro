@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Home, MapPin, FileText, MessageCircle, User } from 'lucide-react';
+import { Home, MapPin, FileText, MessageCircle, User, Settings } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -23,7 +23,15 @@ const BottomNav = () => {
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];
 
-  const items = user?.role === 'supervisor' ? supervisorItems : guardItems;
+  const adminItems = [
+    { path: '/dashboard', icon: Home, label: 'Panel' },
+    { path: '/servicios', icon: Settings, label: 'Servicios' },
+    { path: '/mapa', icon: MapPin, label: 'Mapa' },
+    { path: '/metricas', icon: FileText, label: 'Métricas' },
+    { path: '/perfil', icon: User, label: 'Perfil' },
+  ];
+
+  const items = user?.role === 'admin' ? adminItems : user?.role === 'supervisor' ? supervisorItems : guardItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50">

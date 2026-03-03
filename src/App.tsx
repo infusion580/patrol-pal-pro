@@ -15,6 +15,7 @@ import Perfil from "./pages/Perfil";
 import MapaSupervisor from "./pages/MapaSupervisor";
 import Metricas from "./pages/Metricas";
 import ReportesSupervisor from "./pages/ReportesSupervisor";
+import Servicios from "./pages/Servicios";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -39,6 +40,7 @@ const App = () => (
             <Route path="/mapa" element={<MapaSupervisor />} />
             <Route path="/metricas" element={<Metricas />} />
             <Route path="/reportes-supervisor" element={<ReportesSupervisor />} />
+            <Route path="/servicios" element={<Servicios />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
