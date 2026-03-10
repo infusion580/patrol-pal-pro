@@ -24,8 +24,12 @@ const Login = () => {
       if (success) {
         navigate('/dashboard');
       }
-    } catch {
-      toast({ title: 'Error', description: 'Credenciales incorrectas', variant: 'destructive' });
+    } catch (error: any) {
+      toast({ 
+        title: 'Error', 
+        description: error?.message || 'Credenciales incorrectas', 
+        variant: 'destructive' 
+      });
     }
     setLoading(false);
   };
@@ -83,15 +87,6 @@ const Login = () => {
               {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>
           </form>
-
-          {/* Demo info */}
-          <div className="mt-4 p-3 rounded-lg bg-accent text-xs text-accent-foreground">
-            <p className="font-semibold mb-1">Demo rápido:</p>
-            <p>Guardia: guardia@demo.com</p>
-            <p>Supervisor: supervisor@demo.com</p>
-            <p>Admin: admin@demo.com</p>
-            <p className="text-muted-foreground mt-1">Cualquier contraseña funciona</p>
-          </div>
         </div>
 
         <p className="text-center text-sm text-muted-foreground mt-6">
