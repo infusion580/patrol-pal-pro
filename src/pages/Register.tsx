@@ -28,12 +28,17 @@ const Register = () => {
       toast({ title: 'Error', description: 'El número de empleado es obligatorio', variant: 'destructive' });
       return;
     }
+    if (form.password.length < 6) {
+      toast({ title: 'Error', description: 'La contraseña debe tener al menos 6 caracteres', variant: 'destructive' });
+      return;
+    }
     setLoading(true);
     try {
       await register(form);
+      toast({ title: '¡Cuenta creada!', description: 'Bienvenido a SecureOps' });
       navigate('/dashboard');
-    } catch {
-      toast({ title: 'Error', description: 'No se pudo crear la cuenta', variant: 'destructive' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error?.message || 'No se pudo crear la cuenta', variant: 'destructive' });
     }
     setLoading(false);
   };
@@ -74,7 +79,7 @@ const Register = () => {
             </div>
 
             <div className="space-y-1.5">
-              <Label htmlFor="password">Contraseña</Label>
+              <Label htmlFor="password">Contraseña (mín. 6 caracteres)</Label>
               <div className="relative">
                 <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => update('password', e.target.value)} required className="h-11 pr-12" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">

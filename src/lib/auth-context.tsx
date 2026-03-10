@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import type { User as SupabaseUser, Session } from '@supabase/supabase-js';
 
 export type UserRole = 'guardia' | 'supervisor' | 'admin';
 
@@ -17,6 +19,7 @@ interface AuthContextType {
   register: (data: RegisterData) => Promise<boolean>;
   logout: () => void;
   isAuthenticated: boolean;
+  loading: boolean;
 }
 
 interface RegisterData {
@@ -30,50 +33,95 @@ interface RegisterData {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Demo users for prototype
-const DEMO_USERS: User[] = [
-  { id: '1', nombre: 'Carlos', apellido: 'López', numeroEmpleado: 'EMP001', role: 'guardia', email: 'guardia@demo.com' },
-  { id: '2', nombre: 'María', apellido: 'García', numeroEmpleado: 'SUP001', role: 'supervisor', email: 'supervisor@demo.com' },
-  { id: '3', nombre: 'Roberto', apellido: 'Díaz', numeroEmpleado: 'ADM001', role: 'admin', email: 'admin@demo.com' },
-];
+async function fetchUserProfile(userId: string): Promise<User | null> {
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('user_id', userId)
+    .single();
+
+  const { data: roleData } = await supabase
+    .from('user_roles')
+    .select('role')
+    .eq('user_id', userId)
+    .single();
+
+  if (!profile) return null;
+
+  return {
+    id: userId,
+    nombre: profile.nombre,
+    apellido: profile.apellido,
+    numeroEmpleado: profile.numero_empleado,
+    role: (roleData?.role as UserRole) || 'guardia',
+    email: profile.email,
+  };
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const login = async (email: string, _password: string): Promise<boolean> => {
-    const found = DEMO_USERS.find(u => u.email === email);
-    if (found) {
-      setUser(found);
-      return true;
-    }
-    // For demo, accept any login and default to guardia
-    setUser({
-      id: Date.now().toString(),
-      nombre: 'Usuario',
-      apellido: 'Demo',
-      numeroEmpleado: 'EMP999',
-      role: 'guardia',
-      email,
+  useEffect(() => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          // Use setTimeout to avoid Supabase deadlock
+          setTimeout(async () => {
+            const profile = await fetchUserProfile(session.user.id);
+            setUser(profile);
+            setLoading(false);
+          }, 0);
+        } else {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    );
+
+    // THEN check existing session
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (session?.user) {
+        const profile = await fetchUserProfile(session.user.id);
+        setUser(profile);
+      }
+      setLoading(false);
     });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const login = async (email: string, password: string): Promise<boolean> => {
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
     return true;
   };
 
   const register = async (data: RegisterData): Promise<boolean> => {
-    setUser({
-      id: Date.now().toString(),
-      nombre: data.nombre,
-      apellido: data.apellido,
-      numeroEmpleado: data.numeroEmpleado,
-      role: data.role,
+    const { error } = await supabase.auth.signUp({
       email: data.email,
+      password: data.password,
+      options: {
+        data: {
+          nombre: data.nombre,
+          apellido: data.apellido,
+          numero_empleado: data.numeroEmpleado,
+          role: data.role,
+        },
+      },
     });
+    if (error) throw error;
     return true;
   };
 
-  const logout = () => setUser(null);
+  const logout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+  };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user }}>
+    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, loading }}>
       {children}
     </AuthContext.Provider>
   );
