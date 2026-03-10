@@ -53,8 +53,8 @@ const SupervisorDashboard = () => {
         ? await supabase.from('servicios').select('id, nombre').in('id', servicioIds)
         : { data: [] };
 
-      const profileMap = new Map(profiles?.map(p => [p.user_id, p]));
-      const svcMap = new Map(svcData?.map(s => [s.id, s.nombre]));
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, p] as const));
+      const svcMap = new Map((svcData || []).map(s => [s.id, s.nombre] as const));
 
       const seen = new Set<string>();
       const guardList = activeRondines
