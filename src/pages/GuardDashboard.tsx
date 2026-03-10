@@ -1,12 +1,59 @@
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
 import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 
 const GuardDashboard = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [rondinesHoy, setRondinesHoy] = useState('0');
+  const [incidencias, setIncidencias] = useState('0');
+  const [recentActivity, setRecentActivity] = useState<Array<{ time: string; text: string; type: string }>>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadStats();
+  }, [user]);
+
+  const loadStats = async () => {
+    if (!user) return;
+    const today = new Date().toISOString().split('T')[0];
+
+    // Count today's rondines
+    const { count: rCount } = await supabase
+      .from('rondines')
+      .select('*', { count: 'exact', head: true })
+      .eq('guardia_id', user.id)
+      .gte('created_at', today);
+    setRondinesHoy(String(rCount || 0));
+
+    // Count today's reportes with incidents
+    const { data: reportes } = await supabase
+      .from('reportes_turno')
+      .select('incidencias')
+      .eq('guardia_id', user.id)
+      .gte('created_at', today);
+    const incCount = reportes?.filter(r => r.incidencias.trim().length > 0).length || 0;
+    setIncidencias(String(incCount));
+
+    // Recent activity from rondines
+    const { data: recentRondines } = await supabase
+      .from('rondines')
+      .select('created_at, status')
+      .eq('guardia_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    const activity = (recentRondines || []).map(r => ({
+      time: new Date(r.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+      text: r.status === 'completado' ? 'Rondín completado' : r.status === 'activo' ? 'Check-in realizado' : 'Rondín cancelado',
+      type: r.status === 'completado' ? 'success' : 'info',
+    }));
+    setRecentActivity(activity);
+  };
 
   const quickActions = [
     { icon: MapPin, label: 'Iniciar Rondín', desc: 'Check-in con GPS', color: 'bg-primary', path: '/rondines' },
@@ -16,14 +63,13 @@ const GuardDashboard = () => {
   ];
 
   const stats = [
-    { icon: CheckCircle2, label: 'Rondines hoy', value: '3/5', color: 'text-success' },
-    { icon: Clock, label: 'Turno activo', value: '4h 23m', color: 'text-primary' },
-    { icon: AlertTriangle, label: 'Incidencias', value: '0', color: 'text-warning' },
+    { icon: CheckCircle2, label: 'Rondines hoy', value: rondinesHoy, color: 'text-success' },
+    { icon: Clock, label: 'Turno activo', value: '—', color: 'text-primary' },
+    { icon: AlertTriangle, label: 'Incidencias', value: incidencias, color: 'text-warning' },
   ];
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <div className="bg-primary text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl">
         <div className="max-w-lg mx-auto">
           <p className="text-sm opacity-80">Bienvenido de vuelta</p>
@@ -33,7 +79,6 @@ const GuardDashboard = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
-        {/* Stats */}
         <div className="bg-card rounded-xl p-4 shadow-card mb-6 grid grid-cols-3 gap-3">
           {stats.map(stat => (
             <div key={stat.label} className="text-center">
@@ -44,15 +89,10 @@ const GuardDashboard = () => {
           ))}
         </div>
 
-        {/* Quick Actions */}
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Acciones Rápidas</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">
           {quickActions.map(action => (
-            <button
-              key={action.label}
-              onClick={() => navigate(action.path)}
-              className="bg-card rounded-xl p-4 shadow-card text-left hover:shadow-elevated transition-shadow active:scale-[0.98]"
-            >
+            <button key={action.label} onClick={() => navigate(action.path)} className="bg-card rounded-xl p-4 shadow-card text-left hover:shadow-elevated transition-shadow active:scale-[0.98]">
               <div className={`w-10 h-10 rounded-lg ${action.color} flex items-center justify-center mb-3`}>
                 <action.icon className="w-5 h-5 text-primary-foreground" />
               </div>
@@ -62,14 +102,12 @@ const GuardDashboard = () => {
           ))}
         </div>
 
-        {/* Recent Activity */}
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Actividad Reciente</h2>
         <div className="space-y-2">
-          {[
-            { time: '14:30', text: 'Rondín completado — Zona Norte', type: 'success' },
-            { time: '12:15', text: 'Reporte de turno enviado', type: 'info' },
-            { time: '10:00', text: 'Check-in realizado', type: 'info' },
-          ].map((activity, i) => (
+          {recentActivity.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">Sin actividad reciente</p>
+          )}
+          {recentActivity.map((activity, i) => (
             <div key={i} className="bg-card rounded-lg p-3 shadow-card flex items-center gap-3">
               <div className={`w-2 h-2 rounded-full ${activity.type === 'success' ? 'bg-success' : 'bg-primary'}`} />
               <div className="flex-1">

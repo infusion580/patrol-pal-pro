@@ -1,10 +1,12 @@
-import { useState } from 'react';
-import { ArrowLeft, Plus, MapPin, Trash2, Edit2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, Plus, MapPin, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 
 interface Checkpoint {
@@ -21,81 +23,86 @@ interface Servicio {
   checkpoints: Checkpoint[];
 }
 
-const INITIAL_SERVICIOS: Servicio[] = [
-  {
-    id: '1',
-    nombre: 'Plaza Central',
-    cliente: 'Grupo Inmobiliario MX',
-    direccion: 'Av. Reforma 123, CDMX',
-    checkpoints: [
-      { id: 'c1', nombre: 'Entrada Principal', ubicacion: 'Lobby' },
-      { id: 'c2', nombre: 'Estacionamiento B2', ubicacion: 'Sótano 2' },
-      { id: 'c3', nombre: 'Azotea', ubicacion: 'Piso 12' },
-    ],
-  },
-  {
-    id: '2',
-    nombre: 'Parque Industrial Norte',
-    cliente: 'TechPark SA',
-    direccion: 'Blvd. Industrial 456, Monterrey',
-    checkpoints: [
-      { id: 'c4', nombre: 'Caseta Vehicular', ubicacion: 'Acceso Norte' },
-      { id: 'c5', nombre: 'Bodega 3', ubicacion: 'Nave C' },
-    ],
-  },
-];
-
 const Servicios = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [servicios, setServicios] = useState<Servicio[]>(INITIAL_SERVICIOS);
+  const { user } = useAuth();
+  const [servicios, setServicios] = useState<Servicio[]>([]);
+  const [loading, setLoading] = useState(true);
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
   const [newService, setNewService] = useState({ nombre: '', cliente: '', direccion: '' });
   const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '' });
 
-  const addService = () => {
+  const fetchServicios = async () => {
+    const { data: svcs } = await supabase.from('servicios').select('*').order('created_at', { ascending: false });
+    if (!svcs) { setLoading(false); return; }
+
+    const serviciosWithCps: Servicio[] = [];
+    for (const s of svcs) {
+      const { data: cps } = await supabase.from('checkpoints').select('*').eq('servicio_id', s.id).order('created_at');
+      serviciosWithCps.push({
+        id: s.id,
+        nombre: s.nombre,
+        cliente: s.cliente,
+        direccion: s.direccion,
+        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion })),
+      });
+    }
+    setServicios(serviciosWithCps);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchServicios(); }, []);
+
+  const addService = async () => {
     if (!newService.nombre.trim()) return;
-    const servicio: Servicio = {
-      id: Date.now().toString(),
-      ...newService,
-      checkpoints: [],
-    };
-    setServicios(prev => [...prev, servicio]);
+    const { error } = await supabase.from('servicios').insert({
+      nombre: newService.nombre,
+      cliente: newService.cliente,
+      direccion: newService.direccion,
+      created_by: user?.id,
+    });
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     setNewService({ nombre: '', cliente: '', direccion: '' });
     setShowAddService(false);
-    toast({ title: 'Servicio agregado', description: servicio.nombre });
+    toast({ title: 'Servicio agregado' });
+    fetchServicios();
   };
 
-  const removeService = (id: string) => {
-    setServicios(prev => prev.filter(s => s.id !== id));
+  const removeService = async (id: string) => {
+    await supabase.from('servicios').delete().eq('id', id);
     toast({ title: 'Servicio eliminado' });
+    fetchServicios();
   };
 
-  const addCheckpoint = (servicioId: string) => {
+  const addCheckpoint = async (servicioId: string) => {
     if (!newCheckpoint.nombre.trim()) return;
-    setServicios(prev =>
-      prev.map(s =>
-        s.id === servicioId
-          ? { ...s, checkpoints: [...s.checkpoints, { id: Date.now().toString(), ...newCheckpoint }] }
-          : s
-      )
-    );
+    const { error } = await supabase.from('checkpoints').insert({
+      servicio_id: servicioId,
+      nombre: newCheckpoint.nombre,
+      ubicacion: newCheckpoint.ubicacion,
+    });
+    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
     setNewCheckpoint({ nombre: '', ubicacion: '' });
     setShowAddCheckpoint(null);
     toast({ title: 'Punto de rondín agregado' });
+    fetchServicios();
   };
 
-  const removeCheckpoint = (servicioId: string, checkpointId: string) => {
-    setServicios(prev =>
-      prev.map(s =>
-        s.id === servicioId
-          ? { ...s, checkpoints: s.checkpoints.filter(c => c.id !== checkpointId) }
-          : s
-      )
-    );
+  const removeCheckpoint = async (checkpointId: string) => {
+    await supabase.from('checkpoints').delete().eq('id', checkpointId);
+    fetchServicios();
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -109,12 +116,7 @@ const Servicios = () => {
               <h1 className="text-xl font-display font-bold">Servicios y Puntos</h1>
               <p className="text-sm opacity-70 mt-1">Configura sitios y checkpoints de rondín</p>
             </div>
-            <Button
-              size="sm"
-              variant="secondary"
-              onClick={() => setShowAddService(!showAddService)}
-              className="gap-1"
-            >
+            <Button size="sm" variant="secondary" onClick={() => setShowAddService(!showAddService)} className="gap-1">
               <Plus className="w-4 h-4" /> Nuevo
             </Button>
           </div>
@@ -122,7 +124,6 @@ const Servicios = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4 space-y-3">
-        {/* Add Service Form */}
         {showAddService && (
           <div className="bg-card rounded-xl p-4 shadow-card space-y-3 animate-slide-up">
             <h3 className="text-sm font-semibold text-foreground">Nuevo Servicio</h3>
@@ -138,15 +139,19 @@ const Servicios = () => {
           </div>
         )}
 
-        {/* Services List */}
+        {servicios.length === 0 && (
+          <div className="bg-card rounded-xl p-8 shadow-card text-center">
+            <MapPin className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No hay servicios configurados</p>
+            <p className="text-xs text-muted-foreground">Agrega tu primer servicio para empezar</p>
+          </div>
+        )}
+
         {servicios.map(servicio => {
           const isExpanded = expandedId === servicio.id;
           return (
             <div key={servicio.id} className="bg-card rounded-xl shadow-card overflow-hidden">
-              <button
-                onClick={() => setExpandedId(isExpanded ? null : servicio.id)}
-                className="w-full p-4 flex items-center gap-3 text-left"
-              >
+              <button onClick={() => setExpandedId(isExpanded ? null : servicio.id)} className="w-full p-4 flex items-center gap-3 text-left">
                 <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
                   <MapPin className="w-5 h-5 text-primary" />
                 </div>
@@ -155,10 +160,7 @@ const Servicios = () => {
                   <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos</p>
                 </div>
                 <div className="flex items-center gap-1">
-                  <button
-                    onClick={(e) => { e.stopPropagation(); removeService(servicio.id); }}
-                    className="p-1.5 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors"
-                  >
+                  <button onClick={(e) => { e.stopPropagation(); removeService(servicio.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors">
                     <Trash2 className="w-4 h-4" />
                   </button>
                   {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -171,10 +173,7 @@ const Servicios = () => {
                   <div className="border-t border-border pt-3">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-foreground">Puntos de Rondín</h4>
-                      <button
-                        onClick={() => setShowAddCheckpoint(showAddCheckpoint === servicio.id ? null : servicio.id)}
-                        className="text-xs text-primary font-semibold flex items-center gap-0.5"
-                      >
+                      <button onClick={() => setShowAddCheckpoint(showAddCheckpoint === servicio.id ? null : servicio.id)} className="text-xs text-primary font-semibold flex items-center gap-0.5">
                         <Plus className="w-3 h-3" /> Agregar
                       </button>
                     </div>
@@ -198,10 +197,7 @@ const Servicios = () => {
                               <p className="text-xs font-semibold text-foreground">{cp.nombre}</p>
                               <p className="text-[10px] text-muted-foreground">{cp.ubicacion}</p>
                             </div>
-                            <button
-                              onClick={() => removeCheckpoint(servicio.id, cp.id)}
-                              className="p-1 rounded text-muted-foreground hover:text-emergency transition-colors"
-                            >
+                            <button onClick={() => removeCheckpoint(cp.id)} className="p-1 rounded text-muted-foreground hover:text-emergency transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>

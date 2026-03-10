@@ -1,34 +1,134 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 
-const checkpoints = [
-  { id: 1, name: 'Entrada Principal', scanned: true, time: '10:05' },
-  { id: 2, name: 'Estacionamiento A', scanned: true, time: '10:15' },
-  { id: 3, name: 'Edificio Norte', scanned: false, time: null },
-  { id: 4, name: 'Zona de Carga', scanned: false, time: null },
-  { id: 5, name: 'Perímetro Sur', scanned: false, time: null },
-];
+interface CheckpointItem {
+  id: string;
+  name: string;
+  scanned: boolean;
+  time: string | null;
+}
 
 const Rondines = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [checkedIn, setCheckedIn] = useState(false);
-  const [points, setPoints] = useState(checkpoints);
+  const [rondinId, setRondinId] = useState<string | null>(null);
+  const [points, setPoints] = useState<CheckpointItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [servicios, setServicios] = useState<Array<{ id: string; nombre: string }>>([]);
+  const [selectedServicio, setSelectedServicio] = useState<string | null>(null);
 
-  const handleScan = (id: number) => {
-    setPoints(prev => prev.map(p =>
-      p.id === id ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) } : p
-    ));
+  useEffect(() => {
+    loadServicios();
+  }, []);
+
+  useEffect(() => {
+    if (selectedServicio) loadCheckpoints(selectedServicio);
+  }, [selectedServicio]);
+
+  const loadServicios = async () => {
+    const { data } = await supabase.from('servicios').select('id, nombre').order('nombre');
+    if (data && data.length > 0) {
+      setServicios(data);
+      setSelectedServicio(data[0].id);
+    }
+    setLoading(false);
+  };
+
+  const loadCheckpoints = async (servicioId: string) => {
+    const { data: cps } = await supabase.from('checkpoints').select('*').eq('servicio_id', servicioId).order('created_at');
+    
+    // Check if there's an active rondin
+    if (user) {
+      const { data: activeRondin } = await supabase
+        .from('rondines')
+        .select('*')
+        .eq('guardia_id', user.id)
+        .eq('status', 'activo')
+        .maybeSingle();
+
+      if (activeRondin) {
+        setRondinId(activeRondin.id);
+        setCheckedIn(true);
+
+        // Get scanned checkpoints
+        const { data: scans } = await supabase
+          .from('rondin_scans')
+          .select('checkpoint_id, scanned_at')
+          .eq('rondin_id', activeRondin.id);
+
+        const scannedMap = new Map(scans?.map(s => [s.checkpoint_id, s.scanned_at]) || []);
+
+        setPoints((cps || []).map(cp => ({
+          id: cp.id,
+          name: cp.nombre,
+          scanned: scannedMap.has(cp.id),
+          time: scannedMap.has(cp.id) 
+            ? new Date(scannedMap.get(cp.id)!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+            : null,
+        })));
+      } else {
+        setPoints((cps || []).map(cp => ({ id: cp.id, name: cp.nombre, scanned: false, time: null })));
+      }
+    }
+  };
+
+  const handleCheckIn = async () => {
+    if (!user || !selectedServicio) return;
+    if (checkedIn && rondinId) {
+      // Check-out
+      await supabase.from('rondines').update({ status: 'completado', checkout_at: new Date().toISOString() }).eq('id', rondinId);
+      setCheckedIn(false);
+      setRondinId(null);
+      setPoints(prev => prev.map(p => ({ ...p, scanned: false, time: null })));
+    } else {
+      // Check-in
+      const { data, error } = await supabase.from('rondines').insert({
+        guardia_id: user.id,
+        servicio_id: selectedServicio,
+        checkin_at: new Date().toISOString(),
+      }).select().single();
+
+      if (data) {
+        setRondinId(data.id);
+        setCheckedIn(true);
+      }
+    }
+  };
+
+  const handleScan = async (checkpointId: string) => {
+    if (!rondinId) return;
+    const { error } = await supabase.from('rondin_scans').insert({
+      rondin_id: rondinId,
+      checkpoint_id: checkpointId,
+    });
+    if (!error) {
+      setPoints(prev => prev.map(p =>
+        p.id === checkpointId
+          ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+          : p
+      ));
+    }
   };
 
   const scannedCount = points.filter(p => p.scanned).length;
 
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background pb-20">
-      {/* Header */}
       <div className="bg-primary text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
@@ -40,72 +140,87 @@ const Rondines = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
+        {/* Service Selector */}
+        {servicios.length > 0 && (
+          <div className="bg-card rounded-xl p-4 shadow-card mb-4">
+            <label className="text-xs font-semibold text-muted-foreground mb-2 block">Servicio</label>
+            <select
+              value={selectedServicio || ''}
+              onChange={e => setSelectedServicio(e.target.value)}
+              className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+              disabled={checkedIn}
+            >
+              {servicios.map(s => (
+                <option key={s.id} value={s.id}>{s.nombre}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
+        {servicios.length === 0 && (
+          <div className="bg-card rounded-xl p-8 shadow-card mb-4 text-center">
+            <MapPin className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+            <p className="text-sm text-muted-foreground">No hay servicios configurados</p>
+            <p className="text-xs text-muted-foreground">Pide a tu supervisor que configure los servicios</p>
+          </div>
+        )}
+
         {/* Check-in Button */}
-        <div className="bg-card rounded-xl p-4 shadow-card mb-6">
-          <Button
-            onClick={() => setCheckedIn(!checkedIn)}
-            className={`w-full h-14 text-base font-bold rounded-xl ${
-              checkedIn
-                ? 'bg-emergency text-emergency-foreground hover:bg-emergency/90'
-                : 'bg-success text-success-foreground hover:bg-success/90'
-            }`}
-          >
-            <MapPin className="w-5 h-5 mr-2" />
-            {checkedIn ? 'Hacer Check-out' : 'Hacer Check-in'}
-          </Button>
-          {checkedIn && (
-            <p className="text-xs text-success text-center mt-2 font-semibold">
-              ✅ Check-in activo — GPS registrado
-            </p>
-          )}
-        </div>
+        {servicios.length > 0 && (
+          <div className="bg-card rounded-xl p-4 shadow-card mb-6">
+            <Button
+              onClick={handleCheckIn}
+              className={`w-full h-14 text-base font-bold rounded-xl ${
+                checkedIn
+                  ? 'bg-emergency text-emergency-foreground hover:bg-emergency/90'
+                  : 'bg-success text-success-foreground hover:bg-success/90'
+              }`}
+            >
+              <MapPin className="w-5 h-5 mr-2" />
+              {checkedIn ? 'Hacer Check-out' : 'Hacer Check-in'}
+            </Button>
+            {checkedIn && (
+              <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>
+            )}
+          </div>
+        )}
 
         {/* Progress */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-semibold text-foreground">Progreso del Rondín</span>
-            <span className="text-sm font-bold text-primary">{Math.round((scannedCount / points.length) * 100)}%</span>
-          </div>
-          <div className="h-2 bg-muted rounded-full overflow-hidden">
-            <div
-              className="h-full bg-primary rounded-full transition-all duration-500"
-              style={{ width: `${(scannedCount / points.length) * 100}%` }}
-            />
-          </div>
-        </div>
-
-        {/* Checkpoints */}
-        <h2 className="text-sm font-semibold text-muted-foreground mb-3">Puntos de Control</h2>
-        <div className="space-y-2">
-          {points.map(point => (
-            <div key={point.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
-              <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                point.scanned ? 'bg-success/10' : 'bg-accent'
-              }`}>
-                {point.scanned ? (
-                  <CheckCircle2 className="w-5 h-5 text-success" />
-                ) : (
-                  <QrCode className="w-5 h-5 text-muted-foreground" />
-                )}
+        {points.length > 0 && (
+          <>
+            <div className="mb-4">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-semibold text-foreground">Progreso del Rondín</span>
+                <span className="text-sm font-bold text-primary">{points.length > 0 ? Math.round((scannedCount / points.length) * 100) : 0}%</span>
               </div>
-              <div className="flex-1">
-                <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>
-                  {point.name}
-                </p>
-                {point.time && (
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Clock className="w-3 h-3" /> {point.time}
-                  </p>
-                )}
+              <div className="h-2 bg-muted rounded-full overflow-hidden">
+                <div className="h-full bg-primary rounded-full transition-all duration-500" style={{ width: `${points.length > 0 ? (scannedCount / points.length) * 100 : 0}%` }} />
               </div>
-              {!point.scanned && (
-                <Button size="sm" onClick={() => handleScan(point.id)} className="text-xs h-8">
-                  Escanear
-                </Button>
-              )}
             </div>
-          ))}
-        </div>
+
+            <h2 className="text-sm font-semibold text-muted-foreground mb-3">Puntos de Control</h2>
+            <div className="space-y-2">
+              {points.map(point => (
+                <div key={point.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${point.scanned ? 'bg-success/10' : 'bg-accent'}`}>
+                    {point.scanned ? <CheckCircle2 className="w-5 h-5 text-success" /> : <QrCode className="w-5 h-5 text-muted-foreground" />}
+                  </div>
+                  <div className="flex-1">
+                    <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>{point.name}</p>
+                    {point.time && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="w-3 h-3" /> {point.time}
+                      </p>
+                    )}
+                  </div>
+                  {!point.scanned && checkedIn && (
+                    <Button size="sm" onClick={() => handleScan(point.id)} className="text-xs h-8">Escanear</Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
       </div>
 
       <EmergencyButton />
