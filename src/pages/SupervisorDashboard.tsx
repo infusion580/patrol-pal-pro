@@ -66,7 +66,7 @@ const SupervisorDashboard = () => {
             nombre: p ? `${p.nombre} ${p.apellido}` : 'Guardia',
             empleado: p?.numero_empleado || '',
             status: r.status,
-            sitio: r.servicio_id ? (svcMap.get(r.servicio_id) || '') : '',
+            sitio: r.servicio_id ? (svcMap.get(r.servicio_id) || '') : '' as string,
             lastUpdate: new Date(r.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
           };
         });

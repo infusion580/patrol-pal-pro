@@ -43,7 +43,7 @@ const ReportesSupervisor = () => {
       const { data: profiles } = guardIds.length > 0
         ? await supabase.from('profiles').select('user_id, nombre, apellido').in('user_id', guardIds)
         : { data: [] };
-      const profileMap = new Map(profiles?.map(p => [p.user_id, `${p.nombre} ${p.apellido}`]));
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, `${p.nombre} ${p.apellido}`] as const));
 
       setReports(data.map(r => ({
         id: r.id,
