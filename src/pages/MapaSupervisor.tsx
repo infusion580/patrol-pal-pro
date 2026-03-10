@@ -1,28 +1,51 @@
-import { ArrowLeft, MapPin, Users, AlertTriangle } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, MapPin } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 
-const guards = [
-  { id: '1', nombre: 'Carlos López', status: 'en_ronda', lat: 19.43, lng: -99.13 },
-  { id: '2', nombre: 'Pedro Martínez', status: 'en_descanso', lat: 19.44, lng: -99.14 },
-  { id: '3', nombre: 'Ana Rodríguez', status: 'en_ronda', lat: 19.42, lng: -99.12 },
-  { id: '4', nombre: 'Luis Hernández', status: 'en_incidencia', lat: 19.45, lng: -99.15 },
-];
-
 const statusColors: Record<string, string> = {
-  en_ronda: 'bg-success',
-  en_descanso: 'bg-warning',
-  en_incidencia: 'bg-emergency',
+  activo: 'bg-success',
+  completado: 'bg-primary',
 };
 
 const statusLabels: Record<string, string> = {
-  en_ronda: 'En Ronda',
-  en_descanso: 'Descanso',
-  en_incidencia: 'Incidencia',
+  activo: 'En Ronda',
+  completado: 'Completado',
 };
 
 const MapaSupervisor = () => {
   const navigate = useNavigate();
+  const [guards, setGuards] = useState<Array<{ id: string; nombre: string; status: string; lat: number; lng: number }>>([]);
+
+  useEffect(() => { loadGuards(); }, []);
+
+  const loadGuards = async () => {
+    const today = new Date().toISOString().split('T')[0];
+    const { data: rondines } = await supabase
+      .from('rondines')
+      .select('guardia_id, status, checkin_lat, checkin_lng')
+      .gte('created_at', today)
+      .order('created_at', { ascending: false });
+
+    if (rondines && rondines.length > 0) {
+      const guardIds = [...new Set(rondines.map(r => r.guardia_id))];
+      const { data: profiles } = await supabase.from('profiles').select('user_id, nombre, apellido').in('user_id', guardIds);
+      const profileMap = new Map((profiles || []).map(p => [p.user_id, `${p.nombre} ${p.apellido}`] as const));
+
+      const seen = new Set<string>();
+      setGuards(rondines
+        .filter(r => { if (seen.has(r.guardia_id)) return false; seen.add(r.guardia_id); return true; })
+        .map(r => ({
+          id: r.guardia_id,
+          nombre: profileMap.get(r.guardia_id) || 'Guardia',
+          status: r.status,
+          lat: r.checkin_lat || 19.43,
+          lng: r.checkin_lng || -99.13,
+        }))
+      );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -37,7 +60,6 @@ const MapaSupervisor = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
-        {/* Map placeholder */}
         <div className="bg-card rounded-xl shadow-card overflow-hidden mb-6">
           <div className="h-64 bg-accent flex items-center justify-center relative">
             <div className="text-center">
@@ -45,18 +67,16 @@ const MapaSupervisor = () => {
               <p className="text-sm text-muted-foreground font-semibold">Mapa Interactivo</p>
               <p className="text-xs text-muted-foreground">Integración con Google Maps / Mapbox</p>
             </div>
-            {/* Simulated pins */}
             {guards.map((g, i) => (
               <div
                 key={g.id}
-                className={`absolute w-4 h-4 rounded-full ${statusColors[g.status]} border-2 border-card shadow-sm`}
+                className={`absolute w-4 h-4 rounded-full ${statusColors[g.status] || 'bg-primary'} border-2 border-card shadow-sm`}
                 style={{ top: `${30 + i * 15}%`, left: `${20 + i * 18}%` }}
               />
             ))}
           </div>
         </div>
 
-        {/* Legend */}
         <div className="flex items-center gap-4 mb-4 px-1">
           {Object.entries(statusLabels).map(([key, label]) => (
             <div key={key} className="flex items-center gap-1.5">
@@ -66,19 +86,21 @@ const MapaSupervisor = () => {
           ))}
         </div>
 
-        {/* Guards List */}
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Ubicación de Elementos</h2>
         <div className="space-y-2">
+          {guards.length === 0 && (
+            <p className="text-sm text-muted-foreground text-center py-4">Sin guardias activos hoy</p>
+          )}
           {guards.map(guard => (
             <div key={guard.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${statusColors[guard.status]}`} />
+              <div className={`w-3 h-3 rounded-full ${statusColors[guard.status] || 'bg-primary'}`} />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{guard.nombre}</p>
                 <p className="text-xs text-muted-foreground">
                   {guard.lat.toFixed(4)}, {guard.lng.toFixed(4)}
                 </p>
               </div>
-              <span className="text-xs text-muted-foreground">{statusLabels[guard.status]}</span>
+              <span className="text-xs text-muted-foreground">{statusLabels[guard.status] || guard.status}</span>
             </div>
           ))}
         </div>
