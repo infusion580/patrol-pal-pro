@@ -14,6 +14,128 @@ export type Database = {
   }
   public: {
     Tables: {
+      chat_messages: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          read: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          read?: boolean
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          read?: boolean
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
+      chat_rh: {
+        Row: {
+          confidential: boolean
+          created_at: string
+          folio: string
+          id: string
+          message: string
+          sender: string
+          topic: string
+          user_id: string
+        }
+        Insert: {
+          confidential?: boolean
+          created_at?: string
+          folio: string
+          id?: string
+          message: string
+          sender: string
+          topic: string
+          user_id: string
+        }
+        Update: {
+          confidential?: boolean
+          created_at?: string
+          folio?: string
+          id?: string
+          message?: string
+          sender?: string
+          topic?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      checkpoints: {
+        Row: {
+          created_at: string
+          id: string
+          nombre: string
+          servicio_id: string
+          ubicacion: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          nombre: string
+          servicio_id: string
+          ubicacion?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          nombre?: string
+          servicio_id?: string
+          ubicacion?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "checkpoints_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      emergencias: {
+        Row: {
+          atendida: boolean
+          created_at: string
+          guardia_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          tipo: string
+        }
+        Insert: {
+          atendida?: boolean
+          created_at?: string
+          guardia_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          tipo?: string
+        }
+        Update: {
+          atendida?: boolean
+          created_at?: string
+          guardia_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           apellido: string
@@ -44,6 +166,164 @@ export type Database = {
           numero_empleado?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      reportes_turno: {
+        Row: {
+          actividades: string
+          created_at: string
+          firmado: boolean
+          guardia_id: string
+          id: string
+          incidencias: string
+          observaciones: string
+          retroalimentacion: string | null
+          revisado_por: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          actividades?: string
+          created_at?: string
+          firmado?: boolean
+          guardia_id: string
+          id?: string
+          incidencias?: string
+          observaciones?: string
+          retroalimentacion?: string | null
+          revisado_por?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          actividades?: string
+          created_at?: string
+          firmado?: boolean
+          guardia_id?: string
+          id?: string
+          incidencias?: string
+          observaciones?: string
+          retroalimentacion?: string | null
+          revisado_por?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      rondin_scans: {
+        Row: {
+          checkpoint_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          rondin_id: string
+          scanned_at: string
+        }
+        Insert: {
+          checkpoint_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          rondin_id: string
+          scanned_at?: string
+        }
+        Update: {
+          checkpoint_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          rondin_id?: string
+          scanned_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rondin_scans_checkpoint_id_fkey"
+            columns: ["checkpoint_id"]
+            isOneToOne: false
+            referencedRelation: "checkpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "rondin_scans_rondin_id_fkey"
+            columns: ["rondin_id"]
+            isOneToOne: false
+            referencedRelation: "rondines"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      rondines: {
+        Row: {
+          checkin_at: string | null
+          checkin_lat: number | null
+          checkin_lng: number | null
+          checkout_at: string | null
+          created_at: string
+          guardia_id: string
+          id: string
+          servicio_id: string | null
+          status: string
+        }
+        Insert: {
+          checkin_at?: string | null
+          checkin_lat?: number | null
+          checkin_lng?: number | null
+          checkout_at?: string | null
+          created_at?: string
+          guardia_id: string
+          id?: string
+          servicio_id?: string | null
+          status?: string
+        }
+        Update: {
+          checkin_at?: string | null
+          checkin_lat?: number | null
+          checkin_lng?: number | null
+          checkout_at?: string | null
+          created_at?: string
+          guardia_id?: string
+          id?: string
+          servicio_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rondines_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      servicios: {
+        Row: {
+          cliente: string
+          created_at: string
+          created_by: string | null
+          direccion: string
+          id: string
+          nombre: string
+          updated_at: string
+        }
+        Insert: {
+          cliente?: string
+          created_at?: string
+          created_by?: string | null
+          direccion?: string
+          id?: string
+          nombre: string
+          updated_at?: string
+        }
+        Update: {
+          cliente?: string
+          created_at?: string
+          created_by?: string | null
+          direccion?: string
+          id?: string
+          nombre?: string
+          updated_at?: string
         }
         Relationships: []
       }
