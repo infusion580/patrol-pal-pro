@@ -87,6 +87,11 @@ const Login = () => {
             <Button type="submit" className="w-full h-12 text-base font-semibold" disabled={loading}>
               {loading ? 'Ingresando...' : 'Ingresar'}
             </Button>
+            <div className="text-right">
+              <Link to="/forgot-password" className="text-xs text-primary font-semibold hover:underline">
+                ¿Olvidaste tu contraseña?
+              </Link>
+            </div>
           </form>
         </div>
 

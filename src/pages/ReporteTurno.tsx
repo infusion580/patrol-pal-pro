@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { ArrowLeft, Camera, Mic, Video, PenTool, Send } from 'lucide-react';
+import { useState, useRef } from 'react';
+import { ArrowLeft, Camera, Mic, Video, PenTool, Send, X, ImageIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -14,15 +14,53 @@ const ReporteTurno = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [form, setForm] = useState({
     incidencias: '',
     actividades: '',
-    observaciones: ''
+    observaciones: '',
   });
   const [signed, setSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [evidencias, setEvidencias] = useState<Array<{ file: File; preview: string }>>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files) return;
+    const newFiles = Array.from(files).map(file => ({
+      file,
+      preview: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+    }));
+    setEvidencias(prev => [...prev, ...newFiles]);
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
+  const removeFile = (index: number) => {
+    setEvidencias(prev => {
+      const copy = [...prev];
+      if (copy[index].preview) URL.revokeObjectURL(copy[index].preview);
+      copy.splice(index, 1);
+      return copy;
+    });
+  };
+
+  const uploadEvidencias = async (): Promise<string[]> => {
+    if (!user || evidencias.length === 0) return [];
+    const urls: string[] = [];
+    for (const ev of evidencias) {
+      const ext = ev.file.name.split('.').pop();
+      const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
+      const { error } = await supabase.storage.from('evidencias').upload(path, ev.file);
+      if (!error) {
+        const { data: { publicUrl } } = supabase.storage.from('evidencias').getPublicUrl(path);
+        urls.push(publicUrl);
+      }
+    }
+    return urls;
+  };
 
   const handleSubmit = async () => {
     if (!signed) {
@@ -31,16 +69,25 @@ const ReporteTurno = () => {
     }
     if (!user) return;
     setSubmitting(true);
+
+    // Upload evidence files
+    setUploadingFiles(true);
+    const evidenciaUrls = await uploadEvidencias();
+    setUploadingFiles(false);
+
+    const observacionesConEvidencia = evidenciaUrls.length > 0
+      ? `${form.observaciones}\n\n[Evidencias adjuntas: ${evidenciaUrls.join(', ')}]`
+      : form.observaciones;
+
     const { error } = await supabase.from('reportes_turno').insert({
       guardia_id: user.id,
       incidencias: form.incidencias,
       actividades: form.actividades,
-      observaciones: form.observaciones,
-      firmado: true
+      observaciones: observacionesConEvidencia,
+      firmado: true,
     });
     setSubmitting(false);
     if (error) {
-      console.error(error);
       toast({ title: 'Error', description: 'No se pudo enviar el reporte. Intenta de nuevo.', variant: 'destructive' });
       return;
     }
@@ -78,18 +125,41 @@ const ReporteTurno = () => {
 
         <div className="bg-card rounded-xl p-4 shadow-card">
           <Label className="mb-3 block">Adjuntar Evidencias</Label>
+          <input ref={fileInputRef} type="file" accept="image/*,video/*,audio/*" multiple className="hidden" onChange={handleFileSelect} />
           <div className="grid grid-cols-3 gap-2">
-            {[
-            { icon: Camera, label: 'Foto' },
-            { icon: Video, label: 'Video' },
-            { icon: Mic, label: 'Audio' }].
-            map((item) =>
-            <button key={item.label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
-                <item.icon className="w-5 h-5 text-primary" />
-                <span className="text-xs font-semibold text-foreground">{item.label}</span>
-              </button>
-            )}
+            <button onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'image/*'; fileInputRef.current.click(); } }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
+              <Camera className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">Foto</span>
+            </button>
+            <button onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'video/*'; fileInputRef.current.click(); } }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
+              <Video className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">Video</span>
+            </button>
+            <button onClick={() => { if (fileInputRef.current) { fileInputRef.current.accept = 'audio/*'; fileInputRef.current.click(); } }} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
+              <Mic className="w-5 h-5 text-primary" />
+              <span className="text-xs font-semibold text-foreground">Audio</span>
+            </button>
           </div>
+
+          {evidencias.length > 0 && (
+            <div className="mt-3 space-y-2">
+              {evidencias.map((ev, i) => (
+                <div key={i} className="flex items-center gap-2 bg-accent rounded-lg p-2">
+                  {ev.preview ? (
+                    <img src={ev.preview} alt="" className="w-10 h-10 rounded object-cover" />
+                  ) : (
+                    <div className="w-10 h-10 rounded bg-muted flex items-center justify-center">
+                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                    </div>
+                  )}
+                  <span className="text-xs text-foreground flex-1 truncate">{ev.file.name}</span>
+                  <button onClick={() => removeFile(i)} className="p-1 text-muted-foreground hover:text-emergency">
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="bg-card rounded-xl p-4 shadow-card">
@@ -97,9 +167,9 @@ const ReporteTurno = () => {
           <button
             onClick={() => setSigned(!signed)}
             className={`w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
-            signed ? 'border-success bg-success/5' : 'border-border hover:border-primary/50'}`
-            }>
-            
+              signed ? 'border-success bg-success/5' : 'border-border hover:border-primary/50'
+            }`}
+          >
             <PenTool className={`w-6 h-6 ${signed ? 'text-success' : 'text-muted-foreground'}`} />
             <span className={`text-sm font-semibold ${signed ? 'text-success' : 'text-muted-foreground'}`}>
               {signed ? '✅ Firmado' : 'Toca para firmar'}
@@ -108,14 +178,14 @@ const ReporteTurno = () => {
         </div>
 
         <Button onClick={handleSubmit} className="w-full h-12 text-base font-semibold" disabled={submitting}>
-          <Send className="w-4 h-4 mr-2" /> {submitting ? 'Enviando...' : 'Enviar Reporte'}
+          <Send className="w-4 h-4 mr-2" /> {submitting ? (uploadingFiles ? 'Subiendo evidencias...' : 'Enviando...') : 'Enviar Reporte'}
         </Button>
       </div>
 
       <EmergencyButton />
       <BottomNav />
-    </div>);
-
+    </div>
+  );
 };
 
 export default ReporteTurno;

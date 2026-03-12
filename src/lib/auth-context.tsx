@@ -11,6 +11,7 @@ export interface User {
   numeroEmpleado: string;
   role: UserRole;
   email: string;
+  avatarUrl: string;
 }
 
 interface AuthContextType {
@@ -55,6 +56,7 @@ async function fetchUserProfile(userId: string): Promise<User | null> {
     numeroEmpleado: profile.numero_empleado,
     role: (roleData?.role as UserRole) || 'guardia',
     email: profile.email,
+    avatarUrl: (profile as any).avatar_url || '',
   };
 }
 
@@ -63,11 +65,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
       async (event, session) => {
         if (session?.user) {
-          // Use setTimeout to avoid Supabase deadlock
           setTimeout(async () => {
             const profile = await fetchUserProfile(session.user.id);
             setUser(profile);
@@ -80,7 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
-    // THEN check existing session
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
         const profile = await fetchUserProfile(session.user.id);
@@ -107,7 +106,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nombre: data.nombre,
           apellido: data.apellido,
           numero_empleado: data.numeroEmpleado,
-          // role is NOT sent - always assigned as 'guardia' server-side
         },
       },
     });

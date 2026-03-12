@@ -136,38 +136,82 @@ export type Database = {
         }
         Relationships: []
       }
+      notificaciones: {
+        Row: {
+          created_at: string
+          guardia_id: string
+          id: string
+          leida: boolean
+          mensaje: string
+          supervisor_id: string | null
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          guardia_id: string
+          id?: string
+          leida?: boolean
+          mensaje?: string
+          supervisor_id?: string | null
+          tipo?: string
+        }
+        Update: {
+          created_at?: string
+          guardia_id?: string
+          id?: string
+          leida?: boolean
+          mensaje?: string
+          supervisor_id?: string | null
+          tipo?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           apellido: string
+          avatar_url: string | null
           created_at: string
           email: string
           id: string
           nombre: string
           numero_empleado: string
+          servicio_asignado_id: string | null
           updated_at: string
           user_id: string
         }
         Insert: {
           apellido?: string
+          avatar_url?: string | null
           created_at?: string
           email?: string
           id?: string
           nombre?: string
           numero_empleado?: string
+          servicio_asignado_id?: string | null
           updated_at?: string
           user_id: string
         }
         Update: {
           apellido?: string
+          avatar_url?: string | null
           created_at?: string
           email?: string
           id?: string
           nombre?: string
           numero_empleado?: string
+          servicio_asignado_id?: string | null
           updated_at?: string
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "profiles_servicio_asignado_id_fkey"
+            columns: ["servicio_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       reportes_turno: {
         Row: {
