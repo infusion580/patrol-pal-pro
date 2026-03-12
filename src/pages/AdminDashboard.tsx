@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Trash2, Shield, TrendingUp } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -13,6 +13,7 @@ interface UserItem {
   empleado: string;
   role: string;
   email: string;
+  servicio_asignado_id: string | null;
 }
 
 const AdminDashboard = () => {
@@ -20,18 +21,22 @@ const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [users, setUsers] = useState<UserItem[]>([]);
+  const [servicios, setServicios] = useState<Array<{ id: string; nombre: string }>>([]);
   const [totalRondines, setTotalRondines] = useState('0');
   const [totalEmergencias, setTotalEmergencias] = useState('0');
   const [loading, setLoading] = useState(true);
+  const [editingUser, setEditingUser] = useState<string | null>(null);
 
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
-    // Load all profiles with roles
-    const { data: profiles } = await supabase.from('profiles').select('*');
-    const { data: roles } = await supabase.from('user_roles').select('*');
-    const roleMap = new Map(roles?.map(r => [r.user_id, r.role]));
+    const [{ data: profiles }, { data: roles }, { data: srvs }] = await Promise.all([
+      supabase.from('profiles').select('*'),
+      supabase.from('user_roles').select('*'),
+      supabase.from('servicios').select('id, nombre').order('nombre'),
+    ]);
 
+    const roleMap = new Map(roles?.map(r => [r.user_id, r.role]));
     if (profiles) {
       setUsers(profiles.map(p => ({
         id: p.user_id,
@@ -39,28 +44,54 @@ const AdminDashboard = () => {
         empleado: p.numero_empleado,
         role: roleMap.get(p.user_id) || 'guardia',
         email: p.email,
+        servicio_asignado_id: (p as any).servicio_asignado_id || null,
       })));
     }
+    setServicios(srvs || []);
 
-    // Stats
     const today = new Date().toISOString().split('T')[0];
-    const { count: rCount } = await supabase.from('rondines').select('*', { count: 'exact', head: true }).gte('created_at', today);
+    const [{ count: rCount }, { count: eCount }] = await Promise.all([
+      supabase.from('rondines').select('*', { count: 'exact', head: true }).gte('created_at', today),
+      supabase.from('emergencias').select('*', { count: 'exact', head: true }).eq('atendida', false),
+    ]);
     setTotalRondines(String(rCount || 0));
-
-    const { count: eCount } = await supabase.from('emergencias').select('*', { count: 'exact', head: true }).eq('atendida', false);
     setTotalEmergencias(String(eCount || 0));
-
     setLoading(false);
   };
 
   const removeUser = async (userId: string, nombre: string) => {
-    // Delete from auth via admin - for now just remove profile (auth user remains)
     const { error } = await supabase.from('profiles').delete().eq('user_id', userId);
     if (error) {
-      toast({ title: 'Error', description: 'No se pudo eliminar. Se requieren permisos de admin.', variant: 'destructive' });
+      toast({ title: 'Error', description: 'No se pudo eliminar el usuario.', variant: 'destructive' });
       return;
     }
     toast({ title: 'Usuario eliminado', description: nombre });
+    loadData();
+  };
+
+  const changeRole = async (userId: string, newRole: string) => {
+    const { error } = await supabase.rpc('promote_user', {
+      _target_user_id: userId,
+      _new_role: newRole as any,
+    });
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo cambiar el rol.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Rol actualizado' });
+    loadData();
+  };
+
+  const assignService = async (userId: string, servicioId: string | null) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ servicio_asignado_id: servicioId } as any)
+      .eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo asignar el servicio.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Servicio asignado' });
     loadData();
   };
 
@@ -130,27 +161,61 @@ const AdminDashboard = () => {
           <h2 className="text-sm font-semibold text-muted-foreground">Gestión de Usuarios</h2>
           <span className="text-xs text-primary font-semibold">{users.length} registrados</span>
         </div>
+
         <div className="space-y-2">
           {users.map(u => {
             const role = roleColors[u.role] || roleColors.guardia;
+            const isEditing = editingUser === u.id;
             return (
-              <div key={u.id} className="bg-card rounded-xl p-3 shadow-card flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                  <span className="text-xs font-bold text-primary">{u.nombre.split(' ').map(n => n[0]).join('')}</span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-foreground truncate">{u.nombre}</p>
-                  <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-muted-foreground font-mono">{u.empleado}</span>
-                    <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${role.cls}`}>{role.label}</span>
+              <div key={u.id} className="bg-card rounded-xl p-3 shadow-card">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="text-xs font-bold text-primary">{u.nombre.split(' ').map(n => n[0]).join('')}</span>
                   </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground truncate">{u.nombre}</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-muted-foreground font-mono">{u.empleado}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${role.cls}`}>{role.label}</span>
+                    </div>
+                  </div>
+                  <button onClick={() => setEditingUser(isEditing ? null : u.id)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
+                    <UserCog className="w-4 h-4" />
+                  </button>
+                  <button onClick={() => removeUser(u.id, u.nombre)} className="p-2 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors">
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <button
-                  onClick={() => removeUser(u.id, u.nombre)}
-                  className="p-2 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
+
+                {isEditing && (
+                  <div className="mt-3 pt-3 border-t border-border space-y-3">
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Rol</label>
+                      <select
+                        value={u.role}
+                        onChange={(e) => changeRole(u.id, e.target.value)}
+                        className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                      >
+                        <option value="guardia">Guardia</option>
+                        <option value="supervisor">Supervisor</option>
+                        <option value="admin">Admin</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Servicio Asignado</label>
+                      <select
+                        value={u.servicio_asignado_id || ''}
+                        onChange={(e) => assignService(u.id, e.target.value || null)}
+                        className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                      >
+                        <option value="">Sin asignar</option>
+                        {servicios.map(s => (
+                          <option key={s.id} value={s.id}>{s.nombre}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
+                )}
               </div>
             );
           })}
