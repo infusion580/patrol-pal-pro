@@ -107,7 +107,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           nombre: data.nombre,
           apellido: data.apellido,
           numero_empleado: data.numeroEmpleado,
-          role: data.role,
+          // role is NOT sent - always assigned as 'guardia' server-side
         },
       },
     });

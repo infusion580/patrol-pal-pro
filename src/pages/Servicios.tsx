@@ -64,7 +64,7 @@ const Servicios = () => {
       direccion: newService.direccion,
       created_by: user?.id,
     });
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el servicio.', variant: 'destructive' }); return; }
     setNewService({ nombre: '', cliente: '', direccion: '' });
     setShowAddService(false);
     toast({ title: 'Servicio agregado' });
@@ -84,7 +84,7 @@ const Servicios = () => {
       nombre: newCheckpoint.nombre,
       ubicacion: newCheckpoint.ubicacion,
     });
-    if (error) { toast({ title: 'Error', description: error.message, variant: 'destructive' }); return; }
+    if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el punto de rondín.', variant: 'destructive' }); return; }
     setNewCheckpoint({ nombre: '', ubicacion: '' });
     setShowAddCheckpoint(null);
     toast({ title: 'Punto de rondín agregado' });

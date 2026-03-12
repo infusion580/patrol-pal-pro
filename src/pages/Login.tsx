@@ -25,9 +25,10 @@ const Login = () => {
         navigate('/dashboard');
       }
     } catch (error: any) {
+      console.error('Login error:', error);
       toast({ 
         title: 'Error', 
-        description: error?.message || 'Credenciales incorrectas', 
+        description: 'Correo o contraseña incorrectos.', 
         variant: 'destructive' 
       });
     }

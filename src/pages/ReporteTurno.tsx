@@ -40,7 +40,8 @@ const ReporteTurno = () => {
     });
     setSubmitting(false);
     if (error) {
-      toast({ title: 'Error', description: error.message, variant: 'destructive' });
+      console.error(error);
+      toast({ title: 'Error', description: 'No se pudo enviar el reporte. Intenta de nuevo.', variant: 'destructive' });
       return;
     }
     toast({ title: '✅ Reporte enviado', description: 'Tu reporte de turno ha sido enviado al supervisor' });
