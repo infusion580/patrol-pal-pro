@@ -38,7 +38,8 @@ const Register = () => {
       toast({ title: '¡Cuenta creada!', description: 'Bienvenido a SecureOps' });
       navigate('/dashboard');
     } catch (error: any) {
-      toast({ title: 'Error', description: error?.message || 'No se pudo crear la cuenta', variant: 'destructive' });
+      console.error('Registration error:', error);
+      toast({ title: 'Error', description: 'No se pudo crear la cuenta. Intenta de nuevo.', variant: 'destructive' });
     }
     setLoading(false);
   };
