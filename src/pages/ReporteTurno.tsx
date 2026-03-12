@@ -17,12 +17,12 @@ const ReporteTurno = () => {
   const [form, setForm] = useState({
     incidencias: '',
     actividades: '',
-    observaciones: '',
+    observaciones: ''
   });
   const [signed, setSigned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
-  const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
+  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
   const handleSubmit = async () => {
     if (!signed) {
@@ -36,7 +36,7 @@ const ReporteTurno = () => {
       incidencias: form.incidencias,
       actividades: form.actividades,
       observaciones: form.observaciones,
-      firmado: true,
+      firmado: true
     });
     setSubmitting(false);
     if (error) {
@@ -50,7 +50,7 @@ const ReporteTurno = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-primary text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl">
+      <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl bg-destructive">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
             <ArrowLeft className="w-4 h-4" /> Regresar
@@ -64,15 +64,15 @@ const ReporteTurno = () => {
         <div className="bg-card rounded-xl p-4 shadow-card space-y-4">
           <div className="space-y-2">
             <Label>Incidencias</Label>
-            <Textarea placeholder="Describe las incidencias ocurridas durante el turno..." value={form.incidencias} onChange={e => update('incidencias', e.target.value)} rows={3} className="text-sm" />
+            <Textarea placeholder="Describe las incidencias ocurridas durante el turno..." value={form.incidencias} onChange={(e) => update('incidencias', e.target.value)} rows={3} className="text-sm" />
           </div>
           <div className="space-y-2">
             <Label>Actividades Realizadas</Label>
-            <Textarea placeholder="Lista las actividades realizadas..." value={form.actividades} onChange={e => update('actividades', e.target.value)} rows={3} className="text-sm" />
+            <Textarea placeholder="Lista las actividades realizadas..." value={form.actividades} onChange={(e) => update('actividades', e.target.value)} rows={3} className="text-sm" />
           </div>
           <div className="space-y-2">
             <Label>Observaciones</Label>
-            <Textarea placeholder="Observaciones adicionales..." value={form.observaciones} onChange={e => update('observaciones', e.target.value)} rows={3} className="text-sm" />
+            <Textarea placeholder="Observaciones adicionales..." value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} rows={3} className="text-sm" />
           </div>
         </div>
 
@@ -80,15 +80,15 @@ const ReporteTurno = () => {
           <Label className="mb-3 block">Adjuntar Evidencias</Label>
           <div className="grid grid-cols-3 gap-2">
             {[
-              { icon: Camera, label: 'Foto' },
-              { icon: Video, label: 'Video' },
-              { icon: Mic, label: 'Audio' },
-            ].map(item => (
-              <button key={item.label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
+            { icon: Camera, label: 'Foto' },
+            { icon: Video, label: 'Video' },
+            { icon: Mic, label: 'Audio' }].
+            map((item) =>
+            <button key={item.label} className="flex flex-col items-center gap-1.5 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
                 <item.icon className="w-5 h-5 text-primary" />
                 <span className="text-xs font-semibold text-foreground">{item.label}</span>
               </button>
-            ))}
+            )}
           </div>
         </div>
 
@@ -97,9 +97,9 @@ const ReporteTurno = () => {
           <button
             onClick={() => setSigned(!signed)}
             className={`w-full h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-2 transition-colors ${
-              signed ? 'border-success bg-success/5' : 'border-border hover:border-primary/50'
-            }`}
-          >
+            signed ? 'border-success bg-success/5' : 'border-border hover:border-primary/50'}`
+            }>
+            
             <PenTool className={`w-6 h-6 ${signed ? 'text-success' : 'text-muted-foreground'}`} />
             <span className={`text-sm font-semibold ${signed ? 'text-success' : 'text-muted-foreground'}`}>
               {signed ? '✅ Firmado' : 'Toca para firmar'}
@@ -114,8 +114,8 @@ const ReporteTurno = () => {
 
       <EmergencyButton />
       <BottomNav />
-    </div>
-  );
+    </div>);
+
 };
 
 export default ReporteTurno;
