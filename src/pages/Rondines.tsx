@@ -25,6 +25,9 @@ const Rondines = () => {
   const [servicios, setServicios] = useState<Array<{id: string;nombre: string;}>>([]);
   const [selectedServicio, setSelectedServicio] = useState<string | null>(null);
 
+  // Monitor zone exit - uses a 500m radius from check-in point as default zone
+  useZoneMonitor(checkedIn ? selectedServicio : null, checkedIn ? { lat: 0, lng: 0, radius: 500 } : undefined);
+
   useEffect(() => {
     loadServicios();
   }, []);
