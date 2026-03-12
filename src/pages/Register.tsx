@@ -14,7 +14,7 @@ const Register = () => {
     numeroEmpleado: '',
     email: '',
     password: '',
-    role: 'guardia' as UserRole, // Always guardia - role is enforced server-side
+    role: 'guardia' as UserRole // Always guardia - role is enforced server-side
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -44,13 +44,13 @@ const Register = () => {
     setLoading(false);
   };
 
-  const update = (field: string, value: string) => setForm(prev => ({ ...prev, [field]: value }));
+  const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm animate-slide-up">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl bg-primary flex items-center justify-center mb-3 shadow-elevated">
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-elevated bg-destructive">
             <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
           <h1 className="text-xl font-display font-bold text-foreground">Crear Cuenta</h1>
@@ -61,28 +61,28 @@ const Register = () => {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
                 <Label htmlFor="nombre">Nombre</Label>
-                <Input id="nombre" placeholder="Juan" value={form.nombre} onChange={e => update('nombre', e.target.value)} required className="h-11" />
+                <Input id="nombre" placeholder="Juan" value={form.nombre} onChange={(e) => update('nombre', e.target.value)} required className="h-11" />
               </div>
               <div className="space-y-1.5">
                 <Label htmlFor="apellido">Apellido</Label>
-                <Input id="apellido" placeholder="Pérez" value={form.apellido} onChange={e => update('apellido', e.target.value)} required className="h-11" />
+                <Input id="apellido" placeholder="Pérez" value={form.apellido} onChange={(e) => update('apellido', e.target.value)} required className="h-11" />
               </div>
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="numEmp">Número de Empleado *</Label>
-              <Input id="numEmp" placeholder="EMP001" value={form.numeroEmpleado} onChange={e => update('numeroEmpleado', e.target.value)} required className="h-11 font-mono" />
+              <Input id="numEmp" placeholder="EMP001" value={form.numeroEmpleado} onChange={(e) => update('numeroEmpleado', e.target.value)} required className="h-11 font-mono" />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="email">Correo electrónico</Label>
-              <Input id="email" type="email" placeholder="tu@correo.com" value={form.email} onChange={e => update('email', e.target.value)} required className="h-11" />
+              <Input id="email" type="email" placeholder="tu@correo.com" value={form.email} onChange={(e) => update('email', e.target.value)} required className="h-11" />
             </div>
 
             <div className="space-y-1.5">
               <Label htmlFor="password">Contraseña (mín. 6 caracteres)</Label>
               <div className="relative">
-                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={e => update('password', e.target.value)} required className="h-11 pr-12" />
+                <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={form.password} onChange={(e) => update('password', e.target.value)} required className="h-11 pr-12" />
                 <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
@@ -103,8 +103,8 @@ const Register = () => {
           </Link>
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Register;
