@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
+import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 
 interface CheckpointItem {
   id: string;
