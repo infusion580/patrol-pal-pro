@@ -26,10 +26,10 @@ const Login = () => {
       }
     } catch (error: any) {
       console.error('Login error:', error);
-      toast({ 
-        title: 'Error', 
-        description: 'Correo o contraseña incorrectos.', 
-        variant: 'destructive' 
+      toast({
+        title: 'Error',
+        description: 'Correo o contraseña incorrectos.',
+        variant: 'destructive'
       });
     }
     setLoading(false);
@@ -40,7 +40,7 @@ const Login = () => {
       <div className="w-full max-w-sm animate-slide-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-2xl bg-primary flex items-center justify-center mb-4 shadow-elevated">
+          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-elevated bg-destructive">
             <Shield className="w-10 h-10 text-primary-foreground" />
           </div>
           <h1 className="text-2xl font-display font-bold text-foreground">SecureOps</h1>
@@ -60,8 +60,8 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
-                className="h-12 text-base"
-              />
+                className="h-12 text-base" />
+              
             </div>
             <div className="space-y-2">
               <Label htmlFor="password">Contraseña</Label>
@@ -73,13 +73,13 @@ const Login = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="h-12 text-base pr-12"
-                />
+                  className="h-12 text-base pr-12" />
+                
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                >
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                  
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
               </div>
@@ -97,8 +97,8 @@ const Login = () => {
           </Link>
         </p>
       </div>
-    </div>
-  );
+    </div>);
+
 };
 
 export default Login;
