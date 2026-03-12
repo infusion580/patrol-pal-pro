@@ -14,7 +14,7 @@ const Register = () => {
     numeroEmpleado: '',
     email: '',
     password: '',
-    role: 'guardia' as UserRole,
+    role: 'guardia' as UserRole, // Always guardia - role is enforced server-side
   });
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
