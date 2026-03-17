@@ -33,7 +33,7 @@ const Servicios = () => {
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
   const [newService, setNewService] = useState({ nombre: '', cliente: '', direccion: '' });
-  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '' });
+  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
 
   const fetchServicios = async () => {
     const { data: svcs } = await supabase.from('servicios').select('*').order('created_at', { ascending: false });
