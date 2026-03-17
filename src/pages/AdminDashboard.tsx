@@ -143,12 +143,14 @@ const AdminDashboard = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-4 gap-2">
+        <div className="grid grid-cols-3 gap-2">
           {[
             { icon: Settings, label: 'Servicios', path: '/servicios' },
             { icon: MapPin, label: 'Mapa', path: '/mapa' },
             { icon: BarChart3, label: 'Métricas', path: '/metricas' },
             { icon: FileText, label: 'Reportes', path: '/reportes-supervisor' },
+            { icon: Bell, label: 'Alertas', path: '/notificaciones' },
+            { icon: UserCog, label: 'Gestión RH', path: '/gestion-rh' },
           ].map(a => (
             <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-1.5 hover:shadow-elevated transition-shadow active:scale-[0.98]">
               <a.icon className="w-5 h-5 text-primary" />
