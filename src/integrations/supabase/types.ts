@@ -78,21 +78,30 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          lat: number | null
+          lng: number | null
           nombre: string
+          radius_metros: number
           servicio_id: string
           ubicacion: string
         }
         Insert: {
           created_at?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           nombre: string
+          radius_metros?: number
           servicio_id: string
           ubicacion?: string
         }
         Update: {
           created_at?: string
           id?: string
+          lat?: number | null
+          lng?: number | null
           nombre?: string
+          radius_metros?: number
           servicio_id?: string
           ubicacion?: string
         }
@@ -212,6 +221,45 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      registros_rh: {
+        Row: {
+          created_at: string
+          created_by: string
+          fecha: string
+          fecha_fin: string | null
+          guardia_id: string
+          id: string
+          monto: number | null
+          nota: string | null
+          status: string
+          tipo: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          fecha?: string
+          fecha_fin?: string | null
+          guardia_id: string
+          id?: string
+          monto?: number | null
+          nota?: string | null
+          status?: string
+          tipo: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          fecha?: string
+          fecha_fin?: string | null
+          guardia_id?: string
+          id?: string
+          monto?: number | null
+          nota?: string | null
+          status?: string
+          tipo?: string
+        }
+        Relationships: []
       }
       reportes_turno: {
         Row: {
