@@ -50,7 +50,7 @@ const Servicios = () => {
         nombre: s.nombre,
         cliente: s.cliente,
         direccion: s.direccion,
-        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion })),
+        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
       });
     }
     setServicios(serviciosWithCps);
