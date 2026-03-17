@@ -112,6 +112,8 @@ const SupervisorDashboard = () => {
             { icon: FileText, label: 'Reportes', path: '/reportes-supervisor' },
             { icon: BarChart3, label: 'Métricas', path: '/metricas' },
             { icon: Settings, label: 'Servicios', path: '/servicios' },
+            { icon: Bell, label: 'Alertas', path: '/notificaciones' },
+            { icon: UserCog, label: 'Gestión RH', path: '/gestion-rh' },
           ].map(a => (
             <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-2 hover:shadow-elevated transition-shadow active:scale-[0.98]">
               <a.icon className="w-5 h-5 text-primary" />
