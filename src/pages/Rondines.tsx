@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -7,34 +7,44 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 import { useZoneMonitor } from '@/hooks/use-zone-monitor';
+import { useToast } from '@/hooks/use-toast';
 
 interface CheckpointItem {
   id: string;
   name: string;
   scanned: boolean;
   time: string | null;
+  lat: number | null;
+  lng: number | null;
+  radius: number;
+}
+
+function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
+  const R = 6371e3;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 const Rondines = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { toast } = useToast();
   const [checkedIn, setCheckedIn] = useState(false);
   const [rondinId, setRondinId] = useState<string | null>(null);
   const [points, setPoints] = useState<CheckpointItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [servicios, setServicios] = useState<Array<{id: string;nombre: string;}>>([]);
+  const [scanning, setScanning] = useState<string | null>(null);
+  const [servicios, setServicios] = useState<Array<{ id: string; nombre: string }>>([]);
   const [selectedServicio, setSelectedServicio] = useState<string | null>(null);
+  const [zoneCenter, setZoneCenter] = useState<{ lat: number; lng: number; radius: number } | undefined>();
 
-  // Monitor zone exit - uses a 500m radius from check-in point as default zone
-  useZoneMonitor(checkedIn ? selectedServicio : null, checkedIn ? { lat: 0, lng: 0, radius: 500 } : undefined);
+  // Monitor zone exit using first checkpoint as zone center
+  useZoneMonitor(checkedIn ? selectedServicio : null, zoneCenter);
 
-  useEffect(() => {
-    loadServicios();
-  }, []);
-
-  useEffect(() => {
-    if (selectedServicio) loadCheckpoints(selectedServicio);
-  }, [selectedServicio]);
+  useEffect(() => { loadServicios(); }, []);
+  useEffect(() => { if (selectedServicio) loadCheckpoints(selectedServicio); }, [selectedServicio]);
 
   const loadServicios = async () => {
     const { data } = await supabase.from('servicios').select('id, nombre').order('nombre');
@@ -48,37 +58,41 @@ const Rondines = () => {
   const loadCheckpoints = async (servicioId: string) => {
     const { data: cps } = await supabase.from('checkpoints').select('*').eq('servicio_id', servicioId).order('created_at');
 
-    // Check if there's an active rondin
     if (user) {
-      const { data: activeRondin } = await supabase.
-      from('rondines').
-      select('*').
-      eq('guardia_id', user.id).
-      eq('status', 'activo').
-      maybeSingle();
+      const { data: activeRondin } = await supabase
+        .from('rondines').select('*')
+        .eq('guardia_id', user.id).eq('status', 'activo')
+        .maybeSingle();
 
       if (activeRondin) {
         setRondinId(activeRondin.id);
         setCheckedIn(true);
 
-        // Get scanned checkpoints
-        const { data: scans } = await supabase.
-        from('rondin_scans').
-        select('checkpoint_id, scanned_at').
-        eq('rondin_id', activeRondin.id);
+        const { data: scans } = await supabase
+          .from('rondin_scans').select('checkpoint_id, scanned_at')
+          .eq('rondin_id', activeRondin.id);
 
         const scannedMap = new Map(scans?.map((s) => [s.checkpoint_id, s.scanned_at]) || []);
 
-        setPoints((cps || []).map((cp) => ({
-          id: cp.id,
-          name: cp.nombre,
+        const mapped = (cps || []).map((cp: any) => ({
+          id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
           scanned: scannedMap.has(cp.id),
-          time: scannedMap.has(cp.id) ?
-          new Date(scannedMap.get(cp.id)!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) :
-          null
-        })));
+          time: scannedMap.has(cp.id)
+            ? new Date(scannedMap.get(cp.id)!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+            : null,
+        }));
+        setPoints(mapped);
+        // Set zone center from first checkpoint with coordinates
+        const first = mapped.find(p => p.lat && p.lng);
+        if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
       } else {
-        setPoints((cps || []).map((cp) => ({ id: cp.id, name: cp.nombre, scanned: false, time: null })));
+        const mapped = (cps || []).map((cp: any) => ({
+          id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
+          scanned: false, time: null,
+        }));
+        setPoints(mapped);
+        const first = mapped.find(p => p.lat && p.lng);
+        if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
       }
     }
   };
@@ -86,17 +100,28 @@ const Rondines = () => {
   const handleCheckIn = async () => {
     if (!user || !selectedServicio) return;
     if (checkedIn && rondinId) {
-      // Check-out
       await supabase.from('rondines').update({ status: 'completado', checkout_at: new Date().toISOString() }).eq('id', rondinId);
       setCheckedIn(false);
       setRondinId(null);
       setPoints((prev) => prev.map((p) => ({ ...p, scanned: false, time: null })));
     } else {
-      // Check-in
+      // Get current position for check-in
+      let lat: number | null = null;
+      let lng: number | null = null;
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 })
+        );
+        lat = pos.coords.latitude;
+        lng = pos.coords.longitude;
+      } catch { /* continue without GPS */ }
+
       const { data, error } = await supabase.from('rondines').insert({
         guardia_id: user.id,
         servicio_id: selectedServicio,
-        checkin_at: new Date().toISOString()
+        checkin_at: new Date().toISOString(),
+        checkin_lat: lat,
+        checkin_lng: lng,
       }).select().single();
 
       if (data) {
@@ -106,19 +131,60 @@ const Rondines = () => {
     }
   };
 
-  const handleScan = async (checkpointId: string) => {
+  const handleScan = async (checkpoint: CheckpointItem) => {
     if (!rondinId) return;
-    const { error } = await supabase.from('rondin_scans').insert({
-      rondin_id: rondinId,
-      checkpoint_id: checkpointId
-    });
-    if (!error) {
-      setPoints((prev) => prev.map((p) =>
-      p.id === checkpointId ?
-      { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) } :
-      p
-      ));
+    setScanning(checkpoint.id);
+
+    // Verify GPS proximity if checkpoint has coordinates
+    if (checkpoint.lat && checkpoint.lng) {
+      try {
+        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
+          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 })
+        );
+        const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
+        if (dist > checkpoint.radius) {
+          toast({
+            title: '❌ Fuera de rango',
+            description: `Estás a ${Math.round(dist)}m del punto. Debes estar a menos de ${checkpoint.radius}m para confirmar.`,
+            variant: 'destructive',
+          });
+          setScanning(null);
+          return;
+        }
+
+        // Save scan with GPS
+        const { error } = await supabase.from('rondin_scans').insert({
+          rondin_id: rondinId,
+          checkpoint_id: checkpoint.id,
+          lat: pos.coords.latitude,
+          lng: pos.coords.longitude,
+        });
+        if (!error) {
+          setPoints((prev) => prev.map((p) =>
+            p.id === checkpoint.id
+              ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+              : p
+          ));
+          toast({ title: '✅ Punto confirmado', description: `${checkpoint.name} verificado a ${Math.round(dist)}m.` });
+        }
+      } catch {
+        toast({ title: 'Error GPS', description: 'No se pudo obtener tu ubicación. Activa el GPS.', variant: 'destructive' });
+      }
+    } else {
+      // No coordinates configured, allow scan without GPS check
+      const { error } = await supabase.from('rondin_scans').insert({
+        rondin_id: rondinId,
+        checkpoint_id: checkpoint.id,
+      });
+      if (!error) {
+        setPoints((prev) => prev.map((p) =>
+          p.id === checkpoint.id
+            ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+            : p
+        ));
+      }
     }
+    setScanning(null);
   };
 
   const scannedCount = points.filter((p) => p.scanned).length;
@@ -127,8 +193,8 @@ const Rondines = () => {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
-      </div>);
-
+      </div>
+    );
   }
 
   return (
@@ -144,54 +210,44 @@ const Rondines = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
-        {/* Service Selector */}
-        {servicios.length > 0 &&
-        <div className="bg-card rounded-xl p-4 shadow-card mb-4">
+        {servicios.length > 0 && (
+          <div className="bg-card rounded-xl p-4 shadow-card mb-4">
             <label className="text-xs font-semibold text-muted-foreground mb-2 block">Servicio</label>
             <select
-            value={selectedServicio || ''}
-            onChange={(e) => setSelectedServicio(e.target.value)}
-            className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
-            disabled={checkedIn}>
-            
-              {servicios.map((s) =>
-            <option key={s.id} value={s.id}>{s.nombre}</option>
-            )}
+              value={selectedServicio || ''}
+              onChange={(e) => setSelectedServicio(e.target.value)}
+              className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+              disabled={checkedIn}
+            >
+              {servicios.map((s) => <option key={s.id} value={s.id}>{s.nombre}</option>)}
             </select>
           </div>
-        }
+        )}
 
-        {servicios.length === 0 &&
-        <div className="bg-card rounded-xl p-8 shadow-card mb-4 text-center">
+        {servicios.length === 0 && (
+          <div className="bg-card rounded-xl p-8 shadow-card mb-4 text-center">
             <MapPin className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">No hay servicios configurados</p>
-            <p className="text-xs text-muted-foreground">Pide a tu supervisor que configure los servicios</p>
           </div>
-        }
+        )}
 
-        {/* Check-in Button */}
-        {servicios.length > 0 &&
-        <div className="bg-card rounded-xl p-4 shadow-card mb-6">
+        {servicios.length > 0 && (
+          <div className="bg-card rounded-xl p-4 shadow-card mb-6">
             <Button
-            onClick={handleCheckIn}
-            className={`w-full h-14 text-base font-bold rounded-xl ${
-            checkedIn ?
-            'bg-emergency text-emergency-foreground hover:bg-emergency/90' :
-            'bg-success text-success-foreground hover:bg-success/90'}`
-            }>
-            
+              onClick={handleCheckIn}
+              className={`w-full h-14 text-base font-bold rounded-xl ${
+                checkedIn ? 'bg-emergency text-emergency-foreground hover:bg-emergency/90' : 'bg-success text-success-foreground hover:bg-success/90'
+              }`}
+            >
               <MapPin className="w-5 h-5 mr-2" />
               {checkedIn ? 'Hacer Check-out' : 'Hacer Check-in'}
             </Button>
-            {checkedIn &&
-          <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>
-          }
+            {checkedIn && <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>}
           </div>
-        }
+        )}
 
-        {/* Progress */}
-        {points.length > 0 &&
-        <>
+        {points.length > 0 && (
+          <>
             <div className="mb-4">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-semibold text-foreground">Progreso del Rondín</span>
@@ -204,33 +260,45 @@ const Rondines = () => {
 
             <h2 className="text-sm font-semibold text-muted-foreground mb-3">Puntos de Control</h2>
             <div className="space-y-2">
-              {points.map((point) =>
-            <div key={point.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
+              {points.map((point) => (
+                <div key={point.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
                   <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${point.scanned ? 'bg-success/10' : 'bg-accent'}`}>
                     {point.scanned ? <CheckCircle2 className="w-5 h-5 text-success" /> : <QrCode className="w-5 h-5 text-muted-foreground" />}
                   </div>
                   <div className="flex-1">
                     <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>{point.name}</p>
-                    {point.time &&
-                <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    {point.time && (
+                      <p className="text-xs text-muted-foreground flex items-center gap-1">
                         <Clock className="w-3 h-3" /> {point.time}
                       </p>
-                }
+                    )}
+                    {point.lat && point.lng && !point.scanned && (
+                      <p className="text-[10px] text-primary flex items-center gap-1">
+                        <Navigation className="w-3 h-3" /> GPS requerido (r:{point.radius}m)
+                      </p>
+                    )}
                   </div>
-                  {!point.scanned && checkedIn &&
-              <Button size="sm" onClick={() => handleScan(point.id)} className="text-xs h-8">Escanear</Button>
-              }
+                  {!point.scanned && checkedIn && (
+                    <Button
+                      size="sm"
+                      onClick={() => handleScan(point)}
+                      disabled={scanning === point.id}
+                      className="text-xs h-8"
+                    >
+                      {scanning === point.id ? 'Verificando...' : 'Confirmar'}
+                    </Button>
+                  )}
                 </div>
-            )}
+              ))}
             </div>
           </>
-        }
+        )}
       </div>
 
       <EmergencyButton />
       <BottomNav />
-    </div>);
-
+    </div>
+  );
 };
 
 export default Rondines;

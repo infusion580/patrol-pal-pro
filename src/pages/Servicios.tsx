@@ -212,6 +212,7 @@ const Servicios = () => {
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-semibold text-foreground">{cp.nombre}</p>
                               <p className="text-[10px] text-muted-foreground">{cp.ubicacion}</p>
+                              {cp.lat && cp.lng && <p className="text-[10px] text-primary font-mono">📍 {cp.lat.toFixed(5)}, {cp.lng.toFixed(5)} (r:{cp.radius_metros}m)</p>}
                             </div>
                             <button onClick={() => removeCheckpoint(cp.id)} className="p-1 rounded text-muted-foreground hover:text-emergency transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />
