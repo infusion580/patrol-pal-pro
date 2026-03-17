@@ -1,33 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
 import BottomNav from '@/components/BottomNav';
-
-// Fix default marker icons for Leaflet + bundlers
-delete (L.Icon.Default.prototype as any)._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
-  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
-  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
-});
-
-const createColorIcon = (color: string) =>
-  new L.DivIcon({
-    className: '',
-    html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35)"></div>`,
-    iconSize: [16, 16],
-    iconAnchor: [8, 8],
-    popupAnchor: [0, -12],
-  });
-
-const icons: Record<string, L.DivIcon> = {
-  activo: createColorIcon('#22c55e'),
-  completado: createColorIcon('hsl(var(--primary))'),
-};
 
 const statusLabels: Record<string, string> = {
   activo: 'En Ronda',
@@ -42,19 +17,12 @@ interface Guard {
   lng: number;
 }
 
-function FitBounds({ guards }: { guards: Guard[] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (guards.length === 0) return;
-    const bounds = L.latLngBounds(guards.map(g => [g.lat, g.lng]));
-    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
-  }, [guards, map]);
-  return null;
-}
+const MapView = lazy(() => import('@/components/MapView'));
 
 const MapaSupervisor = () => {
   const navigate = useNavigate();
   const [guards, setGuards] = useState<Guard[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => { loadGuards(); }, []);
 
@@ -84,9 +52,8 @@ const MapaSupervisor = () => {
         }))
       );
     }
+    setLoading(false);
   };
-
-  const defaultCenter: [number, number] = [19.4326, -99.1332]; // CDMX
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -102,27 +69,15 @@ const MapaSupervisor = () => {
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
         <div className="bg-card rounded-xl shadow-card overflow-hidden mb-6">
-          <MapContainer
-            center={defaultCenter}
-            zoom={12}
-            className="h-72 w-full z-0"
-            scrollWheelZoom={true}
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <FitBounds guards={guards} />
-            {guards.map(g => (
-              <Marker key={g.id} position={[g.lat, g.lng]} icon={icons[g.status] || icons.activo}>
-                <Popup>
-                  <strong>{g.nombre}</strong><br />
-                  {statusLabels[g.status] || g.status}<br />
-                  <span className="text-xs">{g.lat.toFixed(4)}, {g.lng.toFixed(4)}</span>
-                </Popup>
-              </Marker>
-            ))}
-          </MapContainer>
+          {loading ? (
+            <div className="h-72 flex items-center justify-center">
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            <Suspense fallback={<div className="h-72 flex items-center justify-center"><div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+              <MapView guards={guards} />
+            </Suspense>
+          )}
         </div>
 
         <div className="flex items-center gap-4 mb-4 px-1">
@@ -144,9 +99,7 @@ const MapaSupervisor = () => {
               <div className={`w-3 h-3 rounded-full ${guard.status === 'activo' ? 'bg-success' : 'bg-primary'}`} />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{guard.nombre}</p>
-                <p className="text-xs text-muted-foreground">
-                  {guard.lat.toFixed(4)}, {guard.lng.toFixed(4)}
-                </p>
+                <p className="text-xs text-muted-foreground">{guard.lat.toFixed(4)}, {guard.lng.toFixed(4)}</p>
               </div>
               <span className="text-xs text-muted-foreground">{statusLabels[guard.status] || guard.status}</span>
             </div>

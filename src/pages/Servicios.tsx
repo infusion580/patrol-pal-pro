@@ -13,6 +13,9 @@ interface Checkpoint {
   id: string;
   nombre: string;
   ubicacion: string;
+  lat: number | null;
+  lng: number | null;
+  radius_metros: number;
 }
 
 interface Servicio {
@@ -33,7 +36,7 @@ const Servicios = () => {
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
   const [newService, setNewService] = useState({ nombre: '', cliente: '', direccion: '' });
-  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '' });
+  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
 
   const fetchServicios = async () => {
     const { data: svcs } = await supabase.from('servicios').select('*').order('created_at', { ascending: false });
@@ -47,7 +50,7 @@ const Servicios = () => {
         nombre: s.nombre,
         cliente: s.cliente,
         direccion: s.direccion,
-        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion })),
+        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
       });
     }
     setServicios(serviciosWithCps);
@@ -79,13 +82,20 @@ const Servicios = () => {
 
   const addCheckpoint = async (servicioId: string) => {
     if (!newCheckpoint.nombre.trim()) return;
+    if (!newCheckpoint.lat || !newCheckpoint.lng) {
+      toast({ title: 'Error', description: 'Las coordenadas (lat/lng) son obligatorias.', variant: 'destructive' });
+      return;
+    }
     const { error } = await supabase.from('checkpoints').insert({
       servicio_id: servicioId,
       nombre: newCheckpoint.nombre,
       ubicacion: newCheckpoint.ubicacion,
-    });
+      lat: parseFloat(newCheckpoint.lat),
+      lng: parseFloat(newCheckpoint.lng),
+      radius_metros: parseInt(newCheckpoint.radius) || 50,
+    } as any);
     if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el punto de rondín.', variant: 'destructive' }); return; }
-    setNewCheckpoint({ nombre: '', ubicacion: '' });
+    setNewCheckpoint({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
     setShowAddCheckpoint(null);
     toast({ title: 'Punto de rondín agregado' });
     fetchServicios();
@@ -181,7 +191,13 @@ const Servicios = () => {
                     {showAddCheckpoint === servicio.id && (
                       <div className="bg-accent rounded-lg p-3 space-y-2 mb-2">
                         <Input placeholder="Nombre del punto" value={newCheckpoint.nombre} onChange={e => setNewCheckpoint(p => ({ ...p, nombre: e.target.value }))} className="h-9 text-sm" />
-                        <Input placeholder="Ubicación" value={newCheckpoint.ubicacion} onChange={e => setNewCheckpoint(p => ({ ...p, ubicacion: e.target.value }))} className="h-9 text-sm" />
+                        <Input placeholder="Ubicación (descripción)" value={newCheckpoint.ubicacion} onChange={e => setNewCheckpoint(p => ({ ...p, ubicacion: e.target.value }))} className="h-9 text-sm" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input placeholder="Latitud *" type="number" step="any" value={newCheckpoint.lat} onChange={e => setNewCheckpoint(p => ({ ...p, lat: e.target.value }))} className="h-9 text-sm" />
+                          <Input placeholder="Longitud *" type="number" step="any" value={newCheckpoint.lng} onChange={e => setNewCheckpoint(p => ({ ...p, lng: e.target.value }))} className="h-9 text-sm" />
+                        </div>
+                        <Input placeholder="Radio permitido (metros)" type="number" value={newCheckpoint.radius} onChange={e => setNewCheckpoint(p => ({ ...p, radius: e.target.value }))} className="h-9 text-sm" />
+                        <p className="text-[10px] text-muted-foreground">El guardia debe estar dentro del radio para confirmar el escaneo.</p>
                         <Button size="sm" onClick={() => addCheckpoint(servicio.id)} className="w-full h-8 text-xs">Agregar Punto</Button>
                       </div>
                     )}
@@ -196,6 +212,7 @@ const Servicios = () => {
                             <div className="flex-1 min-w-0">
                               <p className="text-xs font-semibold text-foreground">{cp.nombre}</p>
                               <p className="text-[10px] text-muted-foreground">{cp.ubicacion}</p>
+                              {cp.lat && cp.lng && <p className="text-[10px] text-primary font-mono">📍 {cp.lat.toFixed(5)}, {cp.lng.toFixed(5)} (r:{cp.radius_metros}m)</p>}
                             </div>
                             <button onClick={() => removeCheckpoint(cp.id)} className="p-1 rounded text-muted-foreground hover:text-emergency transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />

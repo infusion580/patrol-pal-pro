@@ -19,6 +19,8 @@ import Metricas from "./pages/Metricas";
 import ReportesSupervisor from "./pages/ReportesSupervisor";
 import Servicios from "./pages/Servicios";
 import NotFound from "./pages/NotFound";
+import GestionRH from "./pages/GestionRH";
+import Notificaciones from "./pages/Notificaciones";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +47,8 @@ const App = () => (
             <Route path="/metricas" element={<Metricas />} />
             <Route path="/reportes-supervisor" element={<ReportesSupervisor />} />
             <Route path="/servicios" element={<Servicios />} />
+            <Route path="/gestion-rh" element={<GestionRH />} />
+            <Route path="/notificaciones" element={<Notificaciones />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
