@@ -13,6 +13,9 @@ interface Checkpoint {
   id: string;
   nombre: string;
   ubicacion: string;
+  lat: number | null;
+  lng: number | null;
+  radius_metros: number;
 }
 
 interface Servicio {
