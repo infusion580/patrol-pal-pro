@@ -79,13 +79,20 @@ const Servicios = () => {
 
   const addCheckpoint = async (servicioId: string) => {
     if (!newCheckpoint.nombre.trim()) return;
+    if (!newCheckpoint.lat || !newCheckpoint.lng) {
+      toast({ title: 'Error', description: 'Las coordenadas (lat/lng) son obligatorias.', variant: 'destructive' });
+      return;
+    }
     const { error } = await supabase.from('checkpoints').insert({
       servicio_id: servicioId,
       nombre: newCheckpoint.nombre,
       ubicacion: newCheckpoint.ubicacion,
-    });
+      lat: parseFloat(newCheckpoint.lat),
+      lng: parseFloat(newCheckpoint.lng),
+      radius_metros: parseInt(newCheckpoint.radius) || 50,
+    } as any);
     if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el punto de rondín.', variant: 'destructive' }); return; }
-    setNewCheckpoint({ nombre: '', ubicacion: '' });
+    setNewCheckpoint({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
     setShowAddCheckpoint(null);
     toast({ title: 'Punto de rondín agregado' });
     fetchServicios();
