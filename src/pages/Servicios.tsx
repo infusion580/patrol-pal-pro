@@ -188,7 +188,13 @@ const Servicios = () => {
                     {showAddCheckpoint === servicio.id && (
                       <div className="bg-accent rounded-lg p-3 space-y-2 mb-2">
                         <Input placeholder="Nombre del punto" value={newCheckpoint.nombre} onChange={e => setNewCheckpoint(p => ({ ...p, nombre: e.target.value }))} className="h-9 text-sm" />
-                        <Input placeholder="Ubicación" value={newCheckpoint.ubicacion} onChange={e => setNewCheckpoint(p => ({ ...p, ubicacion: e.target.value }))} className="h-9 text-sm" />
+                        <Input placeholder="Ubicación (descripción)" value={newCheckpoint.ubicacion} onChange={e => setNewCheckpoint(p => ({ ...p, ubicacion: e.target.value }))} className="h-9 text-sm" />
+                        <div className="grid grid-cols-2 gap-2">
+                          <Input placeholder="Latitud *" type="number" step="any" value={newCheckpoint.lat} onChange={e => setNewCheckpoint(p => ({ ...p, lat: e.target.value }))} className="h-9 text-sm" />
+                          <Input placeholder="Longitud *" type="number" step="any" value={newCheckpoint.lng} onChange={e => setNewCheckpoint(p => ({ ...p, lng: e.target.value }))} className="h-9 text-sm" />
+                        </div>
+                        <Input placeholder="Radio permitido (metros)" type="number" value={newCheckpoint.radius} onChange={e => setNewCheckpoint(p => ({ ...p, radius: e.target.value }))} className="h-9 text-sm" />
+                        <p className="text-[10px] text-muted-foreground">El guardia debe estar dentro del radio para confirmar el escaneo.</p>
                         <Button size="sm" onClick={() => addCheckpoint(servicio.id)} className="w-full h-8 text-xs">Agregar Punto</Button>
                       </div>
                     )}
