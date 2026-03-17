@@ -1,12 +1,32 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
+import L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
 import BottomNav from '@/components/BottomNav';
 
-const statusColors: Record<string, string> = {
-  activo: 'bg-success',
-  completado: 'bg-primary',
+// Fix default marker icons for Leaflet + bundlers
+delete (L.Icon.Default.prototype as any)._getIconUrl;
+L.Icon.Default.mergeOptions({
+  iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon-2x.png',
+  iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-icon.png',
+  shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/images/marker-shadow.png',
+});
+
+const createColorIcon = (color: string) =>
+  new L.DivIcon({
+    className: '',
+    html: `<div style="width:16px;height:16px;border-radius:50%;background:${color};border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,.35)"></div>`,
+    iconSize: [16, 16],
+    iconAnchor: [8, 8],
+    popupAnchor: [0, -12],
+  });
+
+const icons: Record<string, L.DivIcon> = {
+  activo: createColorIcon('#22c55e'),
+  completado: createColorIcon('hsl(var(--primary))'),
 };
 
 const statusLabels: Record<string, string> = {
@@ -14,9 +34,27 @@ const statusLabels: Record<string, string> = {
   completado: 'Completado',
 };
 
+interface Guard {
+  id: string;
+  nombre: string;
+  status: string;
+  lat: number;
+  lng: number;
+}
+
+function FitBounds({ guards }: { guards: Guard[] }) {
+  const map = useMap();
+  useEffect(() => {
+    if (guards.length === 0) return;
+    const bounds = L.latLngBounds(guards.map(g => [g.lat, g.lng]));
+    map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 });
+  }, [guards, map]);
+  return null;
+}
+
 const MapaSupervisor = () => {
   const navigate = useNavigate();
-  const [guards, setGuards] = useState<Array<{ id: string; nombre: string; status: string; lat: number; lng: number }>>([]);
+  const [guards, setGuards] = useState<Guard[]>([]);
 
   useEffect(() => { loadGuards(); }, []);
 
@@ -36,16 +74,19 @@ const MapaSupervisor = () => {
       const seen = new Set<string>();
       setGuards(rondines
         .filter(r => { if (seen.has(r.guardia_id)) return false; seen.add(r.guardia_id); return true; })
+        .filter(r => r.checkin_lat && r.checkin_lng)
         .map(r => ({
           id: r.guardia_id,
           nombre: profileMap.get(r.guardia_id) || 'Guardia',
           status: r.status,
-          lat: r.checkin_lat || 19.43,
-          lng: r.checkin_lng || -99.13,
+          lat: r.checkin_lat!,
+          lng: r.checkin_lng!,
         }))
       );
     }
   };
+
+  const defaultCenter: [number, number] = [19.4326, -99.1332]; // CDMX
 
   return (
     <div className="min-h-screen bg-background pb-20">
@@ -61,26 +102,33 @@ const MapaSupervisor = () => {
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
         <div className="bg-card rounded-xl shadow-card overflow-hidden mb-6">
-          <div className="h-64 bg-accent flex items-center justify-center relative">
-            <div className="text-center">
-              <MapPin className="w-12 h-12 text-primary/30 mx-auto mb-2" />
-              <p className="text-sm text-muted-foreground font-semibold">Mapa Interactivo</p>
-              <p className="text-xs text-muted-foreground">Integración con Google Maps / Mapbox</p>
-            </div>
-            {guards.map((g, i) => (
-              <div
-                key={g.id}
-                className={`absolute w-4 h-4 rounded-full ${statusColors[g.status] || 'bg-primary'} border-2 border-card shadow-sm`}
-                style={{ top: `${30 + i * 15}%`, left: `${20 + i * 18}%` }}
-              />
+          <MapContainer
+            center={defaultCenter}
+            zoom={12}
+            className="h-72 w-full z-0"
+            scrollWheelZoom={true}
+          >
+            <TileLayer
+              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+            />
+            <FitBounds guards={guards} />
+            {guards.map(g => (
+              <Marker key={g.id} position={[g.lat, g.lng]} icon={icons[g.status] || icons.activo}>
+                <Popup>
+                  <strong>{g.nombre}</strong><br />
+                  {statusLabels[g.status] || g.status}<br />
+                  <span className="text-xs">{g.lat.toFixed(4)}, {g.lng.toFixed(4)}</span>
+                </Popup>
+              </Marker>
             ))}
-          </div>
+          </MapContainer>
         </div>
 
         <div className="flex items-center gap-4 mb-4 px-1">
           {Object.entries(statusLabels).map(([key, label]) => (
             <div key={key} className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${statusColors[key]}`} />
+              <div className={`w-2.5 h-2.5 rounded-full ${key === 'activo' ? 'bg-success' : 'bg-primary'}`} />
               <span className="text-xs text-muted-foreground">{label}</span>
             </div>
           ))}
@@ -93,7 +141,7 @@ const MapaSupervisor = () => {
           )}
           {guards.map(guard => (
             <div key={guard.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${statusColors[guard.status] || 'bg-primary'}`} />
+              <div className={`w-3 h-3 rounded-full ${guard.status === 'activo' ? 'bg-success' : 'bg-primary'}`} />
               <div className="flex-1">
                 <p className="text-sm font-semibold text-foreground">{guard.nombre}</p>
                 <p className="text-xs text-muted-foreground">
