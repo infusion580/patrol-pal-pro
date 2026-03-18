@@ -22,6 +22,17 @@ const Notificaciones = () => {
 
   useEffect(() => { loadNotifs(); }, []);
 
+  // Realtime subscription for new notifications
+  useEffect(() => {
+    const channel = supabase
+      .channel('notificaciones-realtime')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones' }, () => {
+        loadNotifs();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const loadNotifs = async () => {
     const { data } = await supabase
       .from('notificaciones')

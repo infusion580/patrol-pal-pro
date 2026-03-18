@@ -59,6 +59,17 @@ const GestionRH = () => {
 
   useEffect(() => { loadData(); }, []);
 
+  // Realtime: refresh when registros_rh changes
+  useEffect(() => {
+    const channel = supabase
+      .channel('registros-rh-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'registros_rh' }, () => {
+        loadData();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const loadData = async () => {
     const [{ data: roles }, { data: profiles }, { data: regs }] = await Promise.all([
       supabase.from('user_roles').select('user_id').eq('role', 'guardia'),

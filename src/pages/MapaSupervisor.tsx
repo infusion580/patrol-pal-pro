@@ -26,6 +26,17 @@ const MapaSupervisor = () => {
 
   useEffect(() => { loadGuards(); }, []);
 
+  // Realtime: refresh when rondines change
+  useEffect(() => {
+    const channel = supabase
+      .channel('rondines-map-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'rondines' }, () => {
+        loadGuards();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const loadGuards = async () => {
     const today = new Date().toISOString().split('T')[0];
     const { data: rondines } = await supabase
