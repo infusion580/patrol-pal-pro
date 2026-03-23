@@ -5,6 +5,7 @@ import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTrian
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
+import ShiftControl from '@/components/ShiftControl';
 
 const GuardDashboard = () => {
   const { user } = useAuth();
