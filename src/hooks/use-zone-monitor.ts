@@ -6,7 +6,7 @@ import { useToast } from '@/hooks/use-toast';
 interface ServiceZone {
   lat: number;
   lng: number;
-  radius: number; // meters
+  radius: number;
 }
 
 function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -17,14 +17,19 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+const COOLDOWN_MS = 60 * 60 * 1000; // 1 hour cooldown
+
 export function useZoneMonitor(servicioId: string | null, zoneCenter?: ServiceZone) {
   const { user } = useAuth();
   const { toast } = useToast();
-  const notifiedRef = useRef(false);
+  const lastNotifiedRef = useRef<number>(0);
   const watchIdRef = useRef<number | null>(null);
 
   const checkZone = useCallback(async (position: GeolocationPosition) => {
-    if (!zoneCenter || !user || notifiedRef.current) return;
+    if (!zoneCenter || !user) return;
+
+    // Cooldown: don't notify more than once per hour
+    if (Date.now() - lastNotifiedRef.current < COOLDOWN_MS) return;
 
     const dist = getDistanceMeters(
       position.coords.latitude,
@@ -34,30 +39,37 @@ export function useZoneMonitor(servicioId: string | null, zoneCenter?: ServiceZo
     );
 
     if (dist > zoneCenter.radius) {
-      notifiedRef.current = true;
+      lastNotifiedRef.current = Date.now();
 
-      // Insert notification for supervisors
-      await supabase.from('notificaciones').insert({
+      const mensaje = `El guardia ${user.nombre} ${user.apellido} salió de la zona del servicio asignado (${Math.round(dist)}m de distancia).`;
+
+      const { error } = await supabase.from('notificaciones').insert({
         tipo: 'zona',
-        mensaje: `El guardia ${user.nombre} ${user.apellido} salió de la zona del servicio asignado (${Math.round(dist)}m de distancia).`,
+        mensaje,
         guardia_id: user.id,
-      } as any);
-
-      toast({
-        title: '⚠️ Fuera de zona',
-        description: 'Has salido de tu zona de servicio. Se notificó al supervisor.',
-        variant: 'destructive',
       });
+
+      if (error) {
+        console.error('Error inserting zone notification:', error);
+      } else {
+        toast({
+          title: '⚠️ Fuera de zona',
+          description: 'Has salido de tu zona de servicio. Se notificó al supervisor.',
+          variant: 'destructive',
+        });
+      }
     }
   }, [zoneCenter, user, toast]);
 
   useEffect(() => {
     if (!servicioId || !zoneCenter || !user || user.role !== 'guardia') return;
 
-    notifiedRef.current = false;
+    lastNotifiedRef.current = 0;
 
     if ('geolocation' in navigator) {
-      watchIdRef.current = navigator.geolocation.watchPosition(checkZone, () => {}, {
+      watchIdRef.current = navigator.geolocation.watchPosition(checkZone, (err) => {
+        console.warn('Geolocation error in zone monitor:', err.message);
+      }, {
         enableHighAccuracy: true,
         maximumAge: 30000,
         timeout: 10000,
@@ -67,6 +79,7 @@ export function useZoneMonitor(servicioId: string | null, zoneCenter?: ServiceZo
     return () => {
       if (watchIdRef.current !== null) {
         navigator.geolocation.clearWatch(watchIdRef.current);
+        watchIdRef.current = null;
       }
     };
   }, [servicioId, zoneCenter, user, checkZone]);
