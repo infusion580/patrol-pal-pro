@@ -481,6 +481,59 @@ export type Database = {
         }
         Relationships: []
       }
+      visitas: {
+        Row: {
+          created_at: string
+          foto_ine_url: string | null
+          foto_placa_url: string | null
+          foto_salida_url: string | null
+          guardia_id: string
+          hora_entrada: string
+          hora_salida: string | null
+          id: string
+          motivo: string
+          nombre_visitante: string
+          servicio_id: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          foto_ine_url?: string | null
+          foto_placa_url?: string | null
+          foto_salida_url?: string | null
+          guardia_id: string
+          hora_entrada?: string
+          hora_salida?: string | null
+          id?: string
+          motivo?: string
+          nombre_visitante: string
+          servicio_id?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          foto_ine_url?: string | null
+          foto_placa_url?: string | null
+          foto_salida_url?: string | null
+          guardia_id?: string
+          hora_entrada?: string
+          hora_salida?: string | null
+          id?: string
+          motivo?: string
+          nombre_visitante?: string
+          servicio_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "visitas_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
