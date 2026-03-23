@@ -5,6 +5,7 @@ import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTrian
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
+import ShiftControl from '@/components/ShiftControl';
 
 const GuardDashboard = () => {
   const { user } = useAuth();
@@ -88,6 +89,8 @@ const GuardDashboard = () => {
             </div>
           )}
         </div>
+
+        <ShiftControl />
 
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Acciones Rápidas</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">
