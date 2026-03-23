@@ -419,6 +419,50 @@ export type Database = {
         }
         Relationships: []
       }
+      turnos: {
+        Row: {
+          comentario_cambio: string | null
+          created_at: string
+          fin: string | null
+          guardia_entrante: string | null
+          guardia_id: string
+          id: string
+          inicio: string
+          servicio_id: string | null
+          status: string
+        }
+        Insert: {
+          comentario_cambio?: string | null
+          created_at?: string
+          fin?: string | null
+          guardia_entrante?: string | null
+          guardia_id: string
+          id?: string
+          inicio?: string
+          servicio_id?: string | null
+          status?: string
+        }
+        Update: {
+          comentario_cambio?: string | null
+          created_at?: string
+          fin?: string | null
+          guardia_entrante?: string | null
+          guardia_id?: string
+          id?: string
+          inicio?: string
+          servicio_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "turnos_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
