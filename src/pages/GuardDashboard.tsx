@@ -90,6 +90,8 @@ const GuardDashboard = () => {
           )}
         </div>
 
+        <ShiftControl />
+
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Acciones Rápidas</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">
           {quickActions.map((action) =>
