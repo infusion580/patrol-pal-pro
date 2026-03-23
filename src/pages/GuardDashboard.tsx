@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
