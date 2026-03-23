@@ -21,6 +21,7 @@ import Servicios from "./pages/Servicios";
 import NotFound from "./pages/NotFound";
 import GestionRH from "./pages/GestionRH";
 import Notificaciones from "./pages/Notificaciones";
+import Visitas from "./pages/Visitas";
 
 const queryClient = new QueryClient();
 
