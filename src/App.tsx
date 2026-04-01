@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import GestionRH from "./pages/GestionRH";
 import Notificaciones from "./pages/Notificaciones";
 import Visitas from "./pages/Visitas";
+import Historial from "./pages/Historial";
 
 const queryClient = new QueryClient();
 
