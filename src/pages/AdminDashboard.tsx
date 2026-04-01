@@ -97,6 +97,19 @@ const AdminDashboard = () => {
     loadData();
   };
 
+  const changeStatus = async (userId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ status: newStatus } as any)
+      .eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo cambiar el estatus.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Estatus actualizado' });
+    loadData();
+  };
+
   const guardiasCount = users.filter(u => u.role === 'guardia').length;
 
   const metrics = [
