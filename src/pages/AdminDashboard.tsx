@@ -14,6 +14,7 @@ interface UserItem {
   role: string;
   email: string;
   servicio_asignado_id: string | null;
+  status: string;
 }
 
 const AdminDashboard = () => {
@@ -45,6 +46,7 @@ const AdminDashboard = () => {
         role: roleMap.get(p.user_id) || 'guardia',
         email: p.email,
         servicio_asignado_id: (p as any).servicio_asignado_id || null,
+        status: (p as any).status || 'activo',
       })));
     }
     setServicios(srvs || []);
@@ -95,6 +97,19 @@ const AdminDashboard = () => {
     loadData();
   };
 
+  const changeStatus = async (userId: string, newStatus: string) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ status: newStatus } as any)
+      .eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo cambiar el estatus.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Estatus actualizado' });
+    loadData();
+  };
+
   const guardiasCount = users.filter(u => u.role === 'guardia').length;
 
   const metrics = [
@@ -108,6 +123,13 @@ const AdminDashboard = () => {
     guardia: { label: 'Guardia', cls: 'bg-primary/10 text-primary' },
     supervisor: { label: 'Supervisor', cls: 'bg-secondary/10 text-secondary' },
     admin: { label: 'Admin', cls: 'bg-emergency/10 text-emergency' },
+  };
+
+  const statusColors: Record<string, { label: string; cls: string }> = {
+    activo: { label: 'Activo', cls: 'bg-success/10 text-success' },
+    vacaciones: { label: 'Vacaciones', cls: 'bg-primary/10 text-primary' },
+    incapacidad: { label: 'Incapacidad', cls: 'bg-warning/10 text-warning' },
+    suspendido: { label: 'Suspendido', cls: 'bg-emergency/10 text-emergency' },
   };
 
   if (loading) {
@@ -179,6 +201,9 @@ const AdminDashboard = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground font-mono">{u.empleado}</span>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${role.cls}`}>{role.label}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${(statusColors[u.status] || statusColors.activo).cls}`}>
+                        {(statusColors[u.status] || statusColors.activo).label}
+                      </span>
                     </div>
                   </div>
                   <button onClick={() => setEditingUser(isEditing ? null : u.id)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
@@ -214,6 +239,19 @@ const AdminDashboard = () => {
                         {servicios.map(s => (
                           <option key={s.id} value={s.id}>{s.nombre}</option>
                         ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Estatus</label>
+                      <select
+                        value={u.status}
+                        onChange={(e) => changeStatus(u.id, e.target.value)}
+                        className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                      >
+                        <option value="activo">Activo</option>
+                        <option value="vacaciones">Vacaciones</option>
+                        <option value="incapacidad">Incapacidad</option>
+                        <option value="suspendido">Suspendido</option>
                       </select>
                     </div>
                   </div>

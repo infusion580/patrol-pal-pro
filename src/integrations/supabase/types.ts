@@ -185,6 +185,7 @@ export type Database = {
           nombre: string
           numero_empleado: string
           servicio_asignado_id: string | null
+          status: string
           updated_at: string
           user_id: string
         }
@@ -197,6 +198,7 @@ export type Database = {
           nombre?: string
           numero_empleado?: string
           servicio_asignado_id?: string | null
+          status?: string
           updated_at?: string
           user_id: string
         }
@@ -209,6 +211,7 @@ export type Database = {
           nombre?: string
           numero_empleado?: string
           servicio_asignado_id?: string | null
+          status?: string
           updated_at?: string
           user_id?: string
         }

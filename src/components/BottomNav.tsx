@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Home, MapPin, FileText, MessageCircle, User, Settings } from 'lucide-react';
+import { Home, MapPin, FileText, MessageCircle, User, Settings, History } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -10,7 +10,7 @@ const BottomNav = () => {
   const guardItems = [
     { path: '/dashboard', icon: Home, label: 'Inicio' },
     { path: '/rondines', icon: MapPin, label: 'Rondines' },
-    { path: '/reportes', icon: FileText, label: 'Reportes' },
+    { path: '/historial', icon: History, label: 'Historial' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];

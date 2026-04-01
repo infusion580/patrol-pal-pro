@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound";
 import GestionRH from "./pages/GestionRH";
 import Notificaciones from "./pages/Notificaciones";
 import Visitas from "./pages/Visitas";
+import Historial from "./pages/Historial";
 
 const queryClient = new QueryClient();
 
@@ -51,6 +52,7 @@ const App = () => (
             <Route path="/gestion-rh" element={<GestionRH />} />
             <Route path="/notificaciones" element={<Notificaciones />} />
             <Route path="/visitas" element={<Visitas />} />
+            <Route path="/historial" element={<Historial />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

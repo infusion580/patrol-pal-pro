@@ -41,7 +41,8 @@ export function useZoneMonitor(servicioId: string | null, zoneCenter?: ServiceZo
     if (dist > zoneCenter.radius) {
       lastNotifiedRef.current = Date.now();
 
-      const mensaje = `El guardia ${user.nombre} ${user.apellido} salió de la zona del servicio asignado (${Math.round(dist)}m de distancia).`;
+      const hora = new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+      const mensaje = `⚠️ El guardia ${user.nombre} ${user.apellido} salió de la zona del servicio asignado a las ${hora}. Distancia detectada: ${Math.round(dist)}m (radio permitido: ${zoneCenter.radius}m). Se recomienda verificar su ubicación.`;
 
       const { error } = await supabase.from('notificaciones').insert({
         tipo: 'zona',
@@ -54,7 +55,7 @@ export function useZoneMonitor(servicioId: string | null, zoneCenter?: ServiceZo
       } else {
         toast({
           title: '⚠️ Fuera de zona',
-          description: 'Has salido de tu zona de servicio. Se notificó al supervisor.',
+          description: `Has salido de tu zona de servicio a las ${hora}. Regresa a tu zona asignada lo antes posible. Se notificó al supervisor.`,
           variant: 'destructive',
         });
       }
@@ -83,4 +84,29 @@ export function useZoneMonitor(servicioId: string | null, zoneCenter?: ServiceZo
       }
     };
   }, [servicioId, zoneCenter, user, checkZone]);
+
+  // Listen for real-time zone notifications sent TO this guard
+  useEffect(() => {
+    if (!user || user.role !== 'guardia') return;
+
+    const channel = supabase
+      .channel('guard-zone-alerts')
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'notificaciones',
+        filter: `guardia_id=eq.${user.id}`,
+      }, (payload: any) => {
+        if (payload.new?.tipo === 'zona') {
+          toast({
+            title: '⚠️ Alerta de zona',
+            description: payload.new.mensaje || 'Se registró una salida de zona.',
+            variant: 'destructive',
+          });
+        }
+      })
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, toast]);
 }
