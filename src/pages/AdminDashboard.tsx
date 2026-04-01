@@ -201,6 +201,9 @@ const AdminDashboard = () => {
                     <div className="flex items-center gap-2">
                       <span className="text-[10px] text-muted-foreground font-mono">{u.empleado}</span>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${role.cls}`}>{role.label}</span>
+                      <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${(statusColors[u.status] || statusColors.activo).cls}`}>
+                        {(statusColors[u.status] || statusColors.activo).label}
+                      </span>
                     </div>
                   </div>
                   <button onClick={() => setEditingUser(isEditing ? null : u.id)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
