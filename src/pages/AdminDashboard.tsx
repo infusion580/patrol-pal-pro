@@ -125,6 +125,13 @@ const AdminDashboard = () => {
     admin: { label: 'Admin', cls: 'bg-emergency/10 text-emergency' },
   };
 
+  const statusColors: Record<string, { label: string; cls: string }> = {
+    activo: { label: 'Activo', cls: 'bg-success/10 text-success' },
+    vacaciones: { label: 'Vacaciones', cls: 'bg-primary/10 text-primary' },
+    incapacidad: { label: 'Incapacidad', cls: 'bg-warning/10 text-warning' },
+    suspendido: { label: 'Suspendido', cls: 'bg-emergency/10 text-emergency' },
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
