@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Home, MapPin, FileText, MessageCircle, User, Settings } from 'lucide-react';
+import { Home, MapPin, FileText, MessageCircle, User, Settings, History } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
