@@ -46,6 +46,7 @@ const AdminDashboard = () => {
         role: roleMap.get(p.user_id) || 'guardia',
         email: p.email,
         servicio_asignado_id: (p as any).servicio_asignado_id || null,
+        status: (p as any).status || 'activo',
       })));
     }
     setServicios(srvs || []);
