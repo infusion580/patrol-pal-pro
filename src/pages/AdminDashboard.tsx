@@ -241,6 +241,19 @@ const AdminDashboard = () => {
                         ))}
                       </select>
                     </div>
+                    <div>
+                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Estatus</label>
+                      <select
+                        value={u.status}
+                        onChange={(e) => changeStatus(u.id, e.target.value)}
+                        className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                      >
+                        <option value="activo">Activo</option>
+                        <option value="vacaciones">Vacaciones</option>
+                        <option value="incapacidad">Incapacidad</option>
+                        <option value="suspendido">Suspendido</option>
+                      </select>
+                    </div>
                   </div>
                 )}
               </div>
