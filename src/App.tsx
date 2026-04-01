@@ -52,6 +52,7 @@ const App = () => (
             <Route path="/gestion-rh" element={<GestionRH />} />
             <Route path="/notificaciones" element={<Notificaciones />} />
             <Route path="/visitas" element={<Visitas />} />
+            <Route path="/historial" element={<Historial />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
