@@ -14,6 +14,7 @@ interface UserItem {
   role: string;
   email: string;
   servicio_asignado_id: string | null;
+  status: string;
 }
 
 const AdminDashboard = () => {
