@@ -23,6 +23,7 @@ import GestionRH from "./pages/GestionRH";
 import Notificaciones from "./pages/Notificaciones";
 import Visitas from "./pages/Visitas";
 import Historial from "./pages/Historial";
+import EstadisticasAdmin from "./pages/EstadisticasAdmin";
 
 const queryClient = new QueryClient();
 
