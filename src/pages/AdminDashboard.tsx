@@ -169,7 +169,7 @@ const AdminDashboard = () => {
           {[
             { icon: Settings, label: 'Servicios', path: '/servicios' },
             { icon: MapPin, label: 'Mapa', path: '/mapa' },
-            { icon: BarChart3, label: 'Métricas', path: '/metricas' },
+            { icon: BarChart3, label: 'Estadísticas', path: '/estadisticas' },
             { icon: FileText, label: 'Reportes', path: '/reportes-supervisor' },
             { icon: Bell, label: 'Alertas', path: '/notificaciones' },
             { icon: UserCog, label: 'Gestión RH', path: '/gestion-rh' },

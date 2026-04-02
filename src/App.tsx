@@ -23,6 +23,7 @@ import GestionRH from "./pages/GestionRH";
 import Notificaciones from "./pages/Notificaciones";
 import Visitas from "./pages/Visitas";
 import Historial from "./pages/Historial";
+import EstadisticasAdmin from "./pages/EstadisticasAdmin";
 
 const queryClient = new QueryClient();
 
@@ -53,6 +54,7 @@ const App = () => (
             <Route path="/notificaciones" element={<Notificaciones />} />
             <Route path="/visitas" element={<Visitas />} />
             <Route path="/historial" element={<Historial />} />
+            <Route path="/estadisticas" element={<EstadisticasAdmin />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
