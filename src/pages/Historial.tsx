@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, FileText, Users, DollarSign, MapPin, AlertTriangle, Clock, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, FileText, Users, DollarSign, MapPin, AlertTriangle, Clock, BarChart3, TrendingUp, TrendingDown, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import ReporteDetailDialog from '@/components/ReporteDetailDialog';
+import VisitaDetailDialog from '@/components/VisitaDetailDialog';
 
 type TabKey = 'estadisticas' | 'reportes' | 'visitas' | 'prestamos' | 'rondines' | 'alertas';
 
