@@ -427,6 +427,8 @@ const Historial = () => {
         )}
       </div>
 
+      <ReporteDetailDialog reporte={selectedReporte} open={!!selectedReporte} onClose={() => setSelectedReporte(null)} />
+      <VisitaDetailDialog visita={selectedVisita} open={!!selectedVisita} onClose={() => setSelectedVisita(null)} />
       <BottomNav />
     </div>
   );
