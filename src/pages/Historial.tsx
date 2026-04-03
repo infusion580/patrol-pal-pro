@@ -36,6 +36,8 @@ const Historial = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<MonthlyStats[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [selectedReporte, setSelectedReporte] = useState<any>(null);
+  const [selectedVisita, setSelectedVisita] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
