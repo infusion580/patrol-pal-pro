@@ -24,6 +24,7 @@ import Notificaciones from "./pages/Notificaciones";
 import Visitas from "./pages/Visitas";
 import Historial from "./pages/Historial";
 import EstadisticasAdmin from "./pages/EstadisticasAdmin";
+import GuardActivityPage from "./pages/GuardActivityPage";
 
 const queryClient = new QueryClient();
 
@@ -55,6 +56,7 @@ const App = () => (
             <Route path="/visitas" element={<Visitas />} />
             <Route path="/historial" element={<Historial />} />
             <Route path="/estadisticas" element={<EstadisticasAdmin />} />
+            <Route path="/actividad-guardia" element={<GuardActivityPage />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
