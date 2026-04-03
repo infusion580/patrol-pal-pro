@@ -1,9 +1,11 @@
 import { useState, useEffect, useMemo } from 'react';
-import { ArrowLeft, FileText, Users, DollarSign, MapPin, AlertTriangle, Clock, BarChart3, TrendingUp, TrendingDown } from 'lucide-react';
+import { ArrowLeft, FileText, Users, DollarSign, MapPin, AlertTriangle, Clock, BarChart3, TrendingUp, TrendingDown, Eye } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import ReporteDetailDialog from '@/components/ReporteDetailDialog';
+import VisitaDetailDialog from '@/components/VisitaDetailDialog';
 
 type TabKey = 'estadisticas' | 'reportes' | 'visitas' | 'prestamos' | 'rondines' | 'alertas';
 
@@ -34,6 +36,8 @@ const Historial = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState<MonthlyStats[]>([]);
   const [statsLoading, setStatsLoading] = useState(true);
+  const [selectedReporte, setSelectedReporte] = useState<any>(null);
+  const [selectedVisita, setSelectedVisita] = useState<any>(null);
 
   useEffect(() => {
     if (user) {
@@ -290,10 +294,13 @@ const Historial = () => {
   };
 
   const renderReportes = () => data.map((r: any) => (
-    <div key={r.id} className="bg-card rounded-xl p-4 shadow-card">
+    <button key={r.id} onClick={() => setSelectedReporte(r)} className="w-full text-left bg-card rounded-xl p-4 shadow-card hover:shadow-elevated transition-shadow">
       <div className="flex items-center justify-between mb-1">
         <p className="font-semibold text-sm text-foreground">Reporte de Turno</p>
-        {statusBadge(r.status)}
+        <div className="flex items-center gap-2">
+          {statusBadge(r.status)}
+          <Eye className="w-3.5 h-3.5 text-primary" />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">{formatDate(r.created_at)}</p>
       {r.actividades && <p className="text-xs text-foreground mt-2 line-clamp-2">{r.actividades}</p>}
@@ -301,24 +308,22 @@ const Historial = () => {
       {r.retroalimentacion && (
         <p className="text-xs text-primary mt-1 italic">Retroalimentación: {r.retroalimentacion}</p>
       )}
-    </div>
+    </button>
   ));
 
   const renderVisitas = () => data.map((v: any) => (
-    <div key={v.id} className="bg-card rounded-xl p-4 shadow-card">
+    <button key={v.id} onClick={() => setSelectedVisita(v)} className="w-full text-left bg-card rounded-xl p-4 shadow-card hover:shadow-elevated transition-shadow">
       <div className="flex items-center justify-between mb-1">
         <p className="font-semibold text-sm text-foreground">{v.nombre_visitante}</p>
-        {statusBadge(v.status)}
+        <div className="flex items-center gap-2">
+          {statusBadge(v.status)}
+          <Eye className="w-3.5 h-3.5 text-primary" />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">Entrada: {formatDate(v.hora_entrada)}</p>
       {v.hora_salida && <p className="text-xs text-muted-foreground">Salida: {formatDate(v.hora_salida)}</p>}
       <p className="text-xs text-foreground mt-1">Motivo: {v.motivo}</p>
-      <div className="flex gap-2 mt-2">
-        {v.foto_ine_url && <a href={v.foto_ine_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline">Ver INE</a>}
-        {v.foto_placa_url && <a href={v.foto_placa_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline">Ver Placa</a>}
-        {v.foto_salida_url && <a href={v.foto_salida_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline">Ver Salida</a>}
-      </div>
-    </div>
+    </button>
   ));
 
   const renderPrestamos = () => data.map((p: any) => {
@@ -422,6 +427,8 @@ const Historial = () => {
         )}
       </div>
 
+      <ReporteDetailDialog reporte={selectedReporte} open={!!selectedReporte} onClose={() => setSelectedReporte(null)} />
+      <VisitaDetailDialog visita={selectedVisita} open={!!selectedVisita} onClose={() => setSelectedVisita(null)} />
       <BottomNav />
     </div>
   );

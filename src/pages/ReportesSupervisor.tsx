@@ -1,18 +1,25 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, XCircle, Clock, FileText, MessageCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Clock, FileText, MessageCircle, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import ReporteDetailDialog from '@/components/ReporteDetailDialog';
 
 interface Report {
   id: string;
   guardia: string;
+  guardia_id: string;
   fecha: string;
   status: string;
   incidencias: string;
+  actividades: string;
+  observaciones: string;
+  firmado: boolean;
+  retroalimentacion: string | null;
+  created_at: string;
 }
 
 const statusConfig: Record<string, { label: string; color: string; bg: string; icon: any }> = {
@@ -28,6 +35,7 @@ const ReportesSupervisor = () => {
   const [filter, setFilter] = useState<'todos' | 'pendiente' | 'aprobado'>('todos');
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedReport, setSelectedReport] = useState<any>(null);
 
   useEffect(() => { loadReports(); }, []);
 
@@ -38,7 +46,6 @@ const ReportesSupervisor = () => {
       .order('created_at', { ascending: false });
 
     if (data) {
-      // Fetch guard profiles
       const guardIds = [...new Set(data.map(r => r.guardia_id))];
       const { data: profiles } = guardIds.length > 0
         ? await supabase.from('profiles').select('user_id, nombre, apellido').in('user_id', guardIds)
@@ -48,28 +55,42 @@ const ReportesSupervisor = () => {
       setReports(data.map(r => ({
         id: r.id,
         guardia: profileMap.get(r.guardia_id) || 'Guardia',
+        guardia_id: r.guardia_id,
         fecha: new Date(r.created_at).toLocaleDateString('es-MX'),
         status: r.status,
         incidencias: r.incidencias,
+        actividades: r.actividades,
+        observaciones: r.observaciones,
+        firmado: r.firmado,
+        retroalimentacion: r.retroalimentacion,
+        created_at: r.created_at,
       })));
     }
     setLoading(false);
   };
 
-  const handleApprove = async (id: string) => {
+  const handleApprove = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     await supabase.from('reportes_turno').update({ status: 'aprobado', revisado_por: user?.id }).eq('id', id);
     toast({ title: '✅ Reporte aprobado' });
     loadReports();
   };
 
-  const handleFeedback = async (id: string) => {
+  const handleFeedback = async (id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
     await supabase.from('reportes_turno').update({ status: 'retroalimentacion', revisado_por: user?.id }).eq('id', id);
     toast({ title: 'Retroalimentación solicitada' });
     loadReports();
   };
 
-  const filtered = filter === 'todos' ? reports : reports.filter(r => r.status === filter);
+  const openReport = (report: Report) => {
+    setSelectedReport({
+      ...report,
+      guardia_nombre: report.guardia,
+    });
+  };
 
+  const filtered = filter === 'todos' ? reports : reports.filter(r => r.status === filter);
   const pendingCount = reports.filter(r => r.status === 'pendiente').length;
 
   if (loading) {
@@ -109,16 +130,19 @@ const ReportesSupervisor = () => {
             const status = statusConfig[report.status] || statusConfig.pendiente;
             const StatusIcon = status.icon;
             return (
-              <div key={report.id} className="bg-card rounded-xl p-4 shadow-card">
+              <button key={report.id} onClick={() => openReport(report)} className="w-full text-left bg-card rounded-xl p-4 shadow-card hover:shadow-elevated transition-shadow">
                 <div className="flex items-start justify-between mb-3">
                   <div>
                     <p className="font-semibold text-sm text-foreground">{report.guardia}</p>
                     <p className="text-xs text-muted-foreground">{report.fecha}</p>
                   </div>
-                  <span className={`text-xs font-semibold px-2 py-1 rounded-full ${status.bg} ${status.color} flex items-center gap-1`}>
-                    <StatusIcon className="w-3 h-3" />
-                    {status.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className={`text-xs font-semibold px-2 py-1 rounded-full ${status.bg} ${status.color} flex items-center gap-1`}>
+                      <StatusIcon className="w-3 h-3" />
+                      {status.label}
+                    </span>
+                    <Eye className="w-4 h-4 text-primary" />
+                  </div>
                 </div>
 
                 <div className="flex items-center gap-2 text-xs text-muted-foreground mb-3">
@@ -126,22 +150,27 @@ const ReportesSupervisor = () => {
                   <span>{report.incidencias ? 'Con incidencias' : 'Sin incidencias'}</span>
                 </div>
 
+                {report.actividades && (
+                  <p className="text-xs text-foreground line-clamp-2 mb-3">{report.actividades}</p>
+                )}
+
                 {report.status === 'pendiente' && (
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 h-9 text-xs bg-success text-success-foreground hover:bg-success/90" onClick={() => handleApprove(report.id)}>
+                    <Button size="sm" className="flex-1 h-9 text-xs bg-success text-success-foreground hover:bg-success/90" onClick={(e) => handleApprove(report.id, e)}>
                       <CheckCircle2 className="w-3 h-3 mr-1" /> Aprobar
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs" onClick={() => handleFeedback(report.id)}>
+                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs" onClick={(e) => handleFeedback(report.id, e)}>
                       <MessageCircle className="w-3 h-3 mr-1" /> Retroalimentar
                     </Button>
                   </div>
                 )}
-              </div>
+              </button>
             );
           })}
         </div>
       </div>
 
+      <ReporteDetailDialog reporte={selectedReport} open={!!selectedReport} onClose={() => setSelectedReport(null)} />
       <BottomNav />
     </div>
   );

@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -206,6 +206,9 @@ const AdminDashboard = () => {
                       </span>
                     </div>
                   </div>
+                  <button onClick={() => navigate(`/actividad-guardia?id=${u.id}&name=${encodeURIComponent(u.nombre)}`)} className="p-2 rounded-lg text-muted-foreground hover:text-success hover:bg-success/10 transition-colors" title="Ver actividad">
+                    <Eye className="w-4 h-4" />
+                  </button>
                   <button onClick={() => setEditingUser(isEditing ? null : u.id)} className="p-2 rounded-lg text-muted-foreground hover:text-primary hover:bg-primary/10 transition-colors">
                     <UserCog className="w-4 h-4" />
                   </button>
