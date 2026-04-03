@@ -312,20 +312,18 @@ const Historial = () => {
   ));
 
   const renderVisitas = () => data.map((v: any) => (
-    <div key={v.id} className="bg-card rounded-xl p-4 shadow-card">
+    <button key={v.id} onClick={() => setSelectedVisita(v)} className="w-full text-left bg-card rounded-xl p-4 shadow-card hover:shadow-elevated transition-shadow">
       <div className="flex items-center justify-between mb-1">
         <p className="font-semibold text-sm text-foreground">{v.nombre_visitante}</p>
-        {statusBadge(v.status)}
+        <div className="flex items-center gap-2">
+          {statusBadge(v.status)}
+          <Eye className="w-3.5 h-3.5 text-primary" />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">Entrada: {formatDate(v.hora_entrada)}</p>
       {v.hora_salida && <p className="text-xs text-muted-foreground">Salida: {formatDate(v.hora_salida)}</p>}
       <p className="text-xs text-foreground mt-1">Motivo: {v.motivo}</p>
-      <div className="flex gap-2 mt-2">
-        {v.foto_ine_url && <a href={v.foto_ine_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline">Ver INE</a>}
-        {v.foto_placa_url && <a href={v.foto_placa_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline">Ver Placa</a>}
-        {v.foto_salida_url && <a href={v.foto_salida_url} target="_blank" rel="noopener noreferrer" className="text-[10px] text-primary underline">Ver Salida</a>}
-      </div>
-    </div>
+    </button>
   ));
 
   const renderPrestamos = () => data.map((p: any) => {
