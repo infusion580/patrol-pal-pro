@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, CheckCircle2, XCircle, Clock, FileText, MessageCircle, Eye } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, XCircle, Clock, FileText, MessageCircle, Eye, Send } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -36,6 +38,10 @@ const ReportesSupervisor = () => {
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<any>(null);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [feedbackReportId, setFeedbackReportId] = useState<string | null>(null);
+  const [feedbackText, setFeedbackText] = useState('');
+  const [sendingFeedback, setSendingFeedback] = useState(false);
 
   useEffect(() => { loadReports(); }, []);
 
@@ -76,10 +82,24 @@ const ReportesSupervisor = () => {
     loadReports();
   };
 
-  const handleFeedback = async (id: string, e: React.MouseEvent) => {
+  const openFeedbackDialog = (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await supabase.from('reportes_turno').update({ status: 'retroalimentacion', revisado_por: user?.id }).eq('id', id);
-    toast({ title: 'Retroalimentación solicitada' });
+    setFeedbackReportId(id);
+    setFeedbackText('');
+    setFeedbackDialogOpen(true);
+  };
+
+  const handleSendFeedback = async () => {
+    if (!feedbackReportId || !feedbackText.trim()) return;
+    setSendingFeedback(true);
+    await supabase.from('reportes_turno').update({
+      status: 'retroalimentacion',
+      revisado_por: user?.id,
+      retroalimentacion: feedbackText.trim(),
+    }).eq('id', feedbackReportId);
+    toast({ title: '📝 Retroalimentación enviada' });
+    setFeedbackDialogOpen(false);
+    setSendingFeedback(false);
     loadReports();
   };
 
@@ -154,12 +174,19 @@ const ReportesSupervisor = () => {
                   <p className="text-xs text-foreground line-clamp-2 mb-3">{report.actividades}</p>
                 )}
 
+                {report.retroalimentacion && report.status === 'retroalimentacion' && (
+                  <div className="bg-emergency/5 border border-emergency/20 rounded-lg p-2 mb-3">
+                    <p className="text-xs font-semibold text-emergency mb-1">Retroalimentación:</p>
+                    <p className="text-xs text-foreground">{report.retroalimentacion}</p>
+                  </div>
+                )}
+
                 {report.status === 'pendiente' && (
                   <div className="flex gap-2">
                     <Button size="sm" className="flex-1 h-9 text-xs bg-success text-success-foreground hover:bg-success/90" onClick={(e) => handleApprove(report.id, e)}>
                       <CheckCircle2 className="w-3 h-3 mr-1" /> Aprobar
                     </Button>
-                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs" onClick={(e) => handleFeedback(report.id, e)}>
+                    <Button size="sm" variant="outline" className="flex-1 h-9 text-xs" onClick={(e) => openFeedbackDialog(report.id, e)}>
                       <MessageCircle className="w-3 h-3 mr-1" /> Retroalimentar
                     </Button>
                   </div>
@@ -169,6 +196,37 @@ const ReportesSupervisor = () => {
           })}
         </div>
       </div>
+
+      <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <MessageCircle className="w-5 h-5 text-primary" />
+              Escribir retroalimentación
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Describe los cambios o correcciones que el guardia debe realizar en su reporte.
+            </p>
+            <Textarea
+              placeholder="Ej: Falta detallar la hora exacta de la incidencia reportada en el acceso principal..."
+              value={feedbackText}
+              onChange={(e) => setFeedbackText(e.target.value)}
+              rows={4}
+              maxLength={1000}
+            />
+            <p className="text-xs text-muted-foreground text-right">{feedbackText.length}/1000</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFeedbackDialogOpen(false)}>Cancelar</Button>
+            <Button onClick={handleSendFeedback} disabled={!feedbackText.trim() || sendingFeedback}>
+              <Send className="w-4 h-4 mr-1" />
+              {sendingFeedback ? 'Enviando...' : 'Enviar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ReporteDetailDialog reporte={selectedReport} open={!!selectedReport} onClose={() => setSelectedReport(null)} />
       <BottomNav />
