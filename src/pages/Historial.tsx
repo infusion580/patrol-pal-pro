@@ -294,10 +294,13 @@ const Historial = () => {
   };
 
   const renderReportes = () => data.map((r: any) => (
-    <div key={r.id} className="bg-card rounded-xl p-4 shadow-card">
+    <button key={r.id} onClick={() => setSelectedReporte(r)} className="w-full text-left bg-card rounded-xl p-4 shadow-card hover:shadow-elevated transition-shadow">
       <div className="flex items-center justify-between mb-1">
         <p className="font-semibold text-sm text-foreground">Reporte de Turno</p>
-        {statusBadge(r.status)}
+        <div className="flex items-center gap-2">
+          {statusBadge(r.status)}
+          <Eye className="w-3.5 h-3.5 text-primary" />
+        </div>
       </div>
       <p className="text-xs text-muted-foreground">{formatDate(r.created_at)}</p>
       {r.actividades && <p className="text-xs text-foreground mt-2 line-clamp-2">{r.actividades}</p>}
@@ -305,7 +308,7 @@ const Historial = () => {
       {r.retroalimentacion && (
         <p className="text-xs text-primary mt-1 italic">Retroalimentación: {r.retroalimentacion}</p>
       )}
-    </div>
+    </button>
   ));
 
   const renderVisitas = () => data.map((v: any) => (
