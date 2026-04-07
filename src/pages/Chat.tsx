@@ -1,10 +1,19 @@
-import { useState, useEffect } from 'react';
-import { ArrowLeft, Send, Image, CheckCheck } from 'lucide-react';
+import { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, Send, Users, User, Shield } from 'lucide-react';
 import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+
+interface ChatContact {
+  user_id: string;
+  nombre: string;
+  apellido: string;
+  role: string;
+  unread: number;
+}
 
 interface Message {
   id: string;
@@ -12,118 +21,256 @@ interface Message {
   sender: 'me' | 'other';
   time: string;
   read: boolean;
+  created_at: string;
 }
 
 const Chat = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [contacts, setContacts] = useState<ChatContact[]>([]);
+  const [selectedContact, setSelectedContact] = useState<ChatContact | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
-  const [supervisorName, setSupervisorName] = useState('Supervisor');
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!user) return;
-    loadMessages();
-
-    // Subscribe to new messages
-    const channel = supabase.
-    channel('chat-messages').
-    on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, () => {
-      loadMessages();
-    }).
-    subscribe();
-
-    return () => {supabase.removeChannel(channel);};
+    loadContacts();
   }, [user]);
 
-  const loadMessages = async () => {
+  useEffect(() => {
     if (!user) return;
-    const { data } = await supabase.
-    from('chat_messages').
-    select('*').
-    or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`).
-    order('created_at', { ascending: true });
+    const channel = supabase
+      .channel('chat-messages-rt')
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload: any) => {
+        if (selectedContact && (payload.new.sender_id === selectedContact.user_id || payload.new.receiver_id === selectedContact.user_id)) {
+          loadMessages(selectedContact.user_id);
+        }
+        loadContacts();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user, selectedContact]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadContacts = async () => {
+    if (!user) return;
+
+    // Get users based on role hierarchy
+    const { data: profiles } = await supabase.from('profiles').select('user_id, nombre, apellido');
+    const { data: roles } = await supabase.from('user_roles').select('user_id, role');
+
+    if (!profiles || !roles) { setLoading(false); return; }
+
+    const roleMap = new Map(roles.map(r => [r.user_id, r.role]));
+
+    // Filter contacts by role rules
+    let filtered = profiles.filter(p => p.user_id !== user.id);
+    if (user.role === 'guardia') {
+      // Guards can only chat with supervisors
+      filtered = filtered.filter(p => roleMap.get(p.user_id) === 'supervisor');
+    } else if (user.role === 'supervisor') {
+      // Supervisors can chat with guards and admins
+      filtered = filtered.filter(p => roleMap.get(p.user_id) === 'guardia' || roleMap.get(p.user_id) === 'admin');
+    }
+    // Admin can chat with everyone
+
+    // Get unread counts
+    const { data: unreadData } = await supabase
+      .from('chat_messages')
+      .select('sender_id')
+      .eq('receiver_id', user.id)
+      .eq('read', false);
+
+    const unreadMap: Record<string, number> = {};
+    unreadData?.forEach(m => { unreadMap[m.sender_id] = (unreadMap[m.sender_id] || 0) + 1; });
+
+    const contactList: ChatContact[] = filtered.map(p => ({
+      user_id: p.user_id,
+      nombre: p.nombre,
+      apellido: p.apellido,
+      role: roleMap.get(p.user_id) || 'guardia',
+      unread: unreadMap[p.user_id] || 0,
+    })).sort((a, b) => b.unread - a.unread);
+
+    setContacts(contactList);
+    setLoading(false);
+  };
+
+  const loadMessages = async (contactId: string) => {
+    if (!user) return;
+    const { data } = await supabase
+      .from('chat_messages')
+      .select('*')
+      .or(`and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`)
+      .order('created_at', { ascending: true });
 
     if (data) {
-      setMessages(data.map((m) => ({
+      setMessages(data.map(m => ({
         id: m.id,
         text: m.message,
-        sender: m.sender_id === user.id ? 'me' : 'other',
+        sender: m.sender_id === user.id ? 'me' as const : 'other' as const,
         time: new Date(m.created_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
-        read: m.read
+        read: m.read,
+        created_at: m.created_at,
       })));
+
+      // Mark received messages as read
+      const unreadIds = data.filter(m => m.receiver_id === user.id && !m.read).map(m => m.id);
+      if (unreadIds.length > 0) {
+        await supabase.from('chat_messages').update({ read: true }).in('id', unreadIds);
+      }
     }
+  };
+
+  const selectContact = (contact: ChatContact) => {
+    setSelectedContact(contact);
+    loadMessages(contact.user_id);
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !user) return;
-    // For now, send to a generic receiver - in production this would be the assigned supervisor
+    if (!input.trim() || !user || !selectedContact) return;
     const { error } = await supabase.from('chat_messages').insert({
       sender_id: user.id,
-      receiver_id: user.id, // placeholder - should be supervisor's ID
-      message: input
+      receiver_id: selectedContact.user_id,
+      message: input,
     });
     if (!error) {
       setInput('');
-      loadMessages();
+      loadMessages(selectedContact.user_id);
     }
   };
 
+  const getRoleIcon = (role: string) => {
+    if (role === 'admin') return <Shield className="w-3.5 h-3.5 text-primary" />;
+    if (role === 'supervisor') return <Users className="w-3.5 h-3.5 text-success" />;
+    return <User className="w-3.5 h-3.5 text-muted-foreground" />;
+  };
+
+  const getRoleLabel = (role: string) => {
+    if (role === 'admin') return 'Administrador';
+    if (role === 'supervisor') return 'Supervisor';
+    return 'Guardia';
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  // Contact list view
+  if (!selectedContact) {
+    return (
+      <div className="min-h-screen bg-background pb-20">
+        <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl bg-destructive">
+          <div className="max-w-lg mx-auto">
+            <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
+              <ArrowLeft className="w-4 h-4" /> Regresar
+            </button>
+            <h1 className="text-xl font-display font-bold">Chat Operativo</h1>
+            <p className="text-sm opacity-70 mt-1">Mensajes por rol</p>
+          </div>
+        </div>
+
+        <div className="max-w-lg mx-auto px-4 -mt-4 space-y-2">
+          {contacts.length === 0 && (
+            <div className="bg-card rounded-xl p-8 shadow-card text-center">
+              <Users className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
+              <p className="text-sm text-muted-foreground">No hay contactos disponibles</p>
+            </div>
+          )}
+          {contacts.map(c => (
+            <button
+              key={c.user_id}
+              onClick={() => selectContact(c)}
+              className="w-full bg-card rounded-xl p-4 shadow-card flex items-center gap-3 text-left hover:shadow-elevated transition-shadow"
+            >
+              <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
+                <span className="text-sm font-bold text-foreground">{c.nombre[0]}{c.apellido[0]}</span>
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-foreground truncate">{c.nombre} {c.apellido}</p>
+                <div className="flex items-center gap-1">
+                  {getRoleIcon(c.role)}
+                  <span className="text-[10px] text-muted-foreground">{getRoleLabel(c.role)}</span>
+                </div>
+              </div>
+              {c.unread > 0 && (
+                <div className="w-5 h-5 rounded-full bg-emergency flex items-center justify-center shrink-0">
+                  <span className="text-[10px] font-bold text-primary-foreground">{c.unread}</span>
+                </div>
+              )}
+            </button>
+          ))}
+        </div>
+        <BottomNav />
+      </div>
+    );
+  }
+
+  // Chat conversation view
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="text-primary-foreground px-4 pt-12 pb-4 bg-destructive">
         <div className="max-w-lg mx-auto flex items-center gap-3">
-          <button onClick={() => navigate('/dashboard')}>
+          <button onClick={() => { setSelectedContact(null); setMessages([]); loadContacts(); }}>
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-            <span className="text-sm font-bold">SV</span>
+            <span className="text-sm font-bold">{selectedContact.nombre[0]}{selectedContact.apellido[0]}</span>
           </div>
           <div>
-            <p className="font-display font-bold text-sm">Chat con Supervisor</p>
-            <p className="text-xs opacity-70">Mensajes en tiempo real</p>
+            <p className="font-display font-bold text-sm">{selectedContact.nombre} {selectedContact.apellido}</p>
+            <div className="flex items-center gap-1">
+              {getRoleIcon(selectedContact.role)}
+              <span className="text-xs opacity-70">{getRoleLabel(selectedContact.role)}</span>
+            </div>
           </div>
         </div>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 py-4 max-w-lg mx-auto w-full space-y-3">
-        {messages.length === 0 &&
-        <div className="text-center py-12">
+        {messages.length === 0 && (
+          <div className="text-center py-12">
             <p className="text-sm text-muted-foreground">No hay mensajes aún</p>
             <p className="text-xs text-muted-foreground">Envía un mensaje para iniciar la conversación</p>
           </div>
-        }
-        {messages.map((msg) =>
-        <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
+        )}
+        {messages.map(msg => (
+          <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
             <div className={`max-w-[80%] rounded-2xl px-4 py-2.5 ${
-          msg.sender === 'me' ?
-          'bg-primary text-primary-foreground rounded-br-md' :
-          'bg-card text-foreground shadow-card rounded-bl-md'}`
-          }>
+              msg.sender === 'me'
+                ? 'bg-primary text-primary-foreground rounded-br-md'
+                : 'bg-card text-foreground shadow-card rounded-bl-md'
+            }`}>
               <p className="text-sm">{msg.text}</p>
               <div className={`flex items-center justify-end gap-1 mt-1 ${
-            msg.sender === 'me' ? 'text-primary-foreground/60' : 'text-muted-foreground'}`
-            }>
+                msg.sender === 'me' ? 'text-primary-foreground/60' : 'text-muted-foreground'
+              }`}>
                 <span className="text-[10px]">{msg.time}</span>
-                {msg.sender === 'me' && <CheckCheck className="w-3 h-3" />}
               </div>
             </div>
           </div>
-        )}
+        ))}
+        <div ref={messagesEndRef} />
       </div>
 
       <div className="bg-card border-t border-border px-4 py-3 mb-16">
         <div className="max-w-lg mx-auto flex items-center gap-2">
-          <button className="text-muted-foreground hover:text-foreground p-2">
-            <Image className="w-5 h-5" />
-          </button>
           <Input
             placeholder="Escribe un mensaje..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
-            className="flex-1 h-10" />
-          
+            className="flex-1 h-10"
+          />
           <button onClick={sendMessage} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors">
             <Send className="w-4 h-4" />
           </button>
@@ -131,8 +278,8 @@ const Chat = () => {
       </div>
 
       <BottomNav />
-    </div>);
-
+    </div>
+  );
 };
 
 export default Chat;

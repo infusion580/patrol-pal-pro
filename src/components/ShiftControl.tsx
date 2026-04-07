@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { notifyTurnoInicio, notifyTurnoFin } from '@/lib/notification-helpers';
 
 interface Turno {
   id: string;
@@ -58,6 +59,7 @@ const ShiftControl = () => {
     if (!error && data) {
       setActiveTurno(data);
       toast({ title: '✅ Turno iniciado', description: 'Tu turno ha sido registrado exitosamente.' });
+      notifyTurnoInicio(user.id, `${user.nombre} ${user.apellido}`);
     }
   };
 
@@ -76,6 +78,7 @@ const ShiftControl = () => {
       setComentario('');
       setGuardiaEntrante('');
       toast({ title: '✅ Cambio de turno', description: 'Tu turno ha sido finalizado y el cambio registrado.' });
+      notifyTurnoFin(user.id, `${user.nombre} ${user.apellido}`);
     }
   };
 
