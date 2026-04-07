@@ -8,6 +8,7 @@ import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
+import { notifyRondinRegistro } from '@/lib/notification-helpers';
 
 interface CheckpointItem {
   id: string;
@@ -127,6 +128,8 @@ const Rondines = () => {
       if (data) {
         setRondinId(data.id);
         setCheckedIn(true);
+        const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+        notifyRondinRegistro(user.id, `${user.nombre} ${user.apellido}`, svcName);
       }
     }
   };
