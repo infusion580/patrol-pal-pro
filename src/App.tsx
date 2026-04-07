@@ -12,6 +12,7 @@ import Dashboard from "./pages/Dashboard";
 import Rondines from "./pages/Rondines";
 import ReporteTurno from "./pages/ReporteTurno";
 import Chat from "./pages/Chat";
+import DashboardOperativo from "./pages/DashboardOperativo";
 import ChatRH from "./pages/ChatRH";
 import Perfil from "./pages/Perfil";
 import MapaSupervisor from "./pages/MapaSupervisor";
@@ -57,6 +58,7 @@ const App = () => (
             <Route path="/historial" element={<Historial />} />
             <Route path="/estadisticas" element={<EstadisticasAdmin />} />
             <Route path="/actividad-guardia" element={<GuardActivityPage />} />
+            <Route path="/dashboard-operativo" element={<DashboardOperativo />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

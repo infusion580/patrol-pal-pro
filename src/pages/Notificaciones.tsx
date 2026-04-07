@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, AlertTriangle, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, Bell, AlertTriangle, CheckCircle2, MapPin, Clock, Shield, Filter } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -14,15 +14,24 @@ interface Notificacion {
   guardia_nombre?: string;
 }
 
+const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: string; label: string }> = {
+  zona: { icon: MapPin, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Salida de Zona' },
+  turno_inicio: { icon: CheckCircle2, color: 'text-success', bgColor: 'bg-success/10', label: 'Inicio de Turno' },
+  turno_fin: { icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', label: 'Fin de Turno' },
+  rondin: { icon: MapPin, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Rondín' },
+  incidencia: { icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Incidencia' },
+  emergencia: { icon: Shield, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Emergencia' },
+};
+
 const Notificaciones = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [notifs, setNotifs] = useState<Notificacion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [filterTipo, setFilterTipo] = useState<string>('all');
 
   useEffect(() => { loadNotifs(); }, []);
 
-  // Realtime subscription for new notifications
   useEffect(() => {
     const channel = supabase
       .channel('notificaciones-realtime')
@@ -38,7 +47,7 @@ const Notificaciones = () => {
       .from('notificaciones')
       .select('*')
       .order('created_at', { ascending: false })
-      .limit(50);
+      .limit(100);
 
     if (data && data.length > 0) {
       const guardiaIds = [...new Set(data.map(n => n.guardia_id))];
@@ -62,6 +71,9 @@ const Notificaciones = () => {
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
   };
 
+  const filtered = filterTipo === 'all' ? notifs : notifs.filter(n => n.tipo === filterTipo);
+  const tipos = ['all', ...new Set(notifs.map(n => n.tipo))];
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
@@ -82,32 +94,57 @@ const Notificaciones = () => {
         </div>
       </div>
 
-      <div className="max-w-lg mx-auto px-4 -mt-4 space-y-2">
-        {notifs.length === 0 && (
+      <div className="max-w-lg mx-auto px-4 -mt-4 space-y-3">
+        {/* Filters */}
+        <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
+          {tipos.map(t => (
+            <button
+              key={t}
+              onClick={() => setFilterTipo(t)}
+              className={`px-3 py-1 rounded-full text-[10px] font-semibold whitespace-nowrap transition-colors ${
+                filterTipo === t ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}
+            >
+              {t === 'all' ? 'Todas' : tipoConfig[t]?.label || t}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 && (
           <div className="bg-card rounded-xl p-8 shadow-card text-center">
             <Bell className="w-10 h-10 text-muted-foreground mx-auto mb-2" />
             <p className="text-sm text-muted-foreground">Sin notificaciones</p>
           </div>
         )}
 
-        {notifs.map(n => (
-          <div
-            key={n.id}
-            onClick={() => !n.leida && markRead(n.id)}
-            className={`bg-card rounded-xl p-4 shadow-card flex items-start gap-3 cursor-pointer transition-opacity ${n.leida ? 'opacity-60' : ''}`}
-          >
-            <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${n.tipo === 'zona' ? 'bg-emergency/10' : 'bg-warning/10'}`}>
-              <AlertTriangle className={`w-4 h-4 ${n.tipo === 'zona' ? 'text-emergency' : 'text-warning'}`} />
+        {filtered.map(n => {
+          const cfg = tipoConfig[n.tipo] || tipoConfig.zona;
+          const Icon = cfg.icon;
+          return (
+            <div
+              key={n.id}
+              onClick={() => !n.leida && markRead(n.id)}
+              className={`bg-card rounded-xl p-4 shadow-card flex items-start gap-3 cursor-pointer transition-opacity ${n.leida ? 'opacity-60' : ''}`}
+            >
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${cfg.bgColor}`}>
+                <Icon className={`w-4 h-4 ${cfg.color}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 mb-0.5">
+                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${cfg.bgColor} ${cfg.color}`}>
+                    {cfg.label}
+                  </span>
+                </div>
+                <p className="text-sm text-foreground whitespace-pre-line">{n.mensaje}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {new Date(n.created_at).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                  {n.guardia_nombre && ` · ${n.guardia_nombre}`}
+                </p>
+              </div>
+              {!n.leida && <div className="w-2.5 h-2.5 rounded-full bg-emergency shrink-0 mt-1" />}
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-foreground">{n.mensaje}</p>
-              <p className="text-[10px] text-muted-foreground mt-1">
-                {new Date(n.created_at).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-              </p>
-            </div>
-            {!n.leida && <div className="w-2.5 h-2.5 rounded-full bg-emergency shrink-0 mt-1" />}
-          </div>
-        ))}
+          );
+        })}
       </div>
 
       <BottomNav />
