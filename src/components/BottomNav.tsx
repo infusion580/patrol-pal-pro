@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Home, MapPin, FileText, MessageCircle, User, Settings, History } from 'lucide-react';
+import { Home, MapPin, FileText, MessageCircle, User, Settings, History, BarChart3 } from 'lucide-react';
 
 const BottomNav = () => {
   const location = useLocation();
@@ -17,7 +17,7 @@ const BottomNav = () => {
 
   const supervisorItems = [
     { path: '/dashboard', icon: Home, label: 'Panel' },
-    { path: '/mapa', icon: MapPin, label: 'Mapa' },
+    { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
     { path: '/reportes', icon: FileText, label: 'Reportes' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
@@ -25,9 +25,9 @@ const BottomNav = () => {
 
   const adminItems = [
     { path: '/dashboard', icon: Home, label: 'Panel' },
+    { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
     { path: '/servicios', icon: Settings, label: 'Servicios' },
-    { path: '/mapa', icon: MapPin, label: 'Mapa' },
-    { path: '/metricas', icon: FileText, label: 'Métricas' },
+    { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];
 
