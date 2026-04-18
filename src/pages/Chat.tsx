@@ -1,10 +1,10 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { ArrowLeft, Send, Users, User, Shield } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
+import { toast } from 'sonner';
 import BottomNav from '@/components/BottomNav';
 
 interface ChatContact {
@@ -32,54 +32,29 @@ const Chat = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const selectedContactRef = useRef<ChatContact | null>(null);
 
+  // Keep ref in sync so realtime handler always sees the current selection
   useEffect(() => {
+    selectedContactRef.current = selectedContact;
+  }, [selectedContact]);
+
+  const loadContacts = useCallback(async () => {
     if (!user) return;
-    loadContacts();
-  }, [user]);
-
-  useEffect(() => {
-    if (!user) return;
-    const channel = supabase
-      .channel('chat-messages-rt')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'chat_messages' }, (payload: any) => {
-        if (selectedContact && (payload.new.sender_id === selectedContact.user_id || payload.new.receiver_id === selectedContact.user_id)) {
-          loadMessages(selectedContact.user_id);
-        }
-        loadContacts();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [user, selectedContact]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
-
-  const loadContacts = async () => {
-    if (!user) return;
-
-    // Get users based on role hierarchy
     const { data: profiles } = await supabase.from('profiles').select('user_id, nombre, apellido');
     const { data: roles } = await supabase.from('user_roles').select('user_id, role');
-
     if (!profiles || !roles) { setLoading(false); return; }
 
     const roleMap = new Map(roles.map(r => [r.user_id, r.role]));
-
-    // Filter contacts by role rules
     let filtered = profiles.filter(p => p.user_id !== user.id);
     if (user.role === 'guardia') {
-      // Guards can only chat with supervisors
-      filtered = filtered.filter(p => roleMap.get(p.user_id) === 'supervisor');
+      filtered = filtered.filter(p => roleMap.get(p.user_id) === 'supervisor' || roleMap.get(p.user_id) === 'admin');
     } else if (user.role === 'supervisor') {
-      // Supervisors can chat with guards and admins
       filtered = filtered.filter(p => roleMap.get(p.user_id) === 'guardia' || roleMap.get(p.user_id) === 'admin');
     }
-    // Admin can chat with everyone
 
-    // Get unread counts
     const { data: unreadData } = await supabase
       .from('chat_messages')
       .select('sender_id')
@@ -95,19 +70,27 @@ const Chat = () => {
       apellido: p.apellido,
       role: roleMap.get(p.user_id) || 'guardia',
       unread: unreadMap[p.user_id] || 0,
-    })).sort((a, b) => b.unread - a.unread);
+    })).sort((a, b) => {
+      if (b.unread !== a.unread) return b.unread - a.unread;
+      return a.nombre.localeCompare(b.nombre);
+    });
 
     setContacts(contactList);
     setLoading(false);
-  };
+  }, [user]);
 
-  const loadMessages = async (contactId: string) => {
+  const loadMessages = useCallback(async (contactId: string) => {
     if (!user) return;
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('chat_messages')
       .select('*')
       .or(`and(sender_id.eq.${user.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${user.id})`)
       .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('loadMessages error:', error);
+      return;
+    }
 
     if (data) {
       setMessages(data.map(m => ({
@@ -119,13 +102,52 @@ const Chat = () => {
         created_at: m.created_at,
       })));
 
-      // Mark received messages as read
       const unreadIds = data.filter(m => m.receiver_id === user.id && !m.read).map(m => m.id);
       if (unreadIds.length > 0) {
         await supabase.from('chat_messages').update({ read: true }).in('id', unreadIds);
       }
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadContacts();
+  }, [user, loadContacts]);
+
+  // Single subscription for the lifetime of the page (does not depend on selectedContact)
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`chat-rt-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `receiver_id=eq.${user.id}` },
+        (payload: any) => {
+          const current = selectedContactRef.current;
+          if (current && payload.new.sender_id === current.user_id) {
+            loadMessages(current.user_id);
+          }
+          loadContacts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'chat_messages', filter: `sender_id=eq.${user.id}` },
+        (payload: any) => {
+          const current = selectedContactRef.current;
+          if (current && payload.new.receiver_id === current.user_id) {
+            loadMessages(current.user_id);
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [user, loadContacts, loadMessages]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
   const selectContact = (contact: ChatContact) => {
     setSelectedContact(contact);
@@ -133,16 +155,22 @@ const Chat = () => {
   };
 
   const sendMessage = async () => {
-    if (!input.trim() || !user || !selectedContact) return;
+    const text = input.trim();
+    if (!text || !user || !selectedContact || sending) return;
+    setSending(true);
     const { error } = await supabase.from('chat_messages').insert({
       sender_id: user.id,
       receiver_id: selectedContact.user_id,
-      message: input,
+      message: text,
     });
-    if (!error) {
+    if (error) {
+      console.error('sendMessage error:', error);
+      toast.error('No se pudo enviar el mensaje');
+    } else {
       setInput('');
       loadMessages(selectedContact.user_id);
     }
+    setSending(false);
   };
 
   const getRoleIcon = (role: string) => {
@@ -165,7 +193,6 @@ const Chat = () => {
     );
   }
 
-  // Contact list view
   if (!selectedContact) {
     return (
       <div className="min-h-screen bg-background pb-20">
@@ -193,7 +220,9 @@ const Chat = () => {
               className="w-full bg-card rounded-xl p-4 shadow-card flex items-center gap-3 text-left hover:shadow-elevated transition-shadow"
             >
               <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
-                <span className="text-sm font-bold text-foreground">{c.nombre[0]}{c.apellido[0]}</span>
+                <span className="text-sm font-bold text-foreground">
+                  {(c.nombre?.[0] || '?')}{(c.apellido?.[0] || '')}
+                </span>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-foreground truncate">{c.nombre} {c.apellido}</p>
@@ -203,7 +232,7 @@ const Chat = () => {
                 </div>
               </div>
               {c.unread > 0 && (
-                <div className="w-5 h-5 rounded-full bg-emergency flex items-center justify-center shrink-0">
+                <div className="min-w-5 h-5 px-1.5 rounded-full bg-emergency flex items-center justify-center shrink-0">
                   <span className="text-[10px] font-bold text-primary-foreground">{c.unread}</span>
                 </div>
               )}
@@ -215,7 +244,6 @@ const Chat = () => {
     );
   }
 
-  // Chat conversation view
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <div className="text-primary-foreground px-4 pt-12 pb-4 bg-destructive">
@@ -224,7 +252,9 @@ const Chat = () => {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center">
-            <span className="text-sm font-bold">{selectedContact.nombre[0]}{selectedContact.apellido[0]}</span>
+            <span className="text-sm font-bold">
+              {(selectedContact.nombre?.[0] || '?')}{(selectedContact.apellido?.[0] || '')}
+            </span>
           </div>
           <div>
             <p className="font-display font-bold text-sm">{selectedContact.nombre} {selectedContact.apellido}</p>
@@ -250,7 +280,7 @@ const Chat = () => {
                 ? 'bg-primary text-primary-foreground rounded-br-md'
                 : 'bg-card text-foreground shadow-card rounded-bl-md'
             }`}>
-              <p className="text-sm">{msg.text}</p>
+              <p className="text-sm whitespace-pre-wrap break-words">{msg.text}</p>
               <div className={`flex items-center justify-end gap-1 mt-1 ${
                 msg.sender === 'me' ? 'text-primary-foreground/60' : 'text-muted-foreground'
               }`}>
@@ -268,10 +298,15 @@ const Chat = () => {
             placeholder="Escribe un mensaje..."
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && sendMessage()}
+            onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } }}
+            disabled={sending}
             className="flex-1 h-10"
           />
-          <button onClick={sendMessage} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors">
+          <button
+            onClick={sendMessage}
+            disabled={sending || !input.trim()}
+            className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center hover:bg-primary/90 transition-colors disabled:opacity-50"
+          >
             <Send className="w-4 h-4" />
           </button>
         </div>
