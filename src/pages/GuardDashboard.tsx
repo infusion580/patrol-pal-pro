@@ -1,11 +1,12 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle, ClipboardList, History } from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle, ClipboardList, History, Trophy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 import ShiftControl from '@/components/ShiftControl';
+import DailyProgress from '@/components/DailyProgress';
 
 const GuardDashboard = () => {
   const { user } = useAuth();
@@ -61,7 +62,8 @@ const GuardDashboard = () => {
   { icon: FileText, label: 'Reporte de Turno', desc: 'Bitácora digital', color: 'bg-secondary', path: '/reportes' },
   { icon: ClipboardList, label: 'Visitas', desc: 'Control de acceso', color: 'bg-warning', path: '/visitas' },
   { icon: MessageCircle, label: 'Chat Supervisor', desc: 'Mensajes directos', color: 'bg-success', path: '/chat' },
-  { icon: History, label: 'Mi Historial', desc: 'Actividad completa', color: 'bg-accent', path: '/historial' }];
+  { icon: History, label: 'Mi Historial', desc: 'Actividad completa', color: 'bg-accent', path: '/historial' },
+  { icon: Trophy, label: 'Cuadro de Honor', desc: 'Top guardias', color: 'bg-warning', path: '/cuadro-honor' }];
 
 
   const stats = [
@@ -92,6 +94,8 @@ const GuardDashboard = () => {
         </div>
 
         <ShiftControl />
+
+        <DailyProgress />
 
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Acciones Rápidas</h2>
         <div className="grid grid-cols-2 gap-3 mb-6">

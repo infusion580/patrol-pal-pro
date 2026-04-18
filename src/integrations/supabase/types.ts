@@ -115,6 +115,56 @@ export type Database = {
           },
         ]
       }
+      cuadro_honor: {
+        Row: {
+          created_at: string
+          fecha: string
+          guardia_id: string
+          id: string
+          insignias: string[]
+          puntos: number
+          reportes_completados: number
+          reportes_meta: number
+          rondines_completados: number
+          rondines_meta: number
+          servicio_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          fecha?: string
+          guardia_id: string
+          id?: string
+          insignias?: string[]
+          puntos?: number
+          reportes_completados?: number
+          reportes_meta?: number
+          rondines_completados?: number
+          rondines_meta?: number
+          servicio_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          fecha?: string
+          guardia_id?: string
+          id?: string
+          insignias?: string[]
+          puntos?: number
+          reportes_completados?: number
+          reportes_meta?: number
+          rondines_completados?: number
+          rondines_meta?: number
+          servicio_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cuadro_honor_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       emergencias: {
         Row: {
           atendida: boolean
@@ -144,6 +194,50 @@ export type Database = {
           tipo?: string
         }
         Relationships: []
+      }
+      metas_servicio: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          hora_fin: string
+          hora_inicio: string
+          id: string
+          reportes_diarios: number
+          rondines_diarios: number
+          servicio_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          hora_fin?: string
+          hora_inicio?: string
+          id?: string
+          reportes_diarios?: number
+          rondines_diarios?: number
+          servicio_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          hora_fin?: string
+          hora_inicio?: string
+          id?: string
+          reportes_diarios?: number
+          rondines_diarios?: number
+          servicio_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "metas_servicio_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: true
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       notificaciones: {
         Row: {

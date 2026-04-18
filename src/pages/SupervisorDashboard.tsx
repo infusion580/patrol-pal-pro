@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 
@@ -114,6 +114,8 @@ const SupervisorDashboard = () => {
             { icon: Settings, label: 'Servicios', path: '/servicios' },
             { icon: Bell, label: 'Alertas', path: '/notificaciones' },
             { icon: UserCog, label: 'Gestión RH', path: '/gestion-rh' },
+            { icon: Target, label: 'Metas', path: '/metas' },
+            { icon: Trophy, label: 'Cuadro Honor', path: '/cuadro-honor' },
           ].map(a => (
             <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-2 hover:shadow-elevated transition-shadow active:scale-[0.98]">
               <a.icon className="w-5 h-5 text-primary" />
