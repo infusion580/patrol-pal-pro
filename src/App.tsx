@@ -26,6 +26,8 @@ import Visitas from "./pages/Visitas";
 import Historial from "./pages/Historial";
 import EstadisticasAdmin from "./pages/EstadisticasAdmin";
 import GuardActivityPage from "./pages/GuardActivityPage";
+import MetasServicio from "./pages/MetasServicio";
+import CuadroHonor from "./pages/CuadroHonor";
 
 const queryClient = new QueryClient();
 
@@ -59,6 +61,8 @@ const App = () => (
             <Route path="/estadisticas" element={<EstadisticasAdmin />} />
             <Route path="/actividad-guardia" element={<GuardActivityPage />} />
             <Route path="/dashboard-operativo" element={<DashboardOperativo />} />
+            <Route path="/metas" element={<MetasServicio />} />
+            <Route path="/cuadro-honor" element={<CuadroHonor />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
