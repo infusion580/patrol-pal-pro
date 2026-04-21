@@ -4,8 +4,9 @@ import { useAuth, UserRole } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import logoDefender from '@/assets/logo-defender.png';
 
 const Register = () => {
   const [form, setForm] = useState({
@@ -50,10 +51,9 @@ const Register = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm animate-slide-up">
         <div className="flex flex-col items-center mb-6">
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-elevated bg-destructive">
-            <Shield className="w-8 h-8 text-primary-foreground" />
+          <div className="bg-foreground rounded-2xl p-4 mb-3 shadow-elevated w-full max-w-[220px] flex items-center justify-center">
+            <img src={logoDefender} alt="Defender Seguridad Privada" className="w-full h-auto" />
           </div>
-          <h1 className="text-xl font-display font-bold text-foreground text-center">Defender Seguridad Privada</h1>
           <p className="text-xs text-muted-foreground mt-1">Crear cuenta</p>
         </div>
 
