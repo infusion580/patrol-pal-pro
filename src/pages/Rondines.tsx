@@ -28,6 +28,58 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * Robust GPS getter: tries high-accuracy first, falls back to low-accuracy with cached position.
+ * Returns position or throws an Error with a user-friendly message.
+ */
+async function getCurrentPositionRobust(): Promise<GeolocationPosition> {
+  if (!('geolocation' in navigator)) {
+    throw new Error('Tu dispositivo no soporta geolocalización.');
+  }
+
+  // Check permission state if available (not supported on all browsers)
+  try {
+    if ('permissions' in navigator) {
+      const status = await (navigator as any).permissions.query({ name: 'geolocation' });
+      if (status.state === 'denied') {
+        throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador para este sitio.');
+      }
+    }
+  } catch (e: any) {
+    if (e?.message?.includes('denegado')) throw e;
+    // ignore — permissions API not available
+  }
+
+  const tryGet = (opts: PositionOptions) =>
+    new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, opts)
+    );
+
+  try {
+    // First attempt: high accuracy, allow recent cached fix (up to 10s)
+    return await tryGet({ enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 });
+  } catch (err: any) {
+    if (err?.code === 1) {
+      throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador.');
+    }
+    // Fallback: lower accuracy, accept older cache (up to 60s) — works better indoors
+    try {
+      return await tryGet({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+    } catch (err2: any) {
+      if (err2?.code === 1) {
+        throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador.');
+      }
+      if (err2?.code === 2) {
+        throw new Error('GPS no disponible. Verifica que la ubicación esté activada y tengas señal.');
+      }
+      if (err2?.code === 3) {
+        throw new Error('Tiempo agotado al obtener GPS. Sal a un área abierta e inténtalo de nuevo.');
+      }
+      throw new Error('No se pudo obtener tu ubicación. Inténtalo de nuevo.');
+    }
+  }
+}
+
 const Rondines = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -110,12 +162,12 @@ const Rondines = () => {
       let lat: number | null = null;
       let lng: number | null = null;
       try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 })
-        );
+        const pos = await getCurrentPositionRobust();
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
-      } catch { /* continue without GPS */ }
+      } catch (e: any) {
+        toast({ title: 'Aviso GPS', description: e?.message || 'Check-in sin coordenadas.', variant: 'default' });
+      }
 
       const { data, error } = await supabase.from('rondines').insert({
         guardia_id: user.id,
@@ -140,38 +192,50 @@ const Rondines = () => {
 
     // Verify GPS proximity if checkpoint has coordinates
     if (checkpoint.lat && checkpoint.lng) {
+      let pos: GeolocationPosition;
       try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 })
-        );
-        const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
-        if (dist > checkpoint.radius) {
-          toast({
-            title: '❌ Fuera de rango',
-            description: `Estás a ${Math.round(dist)}m del punto. Debes estar a menos de ${checkpoint.radius}m para confirmar.`,
-            variant: 'destructive',
-          });
-          setScanning(null);
-          return;
-        }
-
-        // Save scan with GPS
-        const { error } = await supabase.from('rondin_scans').insert({
-          rondin_id: rondinId,
-          checkpoint_id: checkpoint.id,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
+        pos = await getCurrentPositionRobust();
+      } catch (e: any) {
+        toast({
+          title: '📍 GPS no disponible',
+          description: e?.message || 'No se pudo obtener tu ubicación.',
+          variant: 'destructive',
         });
-        if (!error) {
-          setPoints((prev) => prev.map((p) =>
-            p.id === checkpoint.id
-              ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
-              : p
-          ));
-          toast({ title: '✅ Punto confirmado', description: `${checkpoint.name} verificado a ${Math.round(dist)}m.` });
-        }
-      } catch {
-        toast({ title: 'Error GPS', description: 'No se pudo obtener tu ubicación. Activa el GPS.', variant: 'destructive' });
+        setScanning(null);
+        return;
+      }
+
+      const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
+      const accuracy = pos.coords.accuracy || 0;
+      // Allow checkpoint radius + GPS accuracy margin (so a 30m accuracy fix doesn't unfairly block)
+      const allowed = checkpoint.radius + Math.min(accuracy, 50);
+
+      if (dist > allowed) {
+        toast({
+          title: '❌ Fuera de rango',
+          description: `Estás a ${Math.round(dist)}m del punto (precisión GPS: ±${Math.round(accuracy)}m). Debes estar a menos de ${checkpoint.radius}m.`,
+          variant: 'destructive',
+        });
+        setScanning(null);
+        return;
+      }
+
+      // Save scan with GPS
+      const { error } = await supabase.from('rondin_scans').insert({
+        rondin_id: rondinId,
+        checkpoint_id: checkpoint.id,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      });
+      if (!error) {
+        setPoints((prev) => prev.map((p) =>
+          p.id === checkpoint.id
+            ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+            : p
+        ));
+        toast({ title: '✅ Punto confirmado', description: `${checkpoint.name} verificado a ${Math.round(dist)}m (±${Math.round(accuracy)}m).` });
+      } else {
+        toast({ title: 'Error', description: 'No se pudo guardar el escaneo. Reintenta.', variant: 'destructive' });
       }
     } else {
       // No coordinates configured, allow scan without GPS check
