@@ -43,17 +43,46 @@ const Chat = () => {
 
   const loadContacts = useCallback(async () => {
     if (!user) return;
-    const { data: profiles } = await supabase.from('profiles').select('user_id, nombre, apellido');
+    const { data: profiles } = await supabase
+      .from('profiles')
+      .select('user_id, nombre, apellido, servicio_asignado_id');
     const { data: roles } = await supabase.from('user_roles').select('user_id, role');
     if (!profiles || !roles) { setLoading(false); return; }
 
     const roleMap = new Map(roles.map(r => [r.user_id, r.role]));
+    const myProfile = profiles.find(p => p.user_id === user.id);
+    const myServicio = myProfile?.servicio_asignado_id ?? null;
+
     let filtered = profiles.filter(p => p.user_id !== user.id);
+
     if (user.role === 'guardia') {
-      filtered = filtered.filter(p => roleMap.get(p.user_id) === 'supervisor' || roleMap.get(p.user_id) === 'admin');
+      // Guardia: solo su supervisor asignado (mismo servicio) + todos los admins (RH)
+      filtered = filtered.filter(p => {
+        const r = roleMap.get(p.user_id);
+        if (r === 'admin') return true;
+        if (r === 'supervisor') {
+          // Si el guardia tiene servicio asignado, solo el supervisor del mismo servicio
+          if (myServicio) return p.servicio_asignado_id === myServicio;
+          // Si no tiene servicio, no ve supervisores (debe asignársele uno)
+          return false;
+        }
+        return false;
+      });
     } else if (user.role === 'supervisor') {
-      filtered = filtered.filter(p => roleMap.get(p.user_id) === 'guardia' || roleMap.get(p.user_id) === 'admin');
+      // Supervisor: todos los guardias (preferentemente de su servicio) + admins (RH)
+      filtered = filtered.filter(p => {
+        const r = roleMap.get(p.user_id);
+        if (r === 'admin') return true;
+        if (r === 'guardia') {
+          // Si el supervisor tiene servicio, ve solo guardias de su servicio
+          if (myServicio) return p.servicio_asignado_id === myServicio;
+          // Si no tiene servicio, ve a todos los guardias
+          return true;
+        }
+        return false;
+      });
     }
+    // admin (RH): ve a todos los usuarios del sistema (sin filtro adicional)
 
     const { data: unreadData } = await supabase
       .from('chat_messages')
