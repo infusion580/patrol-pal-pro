@@ -192,38 +192,50 @@ const Rondines = () => {
 
     // Verify GPS proximity if checkpoint has coordinates
     if (checkpoint.lat && checkpoint.lng) {
+      let pos: GeolocationPosition;
       try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 15000 })
-        );
-        const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
-        if (dist > checkpoint.radius) {
-          toast({
-            title: '❌ Fuera de rango',
-            description: `Estás a ${Math.round(dist)}m del punto. Debes estar a menos de ${checkpoint.radius}m para confirmar.`,
-            variant: 'destructive',
-          });
-          setScanning(null);
-          return;
-        }
-
-        // Save scan with GPS
-        const { error } = await supabase.from('rondin_scans').insert({
-          rondin_id: rondinId,
-          checkpoint_id: checkpoint.id,
-          lat: pos.coords.latitude,
-          lng: pos.coords.longitude,
+        pos = await getCurrentPositionRobust();
+      } catch (e: any) {
+        toast({
+          title: '📍 GPS no disponible',
+          description: e?.message || 'No se pudo obtener tu ubicación.',
+          variant: 'destructive',
         });
-        if (!error) {
-          setPoints((prev) => prev.map((p) =>
-            p.id === checkpoint.id
-              ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
-              : p
-          ));
-          toast({ title: '✅ Punto confirmado', description: `${checkpoint.name} verificado a ${Math.round(dist)}m.` });
-        }
-      } catch {
-        toast({ title: 'Error GPS', description: 'No se pudo obtener tu ubicación. Activa el GPS.', variant: 'destructive' });
+        setScanning(null);
+        return;
+      }
+
+      const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
+      const accuracy = pos.coords.accuracy || 0;
+      // Allow checkpoint radius + GPS accuracy margin (so a 30m accuracy fix doesn't unfairly block)
+      const allowed = checkpoint.radius + Math.min(accuracy, 50);
+
+      if (dist > allowed) {
+        toast({
+          title: '❌ Fuera de rango',
+          description: `Estás a ${Math.round(dist)}m del punto (precisión GPS: ±${Math.round(accuracy)}m). Debes estar a menos de ${checkpoint.radius}m.`,
+          variant: 'destructive',
+        });
+        setScanning(null);
+        return;
+      }
+
+      // Save scan with GPS
+      const { error } = await supabase.from('rondin_scans').insert({
+        rondin_id: rondinId,
+        checkpoint_id: checkpoint.id,
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+      });
+      if (!error) {
+        setPoints((prev) => prev.map((p) =>
+          p.id === checkpoint.id
+            ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
+            : p
+        ));
+        toast({ title: '✅ Punto confirmado', description: `${checkpoint.name} verificado a ${Math.round(dist)}m (±${Math.round(accuracy)}m).` });
+      } else {
+        toast({ title: 'Error', description: 'No se pudo guardar el escaneo. Reintenta.', variant: 'destructive' });
       }
     } else {
       // No coordinates configured, allow scan without GPS check
