@@ -1,5 +1,5 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { useNavigate } from 'react-router-dom';
+
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
@@ -20,7 +20,6 @@ interface Guard {
 const MapView = lazy(() => import('@/components/MapView'));
 
 const MapaSupervisor = () => {
-  const navigate = useNavigate();
   const [guards, setGuards] = useState<Guard[]>([]);
   const [loading, setLoading] = useState(true);
 
