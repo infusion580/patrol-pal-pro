@@ -303,19 +303,75 @@ const AdminDashboard = () => {
                         <option value="admin">Admin</option>
                       </select>
                     </div>
-                    <div>
-                      <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Servicio Asignado</label>
-                      <select
-                        value={u.servicio_asignado_id || ''}
-                        onChange={(e) => assignService(u.id, e.target.value || null)}
-                        className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
-                      >
-                        <option value="">Sin asignar</option>
-                        {servicios.map(s => (
-                          <option key={s.id} value={s.id}>{s.nombre}</option>
-                        ))}
-                      </select>
-                    </div>
+                    {u.role === 'guardia' ? (
+                      <div>
+                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                          Servicios Asignados
+                        </label>
+                        <div className="space-y-1.5 mb-2">
+                          {u.servicios.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic">Sin servicios asignados</p>
+                          )}
+                          {u.servicios.map(gs => {
+                            const srv = servicios.find(s => s.id === gs.servicio_id);
+                            return (
+                              <div key={gs.servicio_id} className="flex items-center gap-2 bg-accent/40 rounded-lg px-2 py-1.5">
+                                <span className="text-xs flex-1 truncate text-foreground">{srv?.nombre || 'Servicio eliminado'}</span>
+                                {gs.es_principal ? (
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">Principal</span>
+                                ) : (
+                                  <button
+                                    onClick={() => setServicioPrincipal(u.id, gs.servicio_id)}
+                                    className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground hover:bg-primary/15 hover:text-primary"
+                                    title="Marcar como principal"
+                                  >
+                                    Marcar
+                                  </button>
+                                )}
+                                <button
+                                  onClick={() => removeServicioFromGuardia(u.id, gs.servicio_id)}
+                                  className="text-emergency hover:text-emergency/80"
+                                  title="Quitar"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <select
+                          value=""
+                          onChange={(e) => { if (e.target.value) addServicioToGuardia(u.id, e.target.value, true); }}
+                          className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                          <option value="">+ Agregar servicio…</option>
+                          {servicios
+                            .filter(s => !u.servicios.some(gs => gs.servicio_id === s.id))
+                            .map(s => (
+                              <option key={s.id} value={s.id}>{s.nombre}</option>
+                            ))}
+                        </select>
+                      </div>
+                    ) : (
+                      <div>
+                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Servicio Asignado</label>
+                        <select
+                          value={u.servicio_asignado_id || ''}
+                          onChange={async (e) => {
+                            const val = e.target.value || null;
+                            await supabase.from('profiles').update({ servicio_asignado_id: val } as any).eq('user_id', u.id);
+                            toast({ title: 'Servicio asignado' });
+                            loadData();
+                          }}
+                          className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                          <option value="">Sin asignar</option>
+                          {servicios.map(s => (
+                            <option key={s.id} value={s.id}>{s.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     {u.role === 'guardia' && (
                       <div>
                         <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Supervisor Asignado</label>
