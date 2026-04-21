@@ -197,6 +197,8 @@ const Chat = () => {
     setSending(false);
   };
 
+  const isGuardiaViewer = user?.role === 'guardia';
+
   const getRoleIcon = (role: string) => {
     if (role === 'admin') return <Shield className="w-3.5 h-3.5 text-primary" />;
     if (role === 'supervisor') return <Users className="w-3.5 h-3.5 text-success" />;
@@ -204,9 +206,19 @@ const Chat = () => {
   };
 
   const getRoleLabel = (role: string) => {
-    if (role === 'admin') return 'Administrador';
+    if (role === 'admin') return isGuardiaViewer ? 'RH' : 'Administrador';
     if (role === 'supervisor') return 'Supervisor';
     return 'Guardia';
+  };
+
+  const getDisplayName = (contact: { nombre: string; apellido: string; role: string }) => {
+    if (isGuardiaViewer && contact.role === 'admin') return { nombre: 'RH', apellido: '' };
+    return { nombre: contact.nombre, apellido: contact.apellido };
+  };
+
+  const getInitials = (contact: { nombre: string; apellido: string; role: string }) => {
+    if (isGuardiaViewer && contact.role === 'admin') return 'RH';
+    return `${contact.nombre?.[0] || '?'}${contact.apellido?.[0] || ''}`;
   };
 
   if (loading) {
