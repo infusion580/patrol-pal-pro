@@ -291,11 +291,13 @@ const Chat = () => {
           </button>
           <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center">
             <span className="text-sm font-bold">
-              {(selectedContact.nombre?.[0] || '?')}{(selectedContact.apellido?.[0] || '')}
+              {getInitials(selectedContact)}
             </span>
           </div>
           <div>
-            <p className="font-display font-bold text-sm">{selectedContact.nombre} {selectedContact.apellido}</p>
+            <p className="font-display font-bold text-sm">
+              {getDisplayName(selectedContact).nombre} {getDisplayName(selectedContact).apellido}
+            </p>
             <div className="flex items-center gap-1">
               {getRoleIcon(selectedContact.role)}
               <span className="text-xs opacity-70">{getRoleLabel(selectedContact.role)}</span>
