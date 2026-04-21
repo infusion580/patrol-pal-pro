@@ -4,8 +4,9 @@ import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Shield, Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import logoDefender from '@/assets/logo-defender.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -45,10 +46,9 @@ const Login = () => {
       <div className="w-full max-w-sm animate-slide-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-elevated bg-destructive">
-            <Shield className="w-10 h-10 text-primary-foreground" />
+          <div className="bg-foreground rounded-2xl p-5 mb-4 shadow-elevated w-full max-w-[260px] flex items-center justify-center">
+            <img src={logoDefender} alt="Defender Seguridad Privada" className="w-full h-auto" />
           </div>
-          <h1 className="text-2xl font-display font-bold text-foreground text-center">Defender Seguridad Privada</h1>
           <p className="text-muted-foreground text-sm mt-1">Sistema de Seguridad Operativa</p>
         </div>
 
