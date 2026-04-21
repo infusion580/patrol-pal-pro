@@ -162,12 +162,12 @@ const Rondines = () => {
       let lat: number | null = null;
       let lng: number | null = null;
       try {
-        const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-          navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true, timeout: 10000 })
-        );
+        const pos = await getCurrentPositionRobust();
         lat = pos.coords.latitude;
         lng = pos.coords.longitude;
-      } catch { /* continue without GPS */ }
+      } catch (e: any) {
+        toast({ title: 'Aviso GPS', description: e?.message || 'Check-in sin coordenadas.', variant: 'default' });
+      }
 
       const { data, error } = await supabase.from('rondines').insert({
         guardia_id: user.id,
