@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Nunito:wght@400;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=Oswald:wght@500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -6,71 +6,78 @@
 
 @layer base {
   :root {
-    /* Base surfaces — clean white with subtle warm gray */
-    --background: 0 0% 99%;
-    --foreground: 0 0% 8%;
+    /* ===========================================================
+       Defender Seguridad Privada — Dark premium identity
+       Reference: defenderseguridad.mx (negro profundo + rojo brand)
+       =========================================================== */
 
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 8%;
+    /* Surfaces — deep near-black with subtle warm tint */
+    --background: 0 0% 6%;
+    --foreground: 0 0% 96%;
 
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 8%;
+    --card: 0 0% 10%;
+    --card-foreground: 0 0% 96%;
 
-    /* Primary: confident red (brand) */
-    --primary: 0 78% 50%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 96%;
+
+    /* Primary: Defender brand red */
+    --primary: 0 82% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 0 85% 60%;
+    --primary-glow: 0 88% 62%;
 
-    /* Secondary: vibrant yellow accent */
-    --secondary: 45 100% 52%;
-    --secondary-foreground: 0 0% 8%;
+    /* Secondary: clean white surface for contrast accents */
+    --secondary: 0 0% 14%;
+    --secondary-foreground: 0 0% 96%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 42%;
+    --muted: 0 0% 13%;
+    --muted-foreground: 0 0% 65%;
 
-    --accent: 45 100% 95%;
-    --accent-foreground: 0 0% 8%;
+    --accent: 0 82% 52%;
+    --accent-foreground: 0 0% 100%;
 
-    --destructive: 0 78% 50%;
+    --destructive: 0 82% 52%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 60% 40%;
+    --success: 152 60% 45%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 45 100% 52%;
+    --warning: 35 95% 55%;
     --warning-foreground: 0 0% 8%;
 
-    --emergency: 0 85% 55%;
+    --emergency: 0 90% 55%;
     --emergency-foreground: 0 0% 100%;
 
-    --border: 0 0% 92%;
-    --input: 0 0% 92%;
-    --ring: 0 78% 50%;
+    --border: 0 0% 18%;
+    --input: 0 0% 16%;
+    --ring: 0 82% 52%;
 
-    /* Larger, friendlier radius */
-    --radius: 1rem;
+    /* Sharper, more architectural radius like the site */
+    --radius: 0.875rem;
 
-    /* Sidebar: deep black with yellow highlights */
-    --sidebar-background: 0 0% 8%;
+    /* Sidebar follows the same dark identity */
+    --sidebar-background: 0 0% 4%;
     --sidebar-foreground: 0 0% 95%;
-    --sidebar-primary: 45 100% 52%;
-    --sidebar-primary-foreground: 0 0% 8%;
-    --sidebar-accent: 0 0% 14%;
+    --sidebar-primary: 0 82% 52%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 95%;
-    --sidebar-border: 0 0% 18%;
-    --sidebar-ring: 45 100% 52%;
+    --sidebar-border: 0 0% 16%;
+    --sidebar-ring: 0 82% 52%;
 
-    --font-display: 'Nunito', sans-serif;
+    --font-display: 'Oswald', 'Inter', sans-serif;
     --font-body: 'Inter', sans-serif;
 
-    /* Softer, more diffused shadows */
-    --shadow-card: 0 1px 2px hsl(0 0% 8% / 0.04), 0 4px 16px -6px hsl(0 0% 8% / 0.06);
-    --shadow-elevated: 0 4px 12px -4px hsl(0 0% 8% / 0.08), 0 16px 40px -16px hsl(0 0% 8% / 0.1);
-    --shadow-emergency: 0 0 0 4px hsl(0 85% 55% / 0.18), 0 8px 24px -4px hsl(0 85% 55% / 0.28);
+    /* Premium shadows + red glow accent */
+    --shadow-card: 0 1px 2px hsl(0 0% 0% / 0.4), 0 8px 24px -8px hsl(0 0% 0% / 0.5);
+    --shadow-elevated: 0 4px 16px -4px hsl(0 0% 0% / 0.5), 0 24px 48px -16px hsl(0 0% 0% / 0.55);
+    --shadow-emergency: 0 0 0 4px hsl(0 90% 55% / 0.22), 0 8px 28px -4px hsl(0 90% 55% / 0.45);
+    --shadow-brand: 0 8px 32px -8px hsl(0 82% 52% / 0.45);
 
     /* Brand gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(0 78% 50%), hsl(0 85% 60%));
-    --gradient-warm: linear-gradient(135deg, hsl(0 78% 50%), hsl(45 100% 52%));
+    --gradient-primary: linear-gradient(135deg, hsl(0 82% 52%), hsl(0 88% 62%));
+    --gradient-dark: linear-gradient(135deg, hsl(0 0% 6%) 0%, hsl(0 0% 12%) 100%);
+    --gradient-brand: linear-gradient(135deg, hsl(0 82% 48%) 0%, hsl(0 75% 38%) 100%);
   }
 }
 
@@ -79,13 +86,14 @@
     @apply border-border;
   }
 
-  body {
+  html, body, #root {
     @apply bg-background text-foreground font-body;
     font-family: var(--font-body);
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: var(--font-display);
+    letter-spacing: 0.01em;
   }
 }
 
@@ -110,18 +118,30 @@
     box-shadow: var(--shadow-emergency);
   }
 
-  /* Rich app header: red gradient + subtle pattern + yellow glow accent.
-     Sized with viewport-relative units so the pattern density and glow scale
-     gracefully on mobile without clipping or losing contrast. */
+  .shadow-brand {
+    box-shadow: var(--shadow-brand);
+  }
+
+  .bg-gradient-brand {
+    background: var(--gradient-brand);
+  }
+
+  .bg-gradient-dark {
+    background: var(--gradient-dark);
+  }
+
+  /* Defender app header: deep black base + red brand accent + subtle pattern.
+     Matches the cinematic dark hero from defenderseguridad.mx. */
   .app-header {
     position: relative;
     color: hsl(var(--primary-foreground));
     background:
-      radial-gradient(120% 80% at 100% 0%, hsl(45 100% 52% / 0.22) 0%, transparent 55%),
-      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.28) 0%, transparent 60%),
-      linear-gradient(135deg, hsl(0 78% 50%) 0%, hsl(0 72% 42%) 100%);
+      radial-gradient(120% 80% at 100% 0%, hsl(0 82% 52% / 0.32) 0%, transparent 55%),
+      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.55) 0%, transparent 60%),
+      linear-gradient(160deg, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 100%);
     overflow: hidden;
     isolation: isolate;
+    border-bottom: 1px solid hsl(0 82% 52% / 0.25);
   }
 
   .app-header::before {
@@ -129,9 +149,8 @@
     position: absolute;
     inset: 0;
     background-image:
-      radial-gradient(circle at 1px 1px, hsl(0 0% 100% / 0.09) 1px, transparent 0);
-    /* Smaller dots on mobile, larger on wider viewports */
-    background-size: clamp(14px, 4vw, 20px) clamp(14px, 4vw, 20px);
+      radial-gradient(circle at 1px 1px, hsl(0 0% 100% / 0.06) 1px, transparent 0);
+    background-size: clamp(14px, 4vw, 22px) clamp(14px, 4vw, 22px);
     pointer-events: none;
     z-index: -1;
   }
@@ -139,34 +158,32 @@
   .app-header::after {
     content: "";
     position: absolute;
-    /* Anchor inside the header so it never clips on small screens */
     top: clamp(-90px, -22vw, -40px);
     right: clamp(-60px, -12vw, -20px);
-    /* Glow scales with viewport width, capped for tablets/desktop */
-    width: clamp(160px, 55vw, 260px);
-    height: clamp(160px, 55vw, 260px);
+    width: clamp(180px, 60vw, 300px);
+    height: clamp(180px, 60vw, 300px);
     border-radius: 9999px;
-    background: radial-gradient(closest-side, hsl(45 100% 52% / 0.38), transparent 70%);
-    filter: blur(10px);
+    background: radial-gradient(closest-side, hsl(0 82% 52% / 0.45), transparent 70%);
+    filter: blur(14px);
     pointer-events: none;
     z-index: -1;
   }
 
-  /* Boost contrast on very small screens by darkening the base gradient slightly */
-  @media (max-width: 480px) {
-    .app-header {
-      background:
-        radial-gradient(120% 80% at 100% 0%, hsl(45 100% 52% / 0.18) 0%, transparent 55%),
-        radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.32) 0%, transparent 60%),
-        linear-gradient(135deg, hsl(0 78% 48%) 0%, hsl(0 72% 38%) 100%);
-    }
-  }
-
-  /* Respect reduced-motion / low-power: drop the blur for cheaper paint */
   @media (prefers-reduced-motion: reduce) {
     .app-header::after {
       filter: none;
     }
+  }
+
+  /* Red accent stripe used by the site under headings */
+  .brand-stripe::after {
+    content: "";
+    display: block;
+    width: 48px;
+    height: 3px;
+    margin-top: 0.5rem;
+    background: hsl(var(--primary));
+    border-radius: 2px;
   }
 
   .animate-pulse-emergency {
@@ -175,10 +192,10 @@
 
   @keyframes pulse-emergency {
     0%, 100% {
-      box-shadow: 0 0 0 0 hsl(0 85% 55% / 0.4);
+      box-shadow: 0 0 0 0 hsl(0 90% 55% / 0.45);
     }
     50% {
-      box-shadow: 0 0 0 16px hsl(0 85% 55% / 0);
+      box-shadow: 0 0 0 16px hsl(0 90% 55% / 0);
     }
   }
 
