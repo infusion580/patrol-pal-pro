@@ -197,6 +197,8 @@ const Chat = () => {
     setSending(false);
   };
 
+  const isGuardiaViewer = user?.role === 'guardia';
+
   const getRoleIcon = (role: string) => {
     if (role === 'admin') return <Shield className="w-3.5 h-3.5 text-primary" />;
     if (role === 'supervisor') return <Users className="w-3.5 h-3.5 text-success" />;
@@ -204,9 +206,19 @@ const Chat = () => {
   };
 
   const getRoleLabel = (role: string) => {
-    if (role === 'admin') return 'Administrador';
+    if (role === 'admin') return isGuardiaViewer ? 'RH' : 'Administrador';
     if (role === 'supervisor') return 'Supervisor';
     return 'Guardia';
+  };
+
+  const getDisplayName = (contact: { nombre: string; apellido: string; role: string }) => {
+    if (isGuardiaViewer && contact.role === 'admin') return { nombre: 'RH', apellido: '' };
+    return { nombre: contact.nombre, apellido: contact.apellido };
+  };
+
+  const getInitials = (contact: { nombre: string; apellido: string; role: string }) => {
+    if (isGuardiaViewer && contact.role === 'admin') return 'RH';
+    return `${contact.nombre?.[0] || '?'}${contact.apellido?.[0] || ''}`;
   };
 
   if (loading) {
@@ -245,11 +257,13 @@ const Chat = () => {
             >
               <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
                 <span className="text-sm font-bold text-foreground">
-                  {(c.nombre?.[0] || '?')}{(c.apellido?.[0] || '')}
+                  {getInitials(c)}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{c.nombre} {c.apellido}</p>
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {getDisplayName(c).nombre} {getDisplayName(c).apellido}
+                </p>
                 <div className="flex items-center gap-1">
                   {getRoleIcon(c.role)}
                   <span className="text-[10px] text-muted-foreground">{getRoleLabel(c.role)}</span>
@@ -277,11 +291,13 @@ const Chat = () => {
           </button>
           <div className="w-9 h-9 rounded-full bg-primary-foreground/20 flex items-center justify-center">
             <span className="text-sm font-bold">
-              {(selectedContact.nombre?.[0] || '?')}{(selectedContact.apellido?.[0] || '')}
+              {getInitials(selectedContact)}
             </span>
           </div>
           <div>
-            <p className="font-display font-bold text-sm">{selectedContact.nombre} {selectedContact.apellido}</p>
+            <p className="font-display font-bold text-sm">
+              {getDisplayName(selectedContact).nombre} {getDisplayName(selectedContact).apellido}
+            </p>
             <div className="flex items-center gap-1">
               {getRoleIcon(selectedContact.role)}
               <span className="text-xs opacity-70">{getRoleLabel(selectedContact.role)}</span>
