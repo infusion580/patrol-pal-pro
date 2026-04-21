@@ -195,6 +195,41 @@ export type Database = {
         }
         Relationships: []
       }
+      guardia_servicios: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          es_principal: boolean
+          guardia_id: string
+          id: string
+          servicio_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          es_principal?: boolean
+          guardia_id: string
+          id?: string
+          servicio_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          es_principal?: boolean
+          guardia_id?: string
+          id?: string
+          servicio_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "guardia_servicios_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       metas_servicio: {
         Row: {
           created_at: string
