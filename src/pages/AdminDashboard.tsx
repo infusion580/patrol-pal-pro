@@ -38,13 +38,21 @@ const AdminDashboard = () => {
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
-    const [{ data: profiles }, { data: roles }, { data: srvs }] = await Promise.all([
+    const [{ data: profiles }, { data: roles }, { data: srvs }, { data: gsrv }] = await Promise.all([
       supabase.from('profiles').select('*'),
       supabase.from('user_roles').select('*'),
       supabase.from('servicios').select('id, nombre').order('nombre'),
+      supabase.from('guardia_servicios' as any).select('guardia_id, servicio_id, es_principal'),
     ]);
 
     const roleMap = new Map(roles?.map(r => [r.user_id, r.role]));
+    const serviciosByGuardia = new Map<string, GuardiaServicio[]>();
+    (gsrv as any[] | null)?.forEach(row => {
+      const list = serviciosByGuardia.get(row.guardia_id) || [];
+      list.push({ servicio_id: row.servicio_id, es_principal: row.es_principal });
+      serviciosByGuardia.set(row.guardia_id, list);
+    });
+
     if (profiles) {
       setUsers(profiles.map(p => ({
         id: p.user_id,
@@ -55,6 +63,7 @@ const AdminDashboard = () => {
         servicio_asignado_id: (p as any).servicio_asignado_id || null,
         supervisor_asignado_id: (p as any).supervisor_asignado_id || null,
         status: (p as any).status || 'activo',
+        servicios: serviciosByGuardia.get(p.user_id) || [],
       })));
     }
     setServicios(srvs || []);
