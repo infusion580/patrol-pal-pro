@@ -110,13 +110,15 @@
     box-shadow: var(--shadow-emergency);
   }
 
-  /* Rich app header: red gradient + subtle pattern + yellow glow accent */
+  /* Rich app header: red gradient + subtle pattern + yellow glow accent.
+     Sized with viewport-relative units so the pattern density and glow scale
+     gracefully on mobile without clipping or losing contrast. */
   .app-header {
     position: relative;
     color: hsl(var(--primary-foreground));
     background:
       radial-gradient(120% 80% at 100% 0%, hsl(45 100% 52% / 0.22) 0%, transparent 55%),
-      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.25) 0%, transparent 60%),
+      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.28) 0%, transparent 60%),
       linear-gradient(135deg, hsl(0 78% 50%) 0%, hsl(0 72% 42%) 100%);
     overflow: hidden;
     isolation: isolate;
@@ -127,8 +129,9 @@
     position: absolute;
     inset: 0;
     background-image:
-      radial-gradient(circle at 1px 1px, hsl(0 0% 100% / 0.08) 1px, transparent 0);
-    background-size: 18px 18px;
+      radial-gradient(circle at 1px 1px, hsl(0 0% 100% / 0.09) 1px, transparent 0);
+    /* Smaller dots on mobile, larger on wider viewports */
+    background-size: clamp(14px, 4vw, 20px) clamp(14px, 4vw, 20px);
     pointer-events: none;
     z-index: -1;
   }
@@ -136,15 +139,34 @@
   .app-header::after {
     content: "";
     position: absolute;
-    top: -40%;
-    right: -10%;
-    width: 220px;
-    height: 220px;
+    /* Anchor inside the header so it never clips on small screens */
+    top: clamp(-90px, -22vw, -40px);
+    right: clamp(-60px, -12vw, -20px);
+    /* Glow scales with viewport width, capped for tablets/desktop */
+    width: clamp(160px, 55vw, 260px);
+    height: clamp(160px, 55vw, 260px);
     border-radius: 9999px;
-    background: radial-gradient(closest-side, hsl(45 100% 52% / 0.35), transparent 70%);
-    filter: blur(8px);
+    background: radial-gradient(closest-side, hsl(45 100% 52% / 0.38), transparent 70%);
+    filter: blur(10px);
     pointer-events: none;
     z-index: -1;
+  }
+
+  /* Boost contrast on very small screens by darkening the base gradient slightly */
+  @media (max-width: 480px) {
+    .app-header {
+      background:
+        radial-gradient(120% 80% at 100% 0%, hsl(45 100% 52% / 0.18) 0%, transparent 55%),
+        radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.32) 0%, transparent 60%),
+        linear-gradient(135deg, hsl(0 78% 48%) 0%, hsl(0 72% 38%) 100%);
+    }
+  }
+
+  /* Respect reduced-motion / low-power: drop the blur for cheaper paint */
+  @media (prefers-reduced-motion: reduce) {
+    .app-header::after {
+      filter: none;
+    }
   }
 
   .animate-pulse-emergency {
