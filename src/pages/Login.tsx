@@ -48,7 +48,7 @@ const Login = () => {
           <div className="w-20 h-20 rounded-2xl flex items-center justify-center mb-4 shadow-elevated bg-destructive">
             <Shield className="w-10 h-10 text-primary-foreground" />
           </div>
-          <h1 className="text-2xl font-display font-bold text-foreground">SecureOps</h1>
+          <h1 className="text-2xl font-display font-bold text-foreground text-center">Defender Seguridad Privada</h1>
           <p className="text-muted-foreground text-sm mt-1">Sistema de Seguridad Operativa</p>
         </div>
 
