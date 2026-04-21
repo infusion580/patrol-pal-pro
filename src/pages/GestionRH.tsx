@@ -138,7 +138,7 @@ const GestionRH = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-primary text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl">
+      <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
             <ArrowLeft className="w-4 h-4" /> Regresar

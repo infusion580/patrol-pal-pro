@@ -83,7 +83,7 @@ const SupervisorDashboard = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="bg-primary text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl">
+      <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
         <div className="max-w-lg mx-auto">
           <p className="text-sm opacity-80">Panel de Supervisor</p>
           <h1 className="text-2xl font-display font-bold">{user?.nombre} {user?.apellido}</h1>
