@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
+import logoDefender from '@/assets/logo-defender.png';
 
 interface GuardiaServicio {
   servicio_id: string;
@@ -213,10 +214,15 @@ const AdminDashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
-        <div className="max-w-lg mx-auto">
-          <p className="text-sm opacity-80">Panel Administrador</p>
-          <h1 className="text-2xl font-display font-bold">{user?.nombre} {user?.apellido}</h1>
-          <p className="text-xs opacity-70 mt-1 font-mono">#{user?.numeroEmpleado}</p>
+        <div className="max-w-lg mx-auto flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase tracking-[0.18em] text-primary font-bold">Panel Administrador</p>
+            <h1 className="text-2xl font-display font-bold uppercase truncate">{user?.nombre} {user?.apellido}</h1>
+            <p className="text-xs opacity-70 mt-1 font-mono">#{user?.numeroEmpleado}</p>
+          </div>
+          <div className="shrink-0 bg-foreground rounded-xl p-2 shadow-brand">
+            <img src={logoDefender} alt="Defender Seguridad Privada" className="h-9 w-auto" />
+          </div>
         </div>
       </div>
 
