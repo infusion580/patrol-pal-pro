@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
+import logoDefender from '@/assets/logo-defender.png';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   activo: { label: 'En Ronda', color: 'text-success', bg: 'bg-success/10' },
@@ -84,10 +85,15 @@ const SupervisorDashboard = () => {
   return (
     <div className="min-h-screen bg-background pb-20">
       <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
-        <div className="max-w-lg mx-auto">
-          <p className="text-sm opacity-80">Panel de Supervisor</p>
-          <h1 className="text-2xl font-display font-bold">{user?.nombre} {user?.apellido}</h1>
-          <p className="text-xs opacity-70 mt-1 font-mono">#{user?.numeroEmpleado}</p>
+        <div className="max-w-lg mx-auto flex items-start justify-between gap-3">
+          <div className="flex-1 min-w-0">
+            <p className="text-xs uppercase tracking-[0.18em] text-primary font-bold">Panel de Supervisor</p>
+            <h1 className="text-2xl font-display font-bold uppercase truncate">{user?.nombre} {user?.apellido}</h1>
+            <p className="text-xs opacity-70 mt-1 font-mono">#{user?.numeroEmpleado}</p>
+          </div>
+          <div className="shrink-0 bg-foreground rounded-xl p-2 shadow-brand">
+            <img src={logoDefender} alt="Defender Seguridad Privada" className="h-9 w-auto" />
+          </div>
         </div>
       </div>
 
