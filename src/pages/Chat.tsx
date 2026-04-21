@@ -45,40 +45,31 @@ const Chat = () => {
     if (!user) return;
     const { data: profiles } = await supabase
       .from('profiles')
-      .select('user_id, nombre, apellido, servicio_asignado_id');
+      .select('user_id, nombre, apellido, servicio_asignado_id, supervisor_asignado_id');
     const { data: roles } = await supabase.from('user_roles').select('user_id, role');
     if (!profiles || !roles) { setLoading(false); return; }
 
     const roleMap = new Map(roles.map(r => [r.user_id, r.role]));
     const myProfile = profiles.find(p => p.user_id === user.id);
-    const myServicio = myProfile?.servicio_asignado_id ?? null;
+    const mySupervisorId = (myProfile as any)?.supervisor_asignado_id ?? null;
 
     let filtered = profiles.filter(p => p.user_id !== user.id);
 
     if (user.role === 'guardia') {
-      // Guardia: solo su supervisor asignado (mismo servicio) + todos los admins (RH)
+      // Guardia: SOLO su supervisor asignado + todos los admins (RH).
+      // No puede ver otros guardias ni supervisores no asignados.
       filtered = filtered.filter(p => {
         const r = roleMap.get(p.user_id);
         if (r === 'admin') return true;
-        if (r === 'supervisor') {
-          // Si el guardia tiene servicio asignado, solo el supervisor del mismo servicio
-          if (myServicio) return p.servicio_asignado_id === myServicio;
-          // Si no tiene servicio, no ve supervisores (debe asignársele uno)
-          return false;
-        }
+        if (r === 'supervisor' && mySupervisorId && p.user_id === mySupervisorId) return true;
         return false;
       });
     } else if (user.role === 'supervisor') {
-      // Supervisor: todos los guardias (preferentemente de su servicio) + admins (RH)
+      // Supervisor: SOLO los guardias que tiene asignados (supervisor_asignado_id = mi user.id) + admins.
       filtered = filtered.filter(p => {
         const r = roleMap.get(p.user_id);
         if (r === 'admin') return true;
-        if (r === 'guardia') {
-          // Si el supervisor tiene servicio, ve solo guardias de su servicio
-          if (myServicio) return p.servicio_asignado_id === myServicio;
-          // Si no tiene servicio, ve a todos los guardias
-          return true;
-        }
+        if (r === 'guardia' && (p as any).supervisor_asignado_id === user.id) return true;
         return false;
       });
     }
@@ -101,6 +92,10 @@ const Chat = () => {
       unread: unreadMap[p.user_id] || 0,
     })).sort((a, b) => {
       if (b.unread !== a.unread) return b.unread - a.unread;
+      // Admins first, then supervisor, then guards alphabetically
+      const roleOrder = (r: string) => r === 'admin' ? 0 : r === 'supervisor' ? 1 : 2;
+      const ro = roleOrder(a.role) - roleOrder(b.role);
+      if (ro !== 0) return ro;
       return a.nombre.localeCompare(b.nombre);
     });
 
