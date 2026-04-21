@@ -1,7 +1,8 @@
-import { ReactNode } from 'react';
+import { ReactNode, CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import logoDefender from '@/assets/logo-defender.png';
+import headerCityFlags from '@/assets/header-city-flags.jpg';
 
 interface AppHeaderProps {
   /** Small label shown above the title (e.g. "Bienvenido", "Sección") */
@@ -26,8 +27,8 @@ interface AppHeaderProps {
 
 /**
  * AppHeader — shared dark-brand header for Defender Seguridad Privada.
- * Uses the .app-header utility (dark base + red glow) and surfaces the
- * brand logo so the identity is consistent across the whole app.
+ * Cinematic dark city + Mexican flag backdrop with red brand glow,
+ * surfaces the brand logo (no frame) so identity stays consistent.
  */
 const AppHeader = ({
   eyebrow,
@@ -43,9 +44,14 @@ const AppHeader = ({
 }: AppHeaderProps) => {
   const navigate = useNavigate();
 
+  const headerStyle = {
+    ['--header-bg-image' as any]: `url(${headerCityFlags})`,
+  } as CSSProperties;
+
   return (
     <div
-      className={`text-primary-foreground px-4 pt-12 pb-6 app-header ${
+      style={headerStyle}
+      className={`text-primary-foreground px-4 pt-12 pb-6 sm:pb-8 app-header ${
         rounded ? 'rounded-b-3xl' : ''
       }`}
     >
@@ -62,26 +68,26 @@ const AppHeader = ({
               </button>
             )}
             {eyebrow && (
-              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary/90 mb-1">
+              <p className="text-[11px] sm:text-xs font-semibold uppercase tracking-[0.18em] text-primary/90 mb-1">
                 {eyebrow}
               </p>
             )}
             {title && (
-              <h1 className="text-2xl font-display font-bold uppercase tracking-wide truncate">
+              <h1 className="text-xl sm:text-2xl font-display font-bold uppercase tracking-wide truncate">
                 {title}
               </h1>
             )}
             {subtitle && (
-              <p className="text-sm text-primary-foreground/70 mt-1">{subtitle}</p>
+              <p className="text-xs sm:text-sm text-primary-foreground/70 mt-1">{subtitle}</p>
             )}
           </div>
 
           {!hideLogo && (
-            <div className="shrink-0 bg-foreground/95 rounded-xl p-2 shadow-brand">
+            <div className="shrink-0 flex items-center">
               <img
                 src={logoDefender}
                 alt="Defender Seguridad Privada"
-                className="h-8 w-auto"
+                className="h-9 sm:h-11 md:h-12 w-auto object-contain drop-shadow-[0_4px_12px_hsl(0_82%_52%/0.45)]"
               />
             </div>
           )}

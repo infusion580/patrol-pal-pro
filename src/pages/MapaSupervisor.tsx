@@ -1,8 +1,8 @@
 import { useState, useEffect, lazy, Suspense } from 'react';
-import { ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
+import AppHeader from '@/components/AppHeader';
 
 const statusLabels: Record<string, string> = {
   activo: 'En Ronda',
@@ -20,7 +20,6 @@ interface Guard {
 const MapView = lazy(() => import('@/components/MapView'));
 
 const MapaSupervisor = () => {
-  const navigate = useNavigate();
   const [guards, setGuards] = useState<Guard[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -68,15 +67,12 @@ const MapaSupervisor = () => {
 
   return (
     <div className="min-h-screen bg-background pb-20">
-      <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
-        <div className="max-w-lg mx-auto">
-          <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
-            <ArrowLeft className="w-4 h-4" /> Regresar
-          </button>
-          <h1 className="text-xl font-display font-bold">Mapa en Tiempo Real</h1>
-          <p className="text-sm opacity-70 mt-1">{guards.length} elementos activos</p>
-        </div>
-      </div>
+      <AppHeader
+        showBack
+        backLabel="Regresar"
+        title="Mapa en Tiempo Real"
+        subtitle={`${guards.length} elementos activos`}
+      />
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
         <div className="bg-card rounded-xl shadow-card overflow-hidden mb-6">

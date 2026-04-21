@@ -130,15 +130,18 @@
     background: var(--gradient-dark);
   }
 
-  /* Defender app header: deep black base + red brand accent + subtle pattern.
-     Matches the cinematic dark hero from defenderseguridad.mx. */
+  /* Defender app header: cinematic city + flag backdrop with red brand glow.
+     Matches the dark hero feel from defenderseguridad.mx. */
   .app-header {
     position: relative;
     color: hsl(var(--primary-foreground));
-    background:
-      radial-gradient(120% 80% at 100% 0%, hsl(0 82% 52% / 0.32) 0%, transparent 55%),
-      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.55) 0%, transparent 60%),
-      linear-gradient(160deg, hsl(0 0% 8%) 0%, hsl(0 0% 4%) 100%);
+    background-color: hsl(0 0% 4%);
+    background-image:
+      linear-gradient(180deg, hsl(0 0% 4% / 0.55) 0%, hsl(0 0% 4% / 0.85) 100%),
+      var(--header-bg-image, none);
+    background-size: cover, cover;
+    background-position: center, center;
+    background-repeat: no-repeat, no-repeat;
     overflow: hidden;
     isolation: isolate;
     border-bottom: 1px solid hsl(0 82% 52% / 0.25);
@@ -148,9 +151,9 @@
     content: "";
     position: absolute;
     inset: 0;
-    background-image:
-      radial-gradient(circle at 1px 1px, hsl(0 0% 100% / 0.06) 1px, transparent 0);
-    background-size: clamp(14px, 4vw, 22px) clamp(14px, 4vw, 22px);
+    background:
+      radial-gradient(120% 80% at 100% 0%, hsl(0 82% 52% / 0.28) 0%, transparent 55%),
+      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.45) 0%, transparent 60%);
     pointer-events: none;
     z-index: -1;
   }
@@ -163,7 +166,7 @@
     width: clamp(180px, 60vw, 300px);
     height: clamp(180px, 60vw, 300px);
     border-radius: 9999px;
-    background: radial-gradient(closest-side, hsl(0 82% 52% / 0.45), transparent 70%);
+    background: radial-gradient(closest-side, hsl(0 82% 52% / 0.35), transparent 70%);
     filter: blur(14px);
     pointer-events: none;
     z-index: -1;
