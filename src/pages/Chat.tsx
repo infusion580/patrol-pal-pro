@@ -232,7 +232,7 @@ const Chat = () => {
   if (!selectedContact) {
     return (
       <div className="min-h-screen bg-background pb-20">
-        <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl bg-destructive">
+        <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
           <div className="max-w-lg mx-auto">
             <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
               <ArrowLeft className="w-4 h-4" /> Regresar
@@ -284,7 +284,7 @@ const Chat = () => {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <div className="text-primary-foreground px-4 pt-12 pb-4 bg-destructive">
+      <div className="text-primary-foreground px-4 pt-12 pb-4 app-header">
         <div className="max-w-lg mx-auto flex items-center gap-3">
           <button onClick={() => { setSelectedContact(null); setMessages([]); loadContacts(); }}>
             <ArrowLeft className="w-5 h-5" />
