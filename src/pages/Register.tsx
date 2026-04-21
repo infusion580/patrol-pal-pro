@@ -51,9 +51,11 @@ const Register = () => {
     <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4 py-8">
       <div className="w-full max-w-sm animate-slide-up">
         <div className="flex flex-col items-center mb-6">
-          <div className="bg-foreground rounded-2xl p-4 mb-3 shadow-elevated w-full max-w-[220px] flex items-center justify-center">
-            <img src={logoDefender} alt="Defender Seguridad Privada" className="w-full h-auto" />
-          </div>
+          <img
+            src={logoDefender}
+            alt="Defender Seguridad Privada"
+            className="w-full max-w-[220px] h-auto mb-3 drop-shadow-[0_8px_24px_hsl(0_82%_52%/0.45)]"
+          />
           <p className="text-xs text-muted-foreground mt-1">Crear cuenta</p>
         </div>
 

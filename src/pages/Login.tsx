@@ -46,9 +46,11 @@ const Login = () => {
       <div className="w-full max-w-sm animate-slide-up">
         {/* Logo */}
         <div className="flex flex-col items-center mb-8">
-          <div className="bg-foreground rounded-2xl p-5 mb-4 shadow-elevated w-full max-w-[260px] flex items-center justify-center">
-            <img src={logoDefender} alt="Defender Seguridad Privada" className="w-full h-auto" />
-          </div>
+          <img
+            src={logoDefender}
+            alt="Defender Seguridad Privada"
+            className="w-full max-w-[260px] h-auto mb-4 drop-shadow-[0_8px_24px_hsl(0_82%_52%/0.45)]"
+          />
           <p className="text-muted-foreground text-sm mt-1">Sistema de Seguridad Operativa</p>
         </div>
 
