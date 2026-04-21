@@ -53,7 +53,8 @@ const Register = () => {
           <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-3 shadow-elevated bg-destructive">
             <Shield className="w-8 h-8 text-primary-foreground" />
           </div>
-          <h1 className="text-xl font-display font-bold text-foreground">Crear Cuenta</h1>
+          <h1 className="text-xl font-display font-bold text-foreground text-center">Defender Seguridad Privada</h1>
+          <p className="text-xs text-muted-foreground mt-1">Crear cuenta</p>
         </div>
 
         <div className="bg-card rounded-xl p-6 shadow-card">
