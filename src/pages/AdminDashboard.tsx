@@ -101,16 +101,56 @@ const AdminDashboard = () => {
     loadData();
   };
 
-  const assignService = async (userId: string, servicioId: string | null) => {
+  const addServicioToGuardia = async (guardiaId: string, servicioId: string, esPrincipalSiPrimero: boolean) => {
+    if (!servicioId) return;
+    const guard = users.find(u => u.id === guardiaId);
+    const yaTiene = guard?.servicios.some(s => s.servicio_id === servicioId);
+    if (yaTiene) {
+      toast({ title: 'Ya está asignado', description: 'Ese servicio ya está en la lista.' });
+      return;
+    }
+    const debeSerPrincipal = esPrincipalSiPrimero && (guard?.servicios.length || 0) === 0;
     const { error } = await supabase
-      .from('profiles')
-      .update({ servicio_asignado_id: servicioId } as any)
-      .eq('user_id', userId);
+      .from('guardia_servicios' as any)
+      .insert({
+        guardia_id: guardiaId,
+        servicio_id: servicioId,
+        es_principal: debeSerPrincipal,
+        created_by: user?.id,
+      } as any);
     if (error) {
       toast({ title: 'Error', description: 'No se pudo asignar el servicio.', variant: 'destructive' });
       return;
     }
-    toast({ title: 'Servicio asignado' });
+    toast({ title: 'Servicio agregado' });
+    loadData();
+  };
+
+  const removeServicioFromGuardia = async (guardiaId: string, servicioId: string) => {
+    const { error } = await supabase
+      .from('guardia_servicios' as any)
+      .delete()
+      .eq('guardia_id', guardiaId)
+      .eq('servicio_id', servicioId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo quitar el servicio.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Servicio quitado' });
+    loadData();
+  };
+
+  const setServicioPrincipal = async (guardiaId: string, servicioId: string) => {
+    const { error } = await supabase
+      .from('guardia_servicios' as any)
+      .update({ es_principal: true } as any)
+      .eq('guardia_id', guardiaId)
+      .eq('servicio_id', servicioId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo marcar como principal.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Servicio principal actualizado' });
     loadData();
   };
 
