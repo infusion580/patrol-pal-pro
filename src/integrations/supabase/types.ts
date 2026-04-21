@@ -280,6 +280,7 @@ export type Database = {
           numero_empleado: string
           servicio_asignado_id: string | null
           status: string
+          supervisor_asignado_id: string | null
           updated_at: string
           user_id: string
         }
@@ -293,6 +294,7 @@ export type Database = {
           numero_empleado?: string
           servicio_asignado_id?: string | null
           status?: string
+          supervisor_asignado_id?: string | null
           updated_at?: string
           user_id: string
         }
@@ -306,6 +308,7 @@ export type Database = {
           numero_empleado?: string
           servicio_asignado_id?: string | null
           status?: string
+          supervisor_asignado_id?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -316,6 +319,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "servicios"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "profiles_supervisor_asignado_id_fkey"
+            columns: ["supervisor_asignado_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
           },
         ]
       }

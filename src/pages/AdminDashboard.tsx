@@ -14,6 +14,7 @@ interface UserItem {
   role: string;
   email: string;
   servicio_asignado_id: string | null;
+  supervisor_asignado_id: string | null;
   status: string;
 }
 
@@ -46,6 +47,7 @@ const AdminDashboard = () => {
         role: roleMap.get(p.user_id) || 'guardia',
         email: p.email,
         servicio_asignado_id: (p as any).servicio_asignado_id || null,
+        supervisor_asignado_id: (p as any).supervisor_asignado_id || null,
         status: (p as any).status || 'activo',
       })));
     }
@@ -94,6 +96,19 @@ const AdminDashboard = () => {
       return;
     }
     toast({ title: 'Servicio asignado' });
+    loadData();
+  };
+
+  const assignSupervisor = async (userId: string, supervisorId: string | null) => {
+    const { error } = await supabase
+      .from('profiles')
+      .update({ supervisor_asignado_id: supervisorId } as any)
+      .eq('user_id', userId);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo asignar el supervisor.', variant: 'destructive' });
+      return;
+    }
+    toast({ title: 'Supervisor asignado' });
     loadData();
   };
 
@@ -246,6 +261,21 @@ const AdminDashboard = () => {
                         ))}
                       </select>
                     </div>
+                    {u.role === 'guardia' && (
+                      <div>
+                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Supervisor Asignado</label>
+                        <select
+                          value={u.supervisor_asignado_id || ''}
+                          onChange={(e) => assignSupervisor(u.id, e.target.value || null)}
+                          className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                          <option value="">Sin asignar</option>
+                          {users.filter(s => s.role === 'supervisor').map(s => (
+                            <option key={s.id} value={s.id}>{s.nombre}</option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
                     <div>
                       <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Estatus</label>
                       <select
