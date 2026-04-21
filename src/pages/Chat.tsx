@@ -257,11 +257,13 @@ const Chat = () => {
             >
               <div className="w-10 h-10 rounded-full bg-accent flex items-center justify-center shrink-0">
                 <span className="text-sm font-bold text-foreground">
-                  {(c.nombre?.[0] || '?')}{(c.apellido?.[0] || '')}
+                  {getInitials(c)}
                 </span>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-foreground truncate">{c.nombre} {c.apellido}</p>
+                <p className="text-sm font-semibold text-foreground truncate">
+                  {getDisplayName(c).nombre} {getDisplayName(c).apellido}
+                </p>
                 <div className="flex items-center gap-1">
                   {getRoleIcon(c.role)}
                   <span className="text-[10px] text-muted-foreground">{getRoleLabel(c.role)}</span>
