@@ -7,6 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 
+interface GuardiaServicio {
+  servicio_id: string;
+  es_principal: boolean;
+}
+
 interface UserItem {
   id: string;
   nombre: string;
@@ -16,6 +21,7 @@ interface UserItem {
   servicio_asignado_id: string | null;
   supervisor_asignado_id: string | null;
   status: string;
+  servicios: GuardiaServicio[];
 }
 
 const AdminDashboard = () => {
