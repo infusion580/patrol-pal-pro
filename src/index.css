@@ -110,6 +110,43 @@
     box-shadow: var(--shadow-emergency);
   }
 
+  /* Rich app header: red gradient + subtle pattern + yellow glow accent */
+  .app-header {
+    position: relative;
+    color: hsl(var(--primary-foreground));
+    background:
+      radial-gradient(120% 80% at 100% 0%, hsl(45 100% 52% / 0.22) 0%, transparent 55%),
+      radial-gradient(90% 60% at 0% 100%, hsl(0 0% 0% / 0.25) 0%, transparent 60%),
+      linear-gradient(135deg, hsl(0 78% 50%) 0%, hsl(0 72% 42%) 100%);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .app-header::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 1px 1px, hsl(0 0% 100% / 0.08) 1px, transparent 0);
+    background-size: 18px 18px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  .app-header::after {
+    content: "";
+    position: absolute;
+    top: -40%;
+    right: -10%;
+    width: 220px;
+    height: 220px;
+    border-radius: 9999px;
+    background: radial-gradient(closest-side, hsl(45 100% 52% / 0.35), transparent 70%);
+    filter: blur(8px);
+    pointer-events: none;
+    z-index: -1;
+  }
+
   .animate-pulse-emergency {
     animation: pulse-emergency 1.5s ease-in-out infinite;
   }
