@@ -28,6 +28,58 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
+/**
+ * Robust GPS getter: tries high-accuracy first, falls back to low-accuracy with cached position.
+ * Returns position or throws an Error with a user-friendly message.
+ */
+async function getCurrentPositionRobust(): Promise<GeolocationPosition> {
+  if (!('geolocation' in navigator)) {
+    throw new Error('Tu dispositivo no soporta geolocalización.');
+  }
+
+  // Check permission state if available (not supported on all browsers)
+  try {
+    if ('permissions' in navigator) {
+      const status = await (navigator as any).permissions.query({ name: 'geolocation' });
+      if (status.state === 'denied') {
+        throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador para este sitio.');
+      }
+    }
+  } catch (e: any) {
+    if (e?.message?.includes('denegado')) throw e;
+    // ignore — permissions API not available
+  }
+
+  const tryGet = (opts: PositionOptions) =>
+    new Promise<GeolocationPosition>((resolve, reject) =>
+      navigator.geolocation.getCurrentPosition(resolve, reject, opts)
+    );
+
+  try {
+    // First attempt: high accuracy, allow recent cached fix (up to 10s)
+    return await tryGet({ enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 });
+  } catch (err: any) {
+    if (err?.code === 1) {
+      throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador.');
+    }
+    // Fallback: lower accuracy, accept older cache (up to 60s) — works better indoors
+    try {
+      return await tryGet({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
+    } catch (err2: any) {
+      if (err2?.code === 1) {
+        throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador.');
+      }
+      if (err2?.code === 2) {
+        throw new Error('GPS no disponible. Verifica que la ubicación esté activada y tengas señal.');
+      }
+      if (err2?.code === 3) {
+        throw new Error('Tiempo agotado al obtener GPS. Sal a un área abierta e inténtalo de nuevo.');
+      }
+      throw new Error('No se pudo obtener tu ubicación. Inténtalo de nuevo.');
+    }
+  }
+}
+
 const Rondines = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
