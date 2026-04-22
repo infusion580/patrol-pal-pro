@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { ArrowLeft, Camera, UserPlus, LogOut, Clock, Car, CreditCard, Eye } from 'lucide-react';
+import { ArrowLeft, Camera, UserPlus, LogOut, Clock, Car, CreditCard, Eye, User, Building2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,6 +12,8 @@ interface Visita {
   id: string;
   nombre_visitante: string;
   motivo: string;
+  persona_a_visitar: string;
+  area_destino: string;
   foto_placa_url: string;
   foto_ine_url: string;
   foto_salida_url: string;
@@ -39,6 +41,8 @@ const Visitas = () => {
   // Form state
   const [nombre, setNombre] = useState('');
   const [motivo, setMotivo] = useState('');
+  const [personaAVisitar, setPersonaAVisitar] = useState('');
+  const [areaDestino, setAreaDestino] = useState('');
   const [fotoPlaca, setFotoPlaca] = useState<File | null>(null);
   const [fotoIne, setFotoIne] = useState<File | null>(null);
   const [previewPlaca, setPreviewPlaca] = useState('');
@@ -108,6 +112,8 @@ const Visitas = () => {
         guardia_id: user.id,
         nombre_visitante: nombre.trim(),
         motivo: motivo.trim(),
+        persona_a_visitar: personaAVisitar.trim(),
+        area_destino: areaDestino.trim(),
         foto_placa_url: placaPath,
         foto_ine_url: inePath,
       } as any);
@@ -155,6 +161,8 @@ const Visitas = () => {
     setShowForm(false);
     setNombre('');
     setMotivo('');
+    setPersonaAVisitar('');
+    setAreaDestino('');
     setFotoPlaca(null);
     setFotoIne(null);
     setPreviewPlaca('');
@@ -204,6 +212,32 @@ const Visitas = () => {
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 placeholder="Nombre completo"
+                className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                <User className="w-3 h-3" /> A quién va a ver
+              </label>
+              <input
+                type="text"
+                value={personaAVisitar}
+                onChange={(e) => setPersonaAVisitar(e.target.value)}
+                placeholder="Nombre de la persona a visitar"
+                className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground mb-1 flex items-center gap-1">
+                <Building2 className="w-3 h-3" /> A qué área
+              </label>
+              <input
+                type="text"
+                value={areaDestino}
+                onChange={(e) => setAreaDestino(e.target.value)}
+                placeholder="Ej: Recursos Humanos, Almacén..."
                 className="w-full h-10 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
               />
             </div>
@@ -276,9 +310,19 @@ const Visitas = () => {
               {visitas.filter(v => v.status === 'dentro').map(v => (
                 <div key={v.id} className="bg-card rounded-xl p-4 shadow-card">
                   <div className="flex items-start justify-between mb-2">
-                    <div>
+                    <div className="min-w-0 flex-1 pr-2">
                       <p className="font-semibold text-sm text-foreground">{v.nombre_visitante}</p>
-                      <p className="text-xs text-muted-foreground">{v.motivo || 'Sin motivo especificado'}</p>
+                      {v.persona_a_visitar && (
+                        <p className="text-[11px] text-foreground/80 flex items-center gap-1 mt-0.5">
+                          <User className="w-3 h-3 shrink-0" /> Visita a: <span className="font-medium">{v.persona_a_visitar}</span>
+                        </p>
+                      )}
+                      {v.area_destino && (
+                        <p className="text-[11px] text-foreground/80 flex items-center gap-1 mt-0.5">
+                          <Building2 className="w-3 h-3 shrink-0" /> Área: <span className="font-medium">{v.area_destino}</span>
+                        </p>
+                      )}
+                      <p className="text-xs text-muted-foreground mt-0.5">{v.motivo || 'Sin motivo especificado'}</p>
                       <p className="text-[10px] text-primary flex items-center gap-1 mt-1">
                         <Clock className="w-3 h-3" />
                         Entrada: {new Date(v.hora_entrada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}

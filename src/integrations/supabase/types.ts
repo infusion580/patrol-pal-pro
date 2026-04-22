@@ -625,6 +625,7 @@ export type Database = {
       }
       visitas: {
         Row: {
+          area_destino: string
           created_at: string
           foto_ine_url: string | null
           foto_placa_url: string | null
@@ -635,10 +636,12 @@ export type Database = {
           id: string
           motivo: string
           nombre_visitante: string
+          persona_a_visitar: string
           servicio_id: string | null
           status: string
         }
         Insert: {
+          area_destino?: string
           created_at?: string
           foto_ine_url?: string | null
           foto_placa_url?: string | null
@@ -649,10 +652,12 @@ export type Database = {
           id?: string
           motivo?: string
           nombre_visitante: string
+          persona_a_visitar?: string
           servicio_id?: string | null
           status?: string
         }
         Update: {
+          area_destino?: string
           created_at?: string
           foto_ine_url?: string | null
           foto_placa_url?: string | null
@@ -663,6 +668,7 @@ export type Database = {
           id?: string
           motivo?: string
           nombre_visitante?: string
+          persona_a_visitar?: string
           servicio_id?: string | null
           status?: string
         }
