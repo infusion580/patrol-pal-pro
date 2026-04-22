@@ -91,8 +91,13 @@ const SupervisorDashboard = () => {
             <h1 className="text-2xl font-display font-bold uppercase truncate">{user?.nombre} {user?.apellido}</h1>
             <p className="text-xs opacity-70 mt-1 font-mono">#{user?.numeroEmpleado}</p>
           </div>
-          <div className="shrink-0 bg-foreground rounded-xl p-2 shadow-brand">
-            <img src={logoDefender} alt="Defender Seguridad Privada" className="h-9 w-auto" />
+          <div className="shrink-0 flex items-center">
+            <img
+              src={logoDefender}
+              alt="Defender Seguridad Privada"
+              className="w-auto object-contain drop-shadow-[0_4px_12px_hsl(0_82%_52%/0.45)]"
+              style={{ height: 'clamp(2rem, 7vw, 3rem)' }}
+            />
           </div>
         </div>
       </div>

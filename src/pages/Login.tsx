@@ -49,9 +49,10 @@ const Login = () => {
           <img
             src={logoDefender}
             alt="Defender Seguridad Privada"
-            className="w-full max-w-[260px] h-auto mb-4 drop-shadow-[0_8px_24px_hsl(0_82%_52%/0.45)]"
+            className="h-auto mb-4 drop-shadow-[0_8px_24px_hsl(0_82%_52%/0.45)]"
+            style={{ width: 'clamp(180px, 65vw, 280px)' }}
           />
-          <p className="text-muted-foreground text-sm mt-1">Sistema de Seguridad Operativa</p>
+          <p className="text-muted-foreground text-sm mt-1 text-center">Sistema de Seguridad Operativa</p>
         </div>
 
         {/* Form */}

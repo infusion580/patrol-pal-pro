@@ -87,7 +87,8 @@ const AppHeader = ({
               <img
                 src={logoDefender}
                 alt="Defender Seguridad Privada"
-                className="h-9 sm:h-11 md:h-12 w-auto object-contain drop-shadow-[0_4px_12px_hsl(0_82%_52%/0.45)]"
+                className="w-auto object-contain drop-shadow-[0_4px_12px_hsl(0_82%_52%/0.45)]"
+                style={{ height: 'clamp(2rem, 7vw, 3rem)' }}
               />
             </div>
           )}
