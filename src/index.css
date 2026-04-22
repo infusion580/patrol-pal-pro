@@ -158,16 +158,22 @@
     z-index: -1;
   }
 
+  /* Decorative Defender logo watermark — appears automatically on every page
+     that uses .app-header. Sits behind content so it never interferes. */
   .app-header::after {
     content: "";
     position: absolute;
-    top: clamp(-90px, -22vw, -40px);
-    right: clamp(-60px, -12vw, -20px);
-    width: clamp(180px, 60vw, 300px);
-    height: clamp(180px, 60vw, 300px);
-    border-radius: 9999px;
-    background: radial-gradient(closest-side, hsl(0 82% 52% / 0.35), transparent 70%);
-    filter: blur(14px);
+    top: 50%;
+    right: clamp(0.75rem, 4vw, 1.5rem);
+    transform: translateY(-50%);
+    width: clamp(3.5rem, 14vw, 6rem);
+    height: clamp(3.5rem, 14vw, 6rem);
+    background-image: url('/logo-defender.png');
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: contain;
+    opacity: 0.18;
+    filter: drop-shadow(0 4px 12px hsl(0 82% 52% / 0.45));
     pointer-events: none;
     z-index: -1;
   }
