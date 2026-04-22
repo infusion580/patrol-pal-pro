@@ -70,7 +70,8 @@ const ResetPassword = () => {
           <img
             src={logoDefender}
             alt="Defender Seguridad Privada"
-            className="w-full max-w-[220px] h-auto mb-3 drop-shadow-[0_8px_24px_hsl(0_82%_52%/0.45)]"
+            className="h-auto mb-3 drop-shadow-[0_8px_24px_hsl(0_82%_52%/0.45)]"
+            style={{ width: 'clamp(160px, 55vw, 240px)' }}
           />
           <p className="text-xs text-muted-foreground mt-1">Establecer nueva contraseña</p>
         </div>
