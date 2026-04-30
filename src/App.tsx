@@ -29,6 +29,7 @@ import GuardActivityPage from "./pages/GuardActivityPage";
 import MetasServicio from "./pages/MetasServicio";
 import CuadroHonor from "./pages/CuadroHonor";
 import ReporteAsistencias from "./pages/ReporteAsistencias";
+import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 
 const queryClient = new QueryClient();
 
@@ -38,6 +39,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <GlobalZoneMonitor />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
