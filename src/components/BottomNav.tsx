@@ -34,7 +34,16 @@ const BottomNav = () => {
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];
 
-  const items = user?.role === 'admin' ? adminItems : user?.role === 'supervisor' ? supervisorItems : guardItems;
+  const clienteItems = [
+    { path: '/dashboard', icon: Home, label: 'Inicio' },
+    { path: '/perfil', icon: User, label: 'Perfil' },
+  ];
+
+  const items =
+    user?.role === 'admin' ? adminItems
+    : user?.role === 'supervisor' ? supervisorItems
+    : user?.role === 'cliente' ? clienteItems
+    : guardItems;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-card border-t border-border z-50 shadow-elevated">

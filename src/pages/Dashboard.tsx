@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 import GuardDashboard from './GuardDashboard';
 import SupervisorDashboard from './SupervisorDashboard';
 import AdminDashboard from './AdminDashboard';
+import ClienteDashboard from './ClienteDashboard';
 
 const Dashboard = () => {
   const { user, isAuthenticated, loading } = useAuth();
@@ -21,6 +22,7 @@ const Dashboard = () => {
   if (!isAuthenticated) return <Navigate to="/login" replace />;
 
   if (user?.role === 'admin') return <AdminDashboard />;
+  if (user?.role === 'cliente') return <ClienteDashboard />;
   return user?.role === 'supervisor' ? <SupervisorDashboard /> : <GuardDashboard />;
 };
 

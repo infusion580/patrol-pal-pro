@@ -166,6 +166,30 @@ export type Database = {
           },
         ]
       }
+      cliente_servicios: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          created_by: string | null
+          id: string
+          servicio_id: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          servicio_id: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          servicio_id?: string
+        }
+        Relationships: []
+      }
       cuadro_honor: {
         Row: {
           created_at: string
@@ -858,6 +882,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cliente_has_servicio: {
+        Args: { _servicio_id: string; _user_id: string }
+        Returns: boolean
+      }
       get_assigned_supervisor: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
         Args: { _user_id: string }
@@ -879,7 +907,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "guardia" | "supervisor" | "admin"
+      app_role: "guardia" | "supervisor" | "admin" | "cliente"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1007,7 +1035,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["guardia", "supervisor", "admin"],
+      app_role: ["guardia", "supervisor", "admin", "cliente"],
     },
   },
 } as const
