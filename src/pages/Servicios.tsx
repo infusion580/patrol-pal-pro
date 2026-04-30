@@ -197,7 +197,7 @@ const Servicios = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground">{servicio.nombre}</p>
-                  <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos</p>
+                  <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos • {TIPO_TURNO_LABEL[servicio.tipo_turno]}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button onClick={(e) => { e.stopPropagation(); removeService(servicio.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors">
@@ -210,6 +210,18 @@ const Servicios = () => {
               {isExpanded && (
                 <div className="px-4 pb-4 space-y-2 animate-slide-up">
                   <p className="text-xs text-muted-foreground">{servicio.direccion}</p>
+                  <div className="border-t border-border pt-3">
+                    <label className="text-xs font-semibold text-foreground block mb-1">Tipo de turno</label>
+                    <select
+                      value={servicio.tipo_turno}
+                      onChange={e => updateTipoTurno(servicio.id, e.target.value as TipoTurno)}
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                    >
+                      <option value="12h">12 horas</option>
+                      <option value="24h">24 horas</option>
+                      <option value="corrido">De corrido</option>
+                    </select>
+                  </div>
                   <div className="border-t border-border pt-3">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-foreground">Puntos de Rondín</h4>
