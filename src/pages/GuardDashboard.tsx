@@ -7,6 +7,7 @@ import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 import ShiftControl from '@/components/ShiftControl';
 import DailyProgress from '@/components/DailyProgress';
+import PendientesList from '@/components/PendientesList';
 import AppHeader from '@/components/AppHeader';
 
 const GuardDashboard = () => {
@@ -93,6 +94,8 @@ const GuardDashboard = () => {
         </div>
 
         <ShiftControl />
+
+        <PendientesList />
 
         <DailyProgress />
 

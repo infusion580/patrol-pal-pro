@@ -257,6 +257,7 @@ const AdminDashboard = () => {
             { icon: Target, label: 'Metas', path: '/metas' },
             { icon: Trophy, label: 'Cuadro Honor', path: '/cuadro-honor' },
             { icon: ClipboardList, label: 'Asistencias', path: '/reporte-asistencias' },
+            { icon: ClipboardList, label: 'Pendientes', path: '/pendientes' },
           ].map(a => (
             <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-1.5 hover:shadow-elevated transition-shadow active:scale-[0.98]">
               <a.icon className="w-5 h-5 text-primary" />
