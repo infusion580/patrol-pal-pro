@@ -44,7 +44,7 @@ const Servicios = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
-  const [newService, setNewService] = useState({ nombre: '', cliente: '', direccion: '' });
+  const [newService, setNewService] = useState<{ nombre: string; cliente: string; direccion: string; tipo_turno: TipoTurno }>({ nombre: '', cliente: '', direccion: '', tipo_turno: '12h' });
   const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
 
   const fetchServicios = async () => {
@@ -59,6 +59,7 @@ const Servicios = () => {
         nombre: s.nombre,
         cliente: s.cliente,
         direccion: s.direccion,
+        tipo_turno: ((s as any).tipo_turno || '12h') as TipoTurno,
         checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
       });
     }
@@ -74,12 +75,20 @@ const Servicios = () => {
       nombre: newService.nombre,
       cliente: newService.cliente,
       direccion: newService.direccion,
+      tipo_turno: newService.tipo_turno,
       created_by: user?.id,
-    });
+    } as any);
     if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el servicio.', variant: 'destructive' }); return; }
-    setNewService({ nombre: '', cliente: '', direccion: '' });
+    setNewService({ nombre: '', cliente: '', direccion: '', tipo_turno: '12h' });
     setShowAddService(false);
     toast({ title: 'Servicio agregado' });
+    fetchServicios();
+  };
+
+  const updateTipoTurno = async (servicioId: string, tipo: TipoTurno) => {
+    const { error } = await supabase.from('servicios').update({ tipo_turno: tipo } as any).eq('id', servicioId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo actualizar el tipo de turno.', variant: 'destructive' }); return; }
+    toast({ title: 'Tipo de turno actualizado' });
     fetchServicios();
   };
 
