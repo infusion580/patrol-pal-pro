@@ -18,13 +18,22 @@ interface Checkpoint {
   radius_metros: number;
 }
 
+type TipoTurno = '12h' | '24h' | 'corrido';
+
 interface Servicio {
   id: string;
   nombre: string;
   cliente: string;
   direccion: string;
+  tipo_turno: TipoTurno;
   checkpoints: Checkpoint[];
 }
+
+const TIPO_TURNO_LABEL: Record<TipoTurno, string> = {
+  '12h': '12 horas',
+  '24h': '24 horas',
+  'corrido': 'De corrido',
+};
 
 const Servicios = () => {
   const navigate = useNavigate();
