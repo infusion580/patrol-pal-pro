@@ -231,8 +231,8 @@ const PendientesList = () => {
             >
               <div className="flex items-start gap-2">
                 <button
-                  onClick={() => !p.cumplido && marcar(p)}
-                  disabled={p.cumplido || marking === p.id}
+                  onClick={() => !p.cumplido && abrirCompletar(p)}
+                  disabled={p.cumplido}
                   className="mt-0.5 shrink-0"
                   aria-label={p.cumplido ? 'Cumplido' : 'Marcar como completado'}
                 >
