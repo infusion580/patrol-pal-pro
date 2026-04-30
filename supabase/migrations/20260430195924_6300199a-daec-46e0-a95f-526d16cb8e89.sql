@@ -1,0 +1,1 @@
+UPDATE public.servicios SET tipo_turno = '24h' WHERE id = '62cb3c8c-e949-4ae4-a6a3-ef2eade1b41a';
