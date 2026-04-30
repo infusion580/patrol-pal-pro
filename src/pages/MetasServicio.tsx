@@ -17,6 +17,7 @@ interface ServicioRow {
 interface MetaRow {
   rondines_diarios: number;
   reportes_diarios: number;
+  pendientes_diarios: number;
   hora_inicio: string;
   hora_fin: string;
 }
@@ -49,13 +50,14 @@ const MetasServicio = () => {
       map[m.servicio_id] = {
         rondines_diarios: m.rondines_diarios,
         reportes_diarios: m.reportes_diarios,
+        pendientes_diarios: m.pendientes_diarios ?? 0,
         hora_inicio: m.hora_inicio?.slice(0, 5) || '08:00',
         hora_fin: m.hora_fin?.slice(0, 5) || '20:00',
       };
     });
     (svcs || []).forEach(s => {
       if (!map[s.id]) {
-        map[s.id] = { rondines_diarios: 4, reportes_diarios: 1, hora_inicio: '08:00', hora_fin: '20:00' };
+        map[s.id] = { rondines_diarios: 4, reportes_diarios: 1, pendientes_diarios: 0, hora_inicio: '08:00', hora_fin: '20:00' };
       }
     });
     setServicios(svcs || []);
@@ -77,6 +79,7 @@ const MetasServicio = () => {
           servicio_id: svcId,
           rondines_diarios: Number(m.rondines_diarios),
           reportes_diarios: Number(m.reportes_diarios),
+          pendientes_diarios: Number(m.pendientes_diarios),
           hora_inicio: m.hora_inicio,
           hora_fin: m.hora_fin,
           created_by: user?.id,
@@ -140,6 +143,11 @@ const MetasServicio = () => {
                 <div>
                   <Label className="text-xs">Reportes/día</Label>
                   <Input type="number" min="0" value={m.reportes_diarios} onChange={e => updateField(s.id, 'reportes_diarios', e.target.value)} className="h-9" />
+                </div>
+                <div className="col-span-2">
+                  <Label className="text-xs">Pendientes/día</Label>
+                  <Input type="number" min="0" value={m.pendientes_diarios} onChange={e => updateField(s.id, 'pendientes_diarios', e.target.value)} className="h-9" />
+                  <p className="text-[10px] text-muted-foreground mt-1">Tareas del puesto que el guardia debe completar para sumar puntos al Cuadro de Honor.</p>
                 </div>
                 <div>
                   <Label className="text-xs">Hora inicio</Label>
