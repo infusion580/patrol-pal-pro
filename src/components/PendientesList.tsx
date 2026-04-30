@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { ClipboardList, CheckCircle2, Circle, AlertOctagon, Repeat } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { ClipboardList, CheckCircle2, Circle, AlertOctagon, Repeat, Camera, X, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
@@ -33,7 +34,6 @@ const PendientesList = () => {
   const { toast } = useToast();
   const [items, setItems] = useState<Pendiente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [marking, setMarking] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
@@ -124,30 +124,83 @@ const PendientesList = () => {
     return () => { supabase.removeChannel(ch); };
   }, [user, load]);
 
-  const marcar = async (p: Pendiente) => {
-    if (!user) return;
-    setMarking(p.id);
+  // Estado del diálogo de cumplimiento
+  const [openItem, setOpenItem] = useState<Pendiente | null>(null);
+  const [nota, setNota] = useState('');
+  const [foto, setFoto] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data: turno } = await supabase
-      .from('turnos')
-      .select('id')
-      .eq('guardia_id', user.id)
-      .eq('status', 'activo')
-      .maybeSingle();
+  const abrirCompletar = (p: Pendiente) => {
+    setOpenItem(p);
+    setNota('');
+    setFoto(null);
+    setFotoPreview(null);
+  };
 
-    const { error } = await supabase.from('pendientes_completados' as any).insert({
-      pendiente_id: p.id,
-      guardia_id: user.id,
-      turno_id: turno?.id || null,
-    } as any);
+  const cerrar = () => {
+    setOpenItem(null);
+    setNota('');
+    setFoto(null);
+    setFotoPreview(null);
+    setSubmitting(false);
+  };
 
-    if (error) {
-      toast({ title: 'Error', description: 'No se pudo registrar.', variant: 'destructive' });
-    } else {
-      toast({ title: '✅ Completado', description: p.titulo });
-      load();
+  const onSelectFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      toast({ title: 'Foto muy grande', description: 'Máximo 8MB.', variant: 'destructive' });
+      return;
     }
-    setMarking(null);
+    setFoto(file);
+    setFotoPreview(URL.createObjectURL(file));
+  };
+
+  const confirmar = async () => {
+    if (!user || !openItem) return;
+    setSubmitting(true);
+
+    try {
+      let fotoUrl = '';
+      if (foto) {
+        const ext = foto.name.split('.').pop() || 'jpg';
+        const path = `${user.id}/${openItem.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('pendientes').upload(path, foto, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: foto.type,
+        });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from('pendientes').getPublicUrl(path);
+        fotoUrl = data.publicUrl;
+      }
+
+      const { data: turno } = await supabase
+        .from('turnos')
+        .select('id')
+        .eq('guardia_id', user.id)
+        .eq('status', 'activo')
+        .maybeSingle();
+
+      const { error } = await supabase.from('pendientes_completados' as any).insert({
+        pendiente_id: openItem.id,
+        guardia_id: user.id,
+        turno_id: turno?.id || null,
+        nota: nota.trim(),
+        foto_url: fotoUrl,
+      } as any);
+
+      if (error) throw error;
+
+      toast({ title: '✅ Completado', description: openItem.titulo });
+      cerrar();
+      load();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message || 'No se pudo registrar.', variant: 'destructive' });
+      setSubmitting(false);
+    }
   };
 
   if (loading) return null;
@@ -178,8 +231,8 @@ const PendientesList = () => {
             >
               <div className="flex items-start gap-2">
                 <button
-                  onClick={() => !p.cumplido && marcar(p)}
-                  disabled={p.cumplido || marking === p.id}
+                  onClick={() => !p.cumplido && abrirCompletar(p)}
+                  disabled={p.cumplido}
                   className="mt-0.5 shrink-0"
                   aria-label={p.cumplido ? 'Cumplido' : 'Marcar como completado'}
                 >
@@ -221,6 +274,85 @@ const PendientesList = () => {
           );
         })}
       </div>
+
+      {openItem && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
+          onClick={cerrar}
+        >
+          <div
+            className="bg-card w-full max-w-md rounded-2xl shadow-elevated p-4 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-display font-bold text-base text-foreground">Marcar como completado</h3>
+                <p className="text-xs text-muted-foreground">{openItem.titulo}</p>
+              </div>
+              <button onClick={cerrar} className="p-1 rounded hover:bg-accent" aria-label="Cerrar">
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                Foto de evidencia (opcional)
+              </label>
+              {fotoPreview ? (
+                <div className="relative">
+                  <img src={fotoPreview} alt="Evidencia" className="w-full h-48 object-cover rounded-lg" />
+                  <button
+                    onClick={() => { setFoto(null); setFotoPreview(null); }}
+                    className="absolute top-2 right-2 p-1 bg-emergency text-emergency-foreground rounded-full"
+                    aria-label="Quitar foto"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-24 rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Camera className="w-6 h-6" />
+                  <span className="text-xs font-semibold">Tomar / Adjuntar foto</span>
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={onSelectFoto}
+                className="hidden"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                Nota (opcional)
+              </label>
+              <textarea
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder="Observaciones, novedades..."
+                rows={2}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" onClick={cerrar} disabled={submitting} className="flex-1">
+                Cancelar
+              </Button>
+              <Button onClick={confirmar} disabled={submitting} className="flex-1 bg-success text-success-foreground hover:bg-success/90">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+                {submitting ? 'Guardando...' : 'Confirmar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
