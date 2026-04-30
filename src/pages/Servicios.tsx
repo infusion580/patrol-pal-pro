@@ -159,6 +159,18 @@ const Servicios = () => {
               <Input placeholder="Nombre del servicio" value={newService.nombre} onChange={e => setNewService(p => ({ ...p, nombre: e.target.value }))} className="h-10" />
               <Input placeholder="Cliente" value={newService.cliente} onChange={e => setNewService(p => ({ ...p, cliente: e.target.value }))} className="h-10" />
               <Input placeholder="Dirección" value={newService.direccion} onChange={e => setNewService(p => ({ ...p, direccion: e.target.value }))} className="h-10" />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">Tipo de turno *</label>
+                <select
+                  value={newService.tipo_turno}
+                  onChange={e => setNewService(p => ({ ...p, tipo_turno: e.target.value as TipoTurno }))}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                >
+                  <option value="12h">12 horas</option>
+                  <option value="24h">24 horas</option>
+                  <option value="corrido">De corrido (vive en el servicio)</option>
+                </select>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={addService} className="flex-1">Guardar</Button>
