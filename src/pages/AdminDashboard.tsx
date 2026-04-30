@@ -23,6 +23,7 @@ interface UserItem {
   supervisor_asignado_id: string | null;
   status: string;
   servicios: GuardiaServicio[];
+  clienteServicios: string[]; // servicio_ids assigned as client
 }
 
 const AdminDashboard = () => {
@@ -39,11 +40,12 @@ const AdminDashboard = () => {
   useEffect(() => { loadData(); }, []);
 
   const loadData = async () => {
-    const [{ data: profiles }, { data: roles }, { data: srvs }, { data: gsrv }] = await Promise.all([
+    const [{ data: profiles }, { data: roles }, { data: srvs }, { data: gsrv }, { data: csrv }] = await Promise.all([
       supabase.from('profiles').select('*'),
       supabase.from('user_roles').select('*'),
       supabase.from('servicios').select('id, nombre').order('nombre'),
       supabase.from('guardia_servicios' as any).select('guardia_id, servicio_id, es_principal'),
+      supabase.from('cliente_servicios' as any).select('cliente_id, servicio_id'),
     ]);
 
     const roleMap = new Map(roles?.map(r => [r.user_id, r.role]));
@@ -52,6 +54,12 @@ const AdminDashboard = () => {
       const list = serviciosByGuardia.get(row.guardia_id) || [];
       list.push({ servicio_id: row.servicio_id, es_principal: row.es_principal });
       serviciosByGuardia.set(row.guardia_id, list);
+    });
+    const serviciosByCliente = new Map<string, string[]>();
+    (csrv as any[] | null)?.forEach(row => {
+      const list = serviciosByCliente.get(row.cliente_id) || [];
+      list.push(row.servicio_id);
+      serviciosByCliente.set(row.cliente_id, list);
     });
 
     if (profiles) {
@@ -65,6 +73,7 @@ const AdminDashboard = () => {
         supervisor_asignado_id: (p as any).supervisor_asignado_id || null,
         status: (p as any).status || 'activo',
         servicios: serviciosByGuardia.get(p.user_id) || [],
+        clienteServicios: serviciosByCliente.get(p.user_id) || [],
       })));
     }
     setServicios(srvs || []);
@@ -194,6 +203,24 @@ const AdminDashboard = () => {
     guardia: { label: 'Guardia', cls: 'bg-primary/10 text-primary' },
     supervisor: { label: 'Supervisor', cls: 'bg-secondary/10 text-secondary' },
     admin: { label: 'Admin', cls: 'bg-emergency/10 text-emergency' },
+    cliente: { label: 'Cliente', cls: 'bg-warning/10 text-warning' },
+  };
+
+  const addServicioToCliente = async (clienteId: string, servicioId: string) => {
+    if (!servicioId) return;
+    const { error } = await supabase.from('cliente_servicios' as any).insert({
+      cliente_id: clienteId, servicio_id: servicioId, created_by: user?.id,
+    } as any);
+    if (error) { toast({ title: 'Error', description: 'No se pudo asignar.', variant: 'destructive' }); return; }
+    toast({ title: 'Servicio asignado al cliente' });
+    loadData();
+  };
+  const removeServicioFromCliente = async (clienteId: string, servicioId: string) => {
+    const { error } = await supabase.from('cliente_servicios' as any).delete()
+      .eq('cliente_id', clienteId).eq('servicio_id', servicioId);
+    if (error) { toast({ title: 'Error', variant: 'destructive' }); return; }
+    toast({ title: 'Servicio quitado del cliente' });
+    loadData();
   };
 
   const statusColors: Record<string, { label: string; cls: string }> = {
@@ -314,6 +341,7 @@ const AdminDashboard = () => {
                         <option value="guardia">Guardia</option>
                         <option value="supervisor">Supervisor</option>
                         <option value="admin">Admin</option>
+                        <option value="cliente">Cliente</option>
                       </select>
                     </div>
                     {u.role === 'guardia' ? (
