@@ -388,6 +388,87 @@ export type Database = {
         }
         Relationships: []
       }
+      pendientes_completados: {
+        Row: {
+          created_at: string
+          foto_url: string | null
+          guardia_id: string
+          id: string
+          nota: string | null
+          pendiente_id: string
+          turno_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          foto_url?: string | null
+          guardia_id: string
+          id?: string
+          nota?: string | null
+          pendiente_id: string
+          turno_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          foto_url?: string | null
+          guardia_id?: string
+          id?: string
+          nota?: string | null
+          pendiente_id?: string
+          turno_id?: string | null
+        }
+        Relationships: []
+      }
+      pendientes_puesto: {
+        Row: {
+          activo: boolean
+          created_at: string
+          created_by: string | null
+          descripcion: string
+          frecuencia: string
+          guardia_id: string | null
+          horas_intervalo: number | null
+          id: string
+          prioridad: string
+          servicio_id: string
+          titulo: string
+          updated_at: string
+          vigencia_fin: string | null
+          vigencia_inicio: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descripcion?: string
+          frecuencia?: string
+          guardia_id?: string | null
+          horas_intervalo?: number | null
+          id?: string
+          prioridad?: string
+          servicio_id: string
+          titulo: string
+          updated_at?: string
+          vigencia_fin?: string | null
+          vigencia_inicio?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descripcion?: string
+          frecuencia?: string
+          guardia_id?: string | null
+          horas_intervalo?: number | null
+          id?: string
+          prioridad?: string
+          servicio_id?: string
+          titulo?: string
+          updated_at?: string
+          vigencia_fin?: string | null
+          vigencia_inicio?: string
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           apellido: string

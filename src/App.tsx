@@ -29,6 +29,7 @@ import GuardActivityPage from "./pages/GuardActivityPage";
 import MetasServicio from "./pages/MetasServicio";
 import CuadroHonor from "./pages/CuadroHonor";
 import ReporteAsistencias from "./pages/ReporteAsistencias";
+import PendientesPuesto from "./pages/PendientesPuesto";
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,7 @@ const App = () => (
             <Route path="/metas" element={<MetasServicio />} />
             <Route path="/cuadro-honor" element={<CuadroHonor />} />
             <Route path="/reporte-asistencias" element={<ReporteAsistencias />} />
+            <Route path="/pendientes" element={<PendientesPuesto />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
