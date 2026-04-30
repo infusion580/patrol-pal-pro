@@ -18,13 +18,22 @@ interface Checkpoint {
   radius_metros: number;
 }
 
+type TipoTurno = '12h' | '24h' | 'corrido';
+
 interface Servicio {
   id: string;
   nombre: string;
   cliente: string;
   direccion: string;
+  tipo_turno: TipoTurno;
   checkpoints: Checkpoint[];
 }
+
+const TIPO_TURNO_LABEL: Record<TipoTurno, string> = {
+  '12h': '12 horas',
+  '24h': '24 horas',
+  'corrido': 'De corrido',
+};
 
 const Servicios = () => {
   const navigate = useNavigate();
@@ -35,7 +44,7 @@ const Servicios = () => {
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
-  const [newService, setNewService] = useState({ nombre: '', cliente: '', direccion: '' });
+  const [newService, setNewService] = useState<{ nombre: string; cliente: string; direccion: string; tipo_turno: TipoTurno }>({ nombre: '', cliente: '', direccion: '', tipo_turno: '12h' });
   const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
 
   const fetchServicios = async () => {
@@ -50,6 +59,7 @@ const Servicios = () => {
         nombre: s.nombre,
         cliente: s.cliente,
         direccion: s.direccion,
+        tipo_turno: ((s as any).tipo_turno || '12h') as TipoTurno,
         checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
       });
     }
@@ -65,12 +75,20 @@ const Servicios = () => {
       nombre: newService.nombre,
       cliente: newService.cliente,
       direccion: newService.direccion,
+      tipo_turno: newService.tipo_turno,
       created_by: user?.id,
-    });
+    } as any);
     if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el servicio.', variant: 'destructive' }); return; }
-    setNewService({ nombre: '', cliente: '', direccion: '' });
+    setNewService({ nombre: '', cliente: '', direccion: '', tipo_turno: '12h' });
     setShowAddService(false);
     toast({ title: 'Servicio agregado' });
+    fetchServicios();
+  };
+
+  const updateTipoTurno = async (servicioId: string, tipo: TipoTurno) => {
+    const { error } = await supabase.from('servicios').update({ tipo_turno: tipo } as any).eq('id', servicioId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo actualizar el tipo de turno.', variant: 'destructive' }); return; }
+    toast({ title: 'Tipo de turno actualizado' });
     fetchServicios();
   };
 
@@ -141,6 +159,18 @@ const Servicios = () => {
               <Input placeholder="Nombre del servicio" value={newService.nombre} onChange={e => setNewService(p => ({ ...p, nombre: e.target.value }))} className="h-10" />
               <Input placeholder="Cliente" value={newService.cliente} onChange={e => setNewService(p => ({ ...p, cliente: e.target.value }))} className="h-10" />
               <Input placeholder="Dirección" value={newService.direccion} onChange={e => setNewService(p => ({ ...p, direccion: e.target.value }))} className="h-10" />
+              <div>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">Tipo de turno *</label>
+                <select
+                  value={newService.tipo_turno}
+                  onChange={e => setNewService(p => ({ ...p, tipo_turno: e.target.value as TipoTurno }))}
+                  className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                >
+                  <option value="12h">12 horas</option>
+                  <option value="24h">24 horas</option>
+                  <option value="corrido">De corrido (vive en el servicio)</option>
+                </select>
+              </div>
             </div>
             <div className="flex gap-2">
               <Button size="sm" onClick={addService} className="flex-1">Guardar</Button>
@@ -167,7 +197,7 @@ const Servicios = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm text-foreground">{servicio.nombre}</p>
-                  <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos</p>
+                  <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos • {TIPO_TURNO_LABEL[servicio.tipo_turno]}</p>
                 </div>
                 <div className="flex items-center gap-1">
                   <button onClick={(e) => { e.stopPropagation(); removeService(servicio.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors">
@@ -180,6 +210,18 @@ const Servicios = () => {
               {isExpanded && (
                 <div className="px-4 pb-4 space-y-2 animate-slide-up">
                   <p className="text-xs text-muted-foreground">{servicio.direccion}</p>
+                  <div className="border-t border-border pt-3">
+                    <label className="text-xs font-semibold text-foreground block mb-1">Tipo de turno</label>
+                    <select
+                      value={servicio.tipo_turno}
+                      onChange={e => updateTipoTurno(servicio.id, e.target.value as TipoTurno)}
+                      className="w-full h-9 rounded-md border border-input bg-background px-3 text-sm text-foreground"
+                    >
+                      <option value="12h">12 horas</option>
+                      <option value="24h">24 horas</option>
+                      <option value="corrido">De corrido</option>
+                    </select>
+                  </div>
                   <div className="border-t border-border pt-3">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-foreground">Puntos de Rondín</h4>

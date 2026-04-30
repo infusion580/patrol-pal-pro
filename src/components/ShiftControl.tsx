@@ -1,85 +1,157 @@
 import { useState, useEffect } from 'react';
-import { Clock, LogIn, LogOut, UserCheck } from 'lucide-react';
+import { Clock, LogIn, LogOut, UserCheck, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { notifyTurnoInicio, notifyTurnoFin } from '@/lib/notification-helpers';
+import { TipoTurno, tipoTurnoLabel, tipoTurnoHoras, generarAsistenciasCorridoFaltantes } from '@/lib/asistencias-helpers';
 
 interface Turno {
   id: string;
   inicio: string;
   status: string;
+  servicio_id?: string | null;
+}
+
+interface Servicio {
+  id: string;
+  nombre: string;
+  tipo_turno: TipoTurno;
 }
 
 const ShiftControl = () => {
   const { user } = useAuth();
   const { toast } = useToast();
   const [activeTurno, setActiveTurno] = useState<Turno | null>(null);
+  const [activeAsistenciaId, setActiveAsistenciaId] = useState<string | null>(null);
+  const [activeTipoTurno, setActiveTipoTurno] = useState<TipoTurno>('12h');
   const [loading, setLoading] = useState(true);
   const [showHandoff, setShowHandoff] = useState(false);
   const [guardiaEntrante, setGuardiaEntrante] = useState('');
   const [comentario, setComentario] = useState('');
-  const [servicios, setServicios] = useState<Array<{ id: string; nombre: string }>>([]);
+  const [servicios, setServicios] = useState<Servicio[]>([]);
   const [selectedServicio, setSelectedServicio] = useState<string>('');
 
   useEffect(() => {
     if (!user) return;
-    loadActiveTurno();
-    loadServicios();
+    (async () => {
+      await loadServicios();
+      await loadActiveTurno();
+      // Generar asistencias automáticas para turnos de corrido
+      await generarAsistenciasCorridoFaltantes(user.id);
+    })();
   }, [user]);
 
   const loadActiveTurno = async () => {
     if (!user) return;
     const { data } = await supabase
       .from('turnos')
-      .select('id, inicio, status')
+      .select('id, inicio, status, servicio_id')
       .eq('guardia_id', user.id)
       .eq('status', 'activo')
       .maybeSingle();
-    setActiveTurno(data);
+    setActiveTurno(data as any);
+
+    if (data) {
+      // Buscar asistencia activa asociada
+      const { data: asist } = await supabase
+        .from('asistencias' as any)
+        .select('id, tipo_turno')
+        .eq('guardia_id', user.id)
+        .eq('status', 'activo')
+        .order('inicio', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (asist) {
+        setActiveAsistenciaId((asist as any).id);
+        setActiveTipoTurno((asist as any).tipo_turno as TipoTurno);
+      }
+    }
     setLoading(false);
   };
 
   const loadServicios = async () => {
-    const { data } = await supabase.from('servicios').select('id, nombre').order('nombre');
+    const { data } = await supabase.from('servicios').select('id, nombre, tipo_turno').order('nombre');
     if (data) {
-      setServicios(data);
-      if (data.length > 0) setSelectedServicio(data[0].id);
+      const list = (data as any[]).map(d => ({ id: d.id, nombre: d.nombre, tipo_turno: (d.tipo_turno || '12h') as TipoTurno }));
+      setServicios(list);
+      if (list.length > 0) setSelectedServicio(list[0].id);
     }
   };
 
   const startShift = async () => {
     if (!user) return;
-    const { data, error } = await supabase.from('turnos').insert({
+    const servicio = servicios.find(s => s.id === selectedServicio);
+    const tipoTurno: TipoTurno = servicio?.tipo_turno || '12h';
+
+    const { data: turnoData, error: turnoErr } = await supabase.from('turnos').insert({
       guardia_id: user.id,
       servicio_id: selectedServicio || null,
-    } as any).select('id, inicio, status').single();
+    } as any).select('id, inicio, status, servicio_id').single();
 
-    if (!error && data) {
-      setActiveTurno(data);
-      toast({ title: '✅ Turno iniciado', description: 'Tu turno ha sido registrado exitosamente.' });
-      notifyTurnoInicio(user.id, `${user.nombre} ${user.apellido}`);
+    if (turnoErr || !turnoData) {
+      toast({ title: 'Error', description: 'No se pudo iniciar el turno.', variant: 'destructive' });
+      return;
     }
+
+    // Crear asistencia
+    const inicio = new Date(turnoData.inicio);
+    const horas = tipoTurnoHoras(tipoTurno);
+    const finEsperado = new Date(inicio.getTime() + horas * 60 * 60 * 1000);
+
+    const { data: asist } = await supabase.from('asistencias' as any).insert({
+      guardia_id: user.id,
+      servicio_id: selectedServicio || null,
+      turno_id: turnoData.id,
+      tipo_turno: tipoTurno,
+      inicio: turnoData.inicio,
+      fin_esperado: finEsperado.toISOString(),
+      status: 'activo',
+    } as any).select('id').single();
+
+    setActiveTurno(turnoData as any);
+    setActiveAsistenciaId((asist as any)?.id || null);
+    setActiveTipoTurno(tipoTurno);
+    toast({ title: '✅ Turno iniciado', description: `Tipo: ${tipoTurnoLabel(tipoTurno)}.` });
+    notifyTurnoInicio(user.id, `${user.nombre} ${user.apellido}`);
   };
 
-  const endShift = async () => {
+  const endShift = async (forzarIncompleto = false) => {
     if (!activeTurno || !user) return;
-    const { error } = await supabase.from('turnos').update({
-      fin: new Date().toISOString(),
+    const ahora = new Date();
+    const inicio = new Date(activeTurno.inicio);
+    const horasReales = (ahora.getTime() - inicio.getTime()) / (60 * 60 * 1000);
+    const horasRequeridas = tipoTurnoHoras(activeTipoTurno);
+    const completado = horasReales >= horasRequeridas - 0.01;
+    const status = completado ? 'completo' : 'incompleto';
+
+    await supabase.from('turnos').update({
+      fin: ahora.toISOString(),
       status: 'completado',
       comentario_cambio: comentario,
       guardia_entrante: guardiaEntrante,
     } as any).eq('id', activeTurno.id);
 
-    if (!error) {
-      setActiveTurno(null);
-      setShowHandoff(false);
-      setComentario('');
-      setGuardiaEntrante('');
-      toast({ title: '✅ Cambio de turno', description: 'Tu turno ha sido finalizado y el cambio registrado.' });
-      notifyTurnoFin(user.id, `${user.nombre} ${user.apellido}`);
+    if (activeAsistenciaId) {
+      await supabase.from('asistencias' as any).update({
+        fin: ahora.toISOString(),
+        duracion_minutos: Math.round((ahora.getTime() - inicio.getTime()) / 60000),
+        status,
+        observaciones: comentario || (status === 'incompleto' ? 'Finalizado antes del tiempo requerido' : ''),
+      } as any).eq('id', activeAsistenciaId);
     }
+
+    setActiveTurno(null);
+    setActiveAsistenciaId(null);
+    setShowHandoff(false);
+    setComentario('');
+    setGuardiaEntrante('');
+    toast({
+      title: completado ? '✅ Turno completo' : '⚠️ Turno incompleto',
+      description: completado ? 'Cumpliste el tiempo requerido.' : `Solo se trabajaron ${horasReales.toFixed(1)} de ${horasRequeridas} hrs.`,
+    });
+    notifyTurnoFin(user.id, `${user.nombre} ${user.apellido}`);
   };
 
   if (loading) return null;
@@ -89,6 +161,9 @@ const ShiftControl = () => {
     : 0;
   const hrs = Math.floor(elapsed / 60);
   const mins = elapsed % 60;
+  const horasRequeridas = tipoTurnoHoras(activeTipoTurno);
+  const horasReales = elapsed / 60;
+  const cumpleTiempo = horasReales >= horasRequeridas - 0.01;
 
   return (
     <div className="bg-card rounded-xl p-4 shadow-card mb-4">
@@ -101,15 +176,23 @@ const ShiftControl = () => {
         <>
           <div className="flex items-center justify-between mb-3">
             <div>
-              <p className="text-xs text-muted-foreground">Turno activo desde</p>
+              <p className="text-xs text-muted-foreground">Turno {tipoTurnoLabel(activeTipoTurno)} • desde</p>
               <p className="text-sm font-semibold text-foreground">
                 {new Date(activeTurno.inicio).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
               </p>
             </div>
-            <div className="bg-success/10 px-3 py-1 rounded-full">
-              <p className="text-xs font-bold text-success">{hrs}h {mins}m</p>
+            <div className={`px-3 py-1 rounded-full ${cumpleTiempo ? 'bg-success/10' : 'bg-warning/10'}`}>
+              <p className={`text-xs font-bold ${cumpleTiempo ? 'text-success' : 'text-warning'}`}>{hrs}h {mins}m</p>
             </div>
           </div>
+
+          {activeTipoTurno === 'corrido' && (
+            <div className="bg-primary/5 border border-primary/20 rounded-lg p-2 mb-3">
+              <p className="text-[11px] text-foreground">
+                <strong>Turno de corrido:</strong> Se registrará una asistencia automática cada 24h. No necesitas finalizar diariamente.
+              </p>
+            </div>
+          )}
 
           {!showHandoff ? (
             <Button
@@ -120,6 +203,14 @@ const ShiftControl = () => {
             </Button>
           ) : (
             <div className="space-y-3">
+              {!cumpleTiempo && (
+                <div className="bg-warning/10 border border-warning/30 rounded-lg p-2 flex gap-2">
+                  <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-foreground">
+                    Aún no cumples las {horasRequeridas} horas requeridas. Si finalizas, la asistencia quedará marcada como <strong>incompleta</strong>.
+                  </p>
+                </div>
+              )}
               <div>
                 <label className="text-xs font-semibold text-muted-foreground block mb-1">
                   <UserCheck className="w-3 h-3 inline mr-1" />
@@ -134,7 +225,9 @@ const ShiftControl = () => {
                 />
               </div>
               <div>
-                <label className="text-xs font-semibold text-muted-foreground block mb-1">Comentario de cambio</label>
+                <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                  Comentario {!cumpleTiempo && <span className="text-warning">(motivo de salida anticipada)</span>}
+                </label>
                 <textarea
                   value={comentario}
                   onChange={(e) => setComentario(e.target.value)}
@@ -145,7 +238,7 @@ const ShiftControl = () => {
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setShowHandoff(false)} className="flex-1">Cancelar</Button>
-                <Button onClick={endShift} className="flex-1 bg-emergency text-emergency-foreground hover:bg-emergency/90">
+                <Button onClick={() => endShift()} className="flex-1 bg-emergency text-emergency-foreground hover:bg-emergency/90">
                   Confirmar Cambio
                 </Button>
               </div>
@@ -162,9 +255,14 @@ const ShiftControl = () => {
                 onChange={(e) => setSelectedServicio(e.target.value)}
                 className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
               >
-                {servicios.map(s => <option key={s.id} value={s.id}>{s.nombre}</option>)}
+                {servicios.map(s => <option key={s.id} value={s.id}>{s.nombre} ({tipoTurnoLabel(s.tipo_turno)})</option>)}
               </select>
             </div>
+          )}
+          {selectedServicio && (
+            <p className="text-[11px] text-muted-foreground mb-2">
+              Tipo de turno: <strong>{tipoTurnoLabel(servicios.find(s => s.id === selectedServicio)?.tipo_turno || '12h')}</strong>
+            </p>
           )}
           <Button onClick={startShift} className="w-full bg-success text-success-foreground hover:bg-success/90">
             <LogIn className="w-4 h-4 mr-2" /> Iniciar Turno

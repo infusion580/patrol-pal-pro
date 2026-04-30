@@ -14,6 +14,57 @@ export type Database = {
   }
   public: {
     Tables: {
+      asistencias: {
+        Row: {
+          auto_generado: boolean
+          created_at: string
+          duracion_minutos: number | null
+          fin: string | null
+          fin_esperado: string | null
+          guardia_id: string
+          id: string
+          inicio: string
+          observaciones: string | null
+          servicio_id: string | null
+          status: string
+          tipo_turno: string
+          turno_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          auto_generado?: boolean
+          created_at?: string
+          duracion_minutos?: number | null
+          fin?: string | null
+          fin_esperado?: string | null
+          guardia_id: string
+          id?: string
+          inicio?: string
+          observaciones?: string | null
+          servicio_id?: string | null
+          status?: string
+          tipo_turno: string
+          turno_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          auto_generado?: boolean
+          created_at?: string
+          duracion_minutos?: number | null
+          fin?: string | null
+          fin_esperado?: string | null
+          guardia_id?: string
+          id?: string
+          inicio?: string
+          observaciones?: string | null
+          servicio_id?: string | null
+          status?: string
+          tipo_turno?: string
+          turno_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -192,6 +243,39 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           tipo?: string
+        }
+        Relationships: []
+      }
+      faltas: {
+        Row: {
+          created_at: string
+          detalle: string | null
+          fecha: string
+          guardia_id: string
+          id: string
+          motivo: string
+          servicio_id: string | null
+          tipo_turno_esperado: string | null
+        }
+        Insert: {
+          created_at?: string
+          detalle?: string | null
+          fecha?: string
+          guardia_id: string
+          id?: string
+          motivo?: string
+          servicio_id?: string | null
+          tipo_turno_esperado?: string | null
+        }
+        Update: {
+          created_at?: string
+          detalle?: string | null
+          fecha?: string
+          guardia_id?: string
+          id?: string
+          motivo?: string
+          servicio_id?: string | null
+          tipo_turno_esperado?: string | null
         }
         Relationships: []
       }
@@ -539,6 +623,7 @@ export type Database = {
           direccion: string
           id: string
           nombre: string
+          tipo_turno: string
           updated_at: string
         }
         Insert: {
@@ -548,6 +633,7 @@ export type Database = {
           direccion?: string
           id?: string
           nombre: string
+          tipo_turno?: string
           updated_at?: string
         }
         Update: {
@@ -557,6 +643,7 @@ export type Database = {
           direccion?: string
           id?: string
           nombre?: string
+          tipo_turno?: string
           updated_at?: string
         }
         Relationships: []
