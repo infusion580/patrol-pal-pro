@@ -393,6 +393,44 @@ const AdminDashboard = () => {
                             ))}
                         </select>
                       </div>
+                    ) : u.role === 'cliente' ? (
+                      <div>
+                        <label className="text-[10px] font-semibold text-muted-foreground block mb-1">
+                          Servicios Visibles para el Cliente
+                        </label>
+                        <div className="space-y-1.5 mb-2">
+                          {u.clienteServicios.length === 0 && (
+                            <p className="text-xs text-muted-foreground italic">Sin servicios asignados</p>
+                          )}
+                          {u.clienteServicios.map(sid => {
+                            const srv = servicios.find(s => s.id === sid);
+                            return (
+                              <div key={sid} className="flex items-center gap-2 bg-accent/40 rounded-lg px-2 py-1.5">
+                                <span className="text-xs flex-1 truncate text-foreground">{srv?.nombre || 'Servicio eliminado'}</span>
+                                <button
+                                  onClick={() => removeServicioFromCliente(u.id, sid)}
+                                  className="text-emergency hover:text-emergency/80"
+                                  title="Quitar"
+                                >
+                                  <Trash2 className="w-3.5 h-3.5" />
+                                </button>
+                              </div>
+                            );
+                          })}
+                        </div>
+                        <select
+                          value=""
+                          onChange={(e) => { if (e.target.value) addServicioToCliente(u.id, e.target.value); }}
+                          className="w-full h-9 rounded-lg border border-border bg-background px-3 text-sm text-foreground"
+                        >
+                          <option value="">+ Agregar servicio…</option>
+                          {servicios
+                            .filter(s => !u.clienteServicios.includes(s.id))
+                            .map(s => (
+                              <option key={s.id} value={s.id}>{s.nombre}</option>
+                            ))}
+                        </select>
+                      </div>
                     ) : (
                       <div>
                         <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Servicio Asignado</label>
