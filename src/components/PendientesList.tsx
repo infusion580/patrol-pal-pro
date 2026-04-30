@@ -1,5 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
-import { ClipboardList, CheckCircle2, Circle, AlertOctagon, Repeat } from 'lucide-react';
+import { useEffect, useState, useCallback, useRef } from 'react';
+import { ClipboardList, CheckCircle2, Circle, AlertOctagon, Repeat, Camera, X, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
