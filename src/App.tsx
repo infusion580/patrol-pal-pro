@@ -30,6 +30,7 @@ import MetasServicio from "./pages/MetasServicio";
 import CuadroHonor from "./pages/CuadroHonor";
 import ReporteAsistencias from "./pages/ReporteAsistencias";
 import PendientesPuesto from "./pages/PendientesPuesto";
+import RegistrationNips from "./pages/RegistrationNips";
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 
 const queryClient = new QueryClient();
@@ -69,6 +70,7 @@ const App = () => (
             <Route path="/cuadro-honor" element={<CuadroHonor />} />
             <Route path="/reporte-asistencias" element={<ReporteAsistencias />} />
             <Route path="/pendientes" element={<PendientesPuesto />} />
+            <Route path="/nips" element={<RegistrationNips />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

@@ -556,6 +556,45 @@ export type Database = {
           },
         ]
       }
+      registration_nips: {
+        Row: {
+          code: string
+          created_at: string
+          created_by: string | null
+          expires_at: string | null
+          id: string
+          label: string
+          role: Database["public"]["Enums"]["app_role"]
+          used: boolean
+          used_at: string | null
+          used_by: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          label?: string
+          role: Database["public"]["Enums"]["app_role"]
+          used?: boolean
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          created_by?: string | null
+          expires_at?: string | null
+          id?: string
+          label?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          used?: boolean
+          used_at?: string | null
+          used_by?: string | null
+        }
+        Relationships: []
+      }
       registros_rh: {
         Row: {
           created_at: string
@@ -885,6 +924,10 @@ export type Database = {
       cliente_has_servicio: {
         Args: { _servicio_id: string; _user_id: string }
         Returns: boolean
+      }
+      consume_registration_nip: {
+        Args: { _code: string; _user_id: string }
+        Returns: Database["public"]["Enums"]["app_role"]
       }
       get_assigned_supervisor: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
