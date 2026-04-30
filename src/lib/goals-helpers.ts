@@ -5,6 +5,7 @@ export interface MetaServicio {
   servicio_id: string;
   rondines_diarios: number;
   reportes_diarios: number;
+  pendientes_diarios: number;
   hora_inicio: string;
   hora_fin: string;
 }
@@ -12,8 +13,10 @@ export interface MetaServicio {
 export interface ProgresoDiario {
   rondinesCompletados: number;
   reportesCompletados: number;
+  pendientesCompletados: number;
   rondinesMeta: number;
   reportesMeta: number;
+  pendientesMeta: number;
   porcentaje: number;
   metaCumplida: boolean;
   horaInicio: string;
@@ -56,6 +59,7 @@ export async function computeGuardProgress(guardiaId: string): Promise<ProgresoD
 
   const rondinesMeta = meta?.rondines_diarios ?? 4;
   const reportesMeta = meta?.reportes_diarios ?? 1;
+  const pendientesMeta = (meta as any)?.pendientes_diarios ?? 0;
   const horaInicio = meta?.hora_inicio?.slice(0, 5) ?? '08:00';
   const horaFin = meta?.hora_fin?.slice(0, 5) ?? '20:00';
 
@@ -73,18 +77,33 @@ export async function computeGuardProgress(guardiaId: string): Promise<ProgresoD
     .eq('guardia_id', guardiaId)
     .gte('created_at', today);
 
+  // Count completed pendientes today
+  const { count: pendCount } = await supabase
+    .from('pendientes_completados')
+    .select('*', { count: 'exact', head: true })
+    .eq('guardia_id', guardiaId)
+    .gte('created_at', today);
+
   const rondinesCompletados = rCount || 0;
   const reportesCompletados = repCount || 0;
+  const pendientesCompletados = pendCount || 0;
 
-  const totalReq = rondinesMeta + reportesMeta;
-  const totalDone = Math.min(rondinesCompletados, rondinesMeta) + Math.min(reportesCompletados, reportesMeta);
+  const totalReq = rondinesMeta + reportesMeta + pendientesMeta;
+  const totalDone =
+    Math.min(rondinesCompletados, rondinesMeta) +
+    Math.min(reportesCompletados, reportesMeta) +
+    Math.min(pendientesCompletados, pendientesMeta);
   const porcentaje = totalReq > 0 ? Math.round((totalDone / totalReq) * 100) : 0;
-  const metaCumplida = rondinesCompletados >= rondinesMeta && reportesCompletados >= reportesMeta;
+  const metaCumplida =
+    rondinesCompletados >= rondinesMeta &&
+    reportesCompletados >= reportesMeta &&
+    pendientesCompletados >= pendientesMeta;
 
   // Compute badges
   const insignias: string[] = [];
   if (rondinesCompletados >= rondinesMeta) insignias.push('rondines_completos');
   if (reportesCompletados >= reportesMeta) insignias.push('reportes_completos');
+  if (pendientesMeta > 0 && pendientesCompletados >= pendientesMeta) insignias.push('pendientes_completos');
   if (metaCumplida) insignias.push('meta_diaria');
   if (rondinesCompletados >= rondinesMeta * 1.5) insignias.push('super_rondinero');
 
@@ -98,13 +117,19 @@ export async function computeGuardProgress(guardiaId: string): Promise<ProgresoD
     .gte('fecha', sevenDaysAgo.toISOString().split('T')[0]);
   if ((streakData?.length || 0) + (metaCumplida ? 1 : 0) >= 7) insignias.push('racha_semanal');
 
-  const puntos = rondinesCompletados * 10 + reportesCompletados * 25 + (metaCumplida ? 50 : 0);
+  const puntos =
+    rondinesCompletados * 10 +
+    reportesCompletados * 25 +
+    pendientesCompletados * 15 +
+    (metaCumplida ? 50 : 0);
 
   return {
     rondinesCompletados,
     reportesCompletados,
+    pendientesCompletados,
     rondinesMeta,
     reportesMeta,
+    pendientesMeta,
     porcentaje,
     metaCumplida,
     horaInicio,
@@ -143,6 +168,7 @@ export const INSIGNIA_META: Record<string, { label: string; emoji: string; color
   meta_diaria: { label: 'Meta Diaria', emoji: '🏆', color: 'bg-warning/20 text-warning' },
   rondines_completos: { label: 'Rondines Completos', emoji: '🛡️', color: 'bg-primary/20 text-primary' },
   reportes_completos: { label: 'Reportes Completos', emoji: '📋', color: 'bg-success/20 text-success' },
+  pendientes_completos: { label: 'Pendientes Completos', emoji: '✅', color: 'bg-secondary/40 text-secondary-foreground' },
   super_rondinero: { label: 'Súper Rondinero', emoji: '⚡', color: 'bg-accent text-accent-foreground' },
   racha_semanal: { label: 'Racha 7 Días', emoji: '🔥', color: 'bg-destructive/20 text-destructive' },
 };

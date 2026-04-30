@@ -73,7 +73,7 @@ const DailyProgress = () => {
 
       <Progress value={p.porcentaje} className={`h-3 mb-3 ${isComplete ? '[&>div]:bg-warning' : ''}`} />
 
-      <div className="grid grid-cols-2 gap-2 mb-3">
+      <div className={`grid ${p.pendientesMeta > 0 ? 'grid-cols-3' : 'grid-cols-2'} gap-2 mb-3`}>
         <div className="bg-background/60 rounded-lg p-2">
           <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Rondines</p>
           <p className="text-sm font-bold text-foreground">
@@ -86,6 +86,14 @@ const DailyProgress = () => {
             {p.reportesCompletados}<span className="text-muted-foreground font-normal">/{p.reportesMeta}</span>
           </p>
         </div>
+        {p.pendientesMeta > 0 && (
+          <div className="bg-background/60 rounded-lg p-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Pendientes</p>
+            <p className="text-sm font-bold text-foreground">
+              {p.pendientesCompletados}<span className="text-muted-foreground font-normal">/{p.pendientesMeta}</span>
+            </p>
+          </div>
+        )}
       </div>
 
       {p.insignias.length > 0 && (
