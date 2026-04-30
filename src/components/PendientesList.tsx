@@ -274,6 +274,85 @@ const PendientesList = () => {
           );
         })}
       </div>
+
+      {openItem && (
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-3"
+          onClick={cerrar}
+        >
+          <div
+            className="bg-card w-full max-w-md rounded-2xl shadow-elevated p-4 space-y-3"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <h3 className="font-display font-bold text-base text-foreground">Marcar como completado</h3>
+                <p className="text-xs text-muted-foreground">{openItem.titulo}</p>
+              </div>
+              <button onClick={cerrar} className="p-1 rounded hover:bg-accent" aria-label="Cerrar">
+                <X className="w-5 h-5 text-muted-foreground" />
+              </button>
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                Foto de evidencia (opcional)
+              </label>
+              {fotoPreview ? (
+                <div className="relative">
+                  <img src={fotoPreview} alt="Evidencia" className="w-full h-48 object-cover rounded-lg" />
+                  <button
+                    onClick={() => { setFoto(null); setFotoPreview(null); }}
+                    className="absolute top-2 right-2 p-1 bg-emergency text-emergency-foreground rounded-full"
+                    aria-label="Quitar foto"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full h-24 rounded-lg border-2 border-dashed border-border hover:border-primary flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors"
+                >
+                  <Camera className="w-6 h-6" />
+                  <span className="text-xs font-semibold">Tomar / Adjuntar foto</span>
+                </button>
+              )}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                capture="environment"
+                onChange={onSelectFoto}
+                className="hidden"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs font-semibold text-muted-foreground block mb-1">
+                Nota (opcional)
+              </label>
+              <textarea
+                value={nota}
+                onChange={(e) => setNota(e.target.value)}
+                placeholder="Observaciones, novedades..."
+                rows={2}
+                className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
+              />
+            </div>
+
+            <div className="flex gap-2 pt-1">
+              <Button variant="outline" onClick={cerrar} disabled={submitting} className="flex-1">
+                Cancelar
+              </Button>
+              <Button onClick={confirmar} disabled={submitting} className="flex-1 bg-success text-success-foreground hover:bg-success/90">
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle2 className="w-4 h-4 mr-1" />}
+                {submitting ? 'Guardando...' : 'Confirmar'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
