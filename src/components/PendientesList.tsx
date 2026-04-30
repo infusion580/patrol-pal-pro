@@ -125,30 +125,83 @@ const PendientesList = () => {
     return () => { supabase.removeChannel(ch); };
   }, [user, load]);
 
-  const marcar = async (p: Pendiente) => {
-    if (!user) return;
-    setMarking(p.id);
+  // Estado del diálogo de cumplimiento
+  const [openItem, setOpenItem] = useState<Pendiente | null>(null);
+  const [nota, setNota] = useState('');
+  const [foto, setFoto] = useState<File | null>(null);
+  const [fotoPreview, setFotoPreview] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-    const { data: turno } = await supabase
-      .from('turnos')
-      .select('id')
-      .eq('guardia_id', user.id)
-      .eq('status', 'activo')
-      .maybeSingle();
+  const abrirCompletar = (p: Pendiente) => {
+    setOpenItem(p);
+    setNota('');
+    setFoto(null);
+    setFotoPreview(null);
+  };
 
-    const { error } = await supabase.from('pendientes_completados' as any).insert({
-      pendiente_id: p.id,
-      guardia_id: user.id,
-      turno_id: turno?.id || null,
-    } as any);
+  const cerrar = () => {
+    setOpenItem(null);
+    setNota('');
+    setFoto(null);
+    setFotoPreview(null);
+    setSubmitting(false);
+  };
 
-    if (error) {
-      toast({ title: 'Error', description: 'No se pudo registrar.', variant: 'destructive' });
-    } else {
-      toast({ title: '✅ Completado', description: p.titulo });
-      load();
+  const onSelectFoto = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) {
+      toast({ title: 'Foto muy grande', description: 'Máximo 8MB.', variant: 'destructive' });
+      return;
     }
-    setMarking(null);
+    setFoto(file);
+    setFotoPreview(URL.createObjectURL(file));
+  };
+
+  const confirmar = async () => {
+    if (!user || !openItem) return;
+    setSubmitting(true);
+
+    try {
+      let fotoUrl = '';
+      if (foto) {
+        const ext = foto.name.split('.').pop() || 'jpg';
+        const path = `${user.id}/${openItem.id}-${Date.now()}.${ext}`;
+        const { error: upErr } = await supabase.storage.from('pendientes').upload(path, foto, {
+          cacheControl: '3600',
+          upsert: false,
+          contentType: foto.type,
+        });
+        if (upErr) throw upErr;
+        const { data } = supabase.storage.from('pendientes').getPublicUrl(path);
+        fotoUrl = data.publicUrl;
+      }
+
+      const { data: turno } = await supabase
+        .from('turnos')
+        .select('id')
+        .eq('guardia_id', user.id)
+        .eq('status', 'activo')
+        .maybeSingle();
+
+      const { error } = await supabase.from('pendientes_completados' as any).insert({
+        pendiente_id: openItem.id,
+        guardia_id: user.id,
+        turno_id: turno?.id || null,
+        nota: nota.trim(),
+        foto_url: fotoUrl,
+      } as any);
+
+      if (error) throw error;
+
+      toast({ title: '✅ Completado', description: openItem.titulo });
+      cerrar();
+      load();
+    } catch (e: any) {
+      toast({ title: 'Error', description: e.message || 'No se pudo registrar.', variant: 'destructive' });
+      setSubmitting(false);
+    }
   };
 
   if (loading) return null;
