@@ -321,6 +321,7 @@ export type Database = {
           hora_fin: string
           hora_inicio: string
           id: string
+          pendientes_diarios: number
           reportes_diarios: number
           rondines_diarios: number
           servicio_id: string
@@ -332,6 +333,7 @@ export type Database = {
           hora_fin?: string
           hora_inicio?: string
           id?: string
+          pendientes_diarios?: number
           reportes_diarios?: number
           rondines_diarios?: number
           servicio_id: string
@@ -343,6 +345,7 @@ export type Database = {
           hora_fin?: string
           hora_inicio?: string
           id?: string
+          pendientes_diarios?: number
           reportes_diarios?: number
           rondines_diarios?: number
           servicio_id?: string
