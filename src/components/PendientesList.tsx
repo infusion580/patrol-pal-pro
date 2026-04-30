@@ -34,7 +34,6 @@ const PendientesList = () => {
   const { toast } = useToast();
   const [items, setItems] = useState<Pendiente[]>([]);
   const [loading, setLoading] = useState(true);
-  const [marking, setMarking] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     if (!user) return;
