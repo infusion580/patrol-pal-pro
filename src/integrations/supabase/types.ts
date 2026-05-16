@@ -948,6 +948,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      validate_registration_nip: {
+        Args: { _code: string }
+        Returns: Database["public"]["Enums"]["app_role"]
+      }
     }
     Enums: {
       app_role: "guardia" | "supervisor" | "admin" | "cliente"
