@@ -48,27 +48,43 @@ const Register = () => {
     }
     setLoading(true);
     try {
-      // 1. Crear cuenta (siempre se asigna 'guardia' por defecto en el trigger)
+      // 1. VALIDAR el NIP ANTES de crear la cuenta (no lo consume).
+      //    Si no es válido, no se crea ningún usuario ni se inicia sesión.
+      const { data: previewRole, error: validateError } = await supabase.rpc(
+        'validate_registration_nip' as any,
+        { _code: form.nip.trim().toUpperCase() }
+      );
+      if (validateError || !previewRole) {
+        toast({
+          title: 'NIP no válido',
+          description: validateError?.message || 'El NIP es incorrecto, ya fue usado o venció. Solicita un NIP nuevo a tu administrador.',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
+      }
+
+      // 2. Crear cuenta (el trigger asigna 'guardia' por defecto)
       await register(form);
 
-      // 2. Iniciar sesión para poder llamar a la función SECURITY DEFINER
+      // 3. Iniciar sesión para poder consumir el NIP con auth.uid()
       const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
         email: form.email,
         password: form.password,
       });
       if (signInError || !signInData.user) throw signInError || new Error('No se pudo iniciar sesión');
 
-      // 3. Consumir el NIP — esto valida y asigna el rol correcto
+      // 4. Consumir el NIP — asigna el rol definitivo
       const { data: assignedRole, error: nipError } = await supabase.rpc('consume_registration_nip' as any, {
         _code: form.nip.trim().toUpperCase(),
         _user_id: signInData.user.id,
       });
       if (nipError) {
-        // Cuenta creada pero NIP inválido → cerrar sesión y avisar
+        // En caso muy raro (race condition): otro usuario consumió el NIP justo ahora
         await supabase.auth.signOut();
         toast({
-          title: 'NIP no válido',
-          description: nipError.message || 'El NIP es incorrecto, ya fue usado o venció. Tu cuenta fue creada pero no activada — pide un NIP nuevo y vuelve a iniciar sesión.',
+          title: 'NIP no disponible',
+          description: nipError.message || 'El NIP fue utilizado por otra persona durante el registro. Pide uno nuevo.',
           variant: 'destructive',
         });
         setLoading(false);
