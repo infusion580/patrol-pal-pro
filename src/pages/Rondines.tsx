@@ -200,9 +200,20 @@ const Rondines = () => {
       toast({ title: 'Foto muy grande', description: 'Máximo 8MB.', variant: 'destructive' });
       return;
     }
+    // Bloquear fotos de galería: solo aceptar imágenes tomadas al momento (< 2 min).
+    const ageMs = Date.now() - file.lastModified;
+    if (Number.isFinite(ageMs) && ageMs > 2 * 60 * 1000) {
+      toast({
+        title: 'Solo cámara en vivo',
+        description: 'No se permiten fotos de la galería. Toma la foto con la cámara en este momento.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setScanFile(file);
     setScanPreview(URL.createObjectURL(file));
   };
+
 
   const confirmScan = async () => {
     if (!scanTarget || !rondinId || !user) return;
