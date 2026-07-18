@@ -1,0 +1,1 @@
+ALTER TABLE public.asistencias ADD COLUMN IF NOT EXISTS horas_extra numeric(6,2) NOT NULL DEFAULT 0;
