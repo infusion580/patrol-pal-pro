@@ -679,6 +679,7 @@ export type Database = {
       rondin_scans: {
         Row: {
           checkpoint_id: string
+          foto_url: string | null
           id: string
           lat: number | null
           lng: number | null
@@ -687,6 +688,7 @@ export type Database = {
         }
         Insert: {
           checkpoint_id: string
+          foto_url?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -695,6 +697,7 @@ export type Database = {
         }
         Update: {
           checkpoint_id?: string
+          foto_url?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
@@ -727,6 +730,7 @@ export type Database = {
           created_at: string
           guardia_id: string
           id: string
+          reporte: string | null
           servicio_id: string | null
           status: string
         }
@@ -738,6 +742,7 @@ export type Database = {
           created_at?: string
           guardia_id: string
           id?: string
+          reporte?: string | null
           servicio_id?: string | null
           status?: string
         }
@@ -749,6 +754,7 @@ export type Database = {
           created_at?: string
           guardia_id?: string
           id?: string
+          reporte?: string | null
           servicio_id?: string | null
           status?: string
         }
