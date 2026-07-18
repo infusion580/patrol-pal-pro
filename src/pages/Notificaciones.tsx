@@ -24,6 +24,8 @@ const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: st
   rondin: { icon: MapPin, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Rondín' },
   incidencia: { icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Incidencia' },
   emergencia: { icon: Shield, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Emergencia' },
+  reporte: { icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Reporte' },
+  sesion: { icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Inicio de Sesión' },
 };
 
 const Notificaciones = () => {
