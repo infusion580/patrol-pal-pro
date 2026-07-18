@@ -12,6 +12,7 @@ interface Notificacion {
   leida: boolean;
   created_at: string;
   guardia_nombre?: string;
+  foto_url?: string | null;
 }
 
 const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: string; label: string }> = {
