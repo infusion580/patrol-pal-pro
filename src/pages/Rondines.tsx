@@ -11,6 +11,7 @@ import EmergencyButton from '@/components/EmergencyButton';
 import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
 import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/lib/notification-helpers';
+import { SignedImg } from '@/components/SignedImg';
 
 interface CheckpointItem {
   id: string;
