@@ -76,6 +76,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <ConnectionBanner />
+        <OfflineQueueIndicator />
         <GlobalZoneMonitor />
         <BrowserRouter>
           <RondinAlarmMonitor />
