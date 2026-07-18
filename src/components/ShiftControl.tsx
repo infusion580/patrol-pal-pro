@@ -151,7 +151,8 @@ const ShiftControl = () => {
       title: completado ? '✅ Turno completo' : '⚠️ Turno incompleto',
       description: completado ? 'Cumpliste el tiempo requerido.' : `Solo se trabajaron ${horasReales.toFixed(1)} de ${horasRequeridas} hrs.`,
     });
-    notifyTurnoFin(user.id, `${user.nombre} ${user.apellido}`);
+    const servicioFin = servicios.find(s => s.id === activeTurno.servicio_id);
+    notifyTurnoFin(user.id, `${user.nombre} ${user.apellido}`, servicioFin?.nombre, status);
   };
 
   if (loading) return null;
