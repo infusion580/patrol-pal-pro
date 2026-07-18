@@ -35,8 +35,14 @@ import ClienteReporteConfig from "./pages/ClienteReporteConfig";
 
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
+
+/** Helper: any authenticated user. */
+const Auth = ({ children }: { children: JSX.Element }) => (
+  <ProtectedRoute>{children}</ProtectedRoute>
+);
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -48,34 +54,39 @@ const App = () => (
         <BrowserRouter>
           <RondinAlarmMonitor />
           <Routes>
+            {/* Public */}
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />
             <Route path="/registro" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="/rondines" element={<Rondines />} />
-            <Route path="/reportes" element={<ReporteTurno />} />
-            <Route path="/chat" element={<Chat />} />
-            <Route path="/chat-rh" element={<ChatRH />} />
-            <Route path="/perfil" element={<Perfil />} />
-            <Route path="/mapa" element={<MapaSupervisor />} />
-            <Route path="/metricas" element={<Metricas />} />
-            <Route path="/reportes-supervisor" element={<ReportesSupervisor />} />
-            <Route path="/servicios" element={<Servicios />} />
-            <Route path="/gestion-rh" element={<GestionRH />} />
-            <Route path="/notificaciones" element={<Notificaciones />} />
-            <Route path="/visitas" element={<Visitas />} />
-            <Route path="/historial" element={<Historial />} />
-            <Route path="/estadisticas" element={<EstadisticasAdmin />} />
-            <Route path="/actividad-guardia" element={<GuardActivityPage />} />
-            <Route path="/dashboard-operativo" element={<DashboardOperativo />} />
-            <Route path="/metas" element={<MetasServicio />} />
-            <Route path="/cuadro-honor" element={<CuadroHonor />} />
-            <Route path="/reporte-asistencias" element={<ReporteAsistencias />} />
-            <Route path="/pendientes" element={<PendientesPuesto />} />
-            <Route path="/nips" element={<RegistrationNips />} />
-            <Route path="/cliente-reporte-config" element={<ClienteReporteConfig />} />
+
+            {/* Authenticated — any role */}
+            <Route path="/dashboard" element={<Auth><Dashboard /></Auth>} />
+            <Route path="/rondines" element={<Auth><Rondines /></Auth>} />
+            <Route path="/reportes" element={<Auth><ReporteTurno /></Auth>} />
+            <Route path="/chat" element={<Auth><Chat /></Auth>} />
+            <Route path="/chat-rh" element={<Auth><ChatRH /></Auth>} />
+            <Route path="/perfil" element={<Auth><Perfil /></Auth>} />
+            <Route path="/notificaciones" element={<Auth><Notificaciones /></Auth>} />
+            <Route path="/historial" element={<Auth><Historial /></Auth>} />
+            <Route path="/actividad-guardia" element={<Auth><GuardActivityPage /></Auth>} />
+            <Route path="/cuadro-honor" element={<Auth><CuadroHonor /></Auth>} />
+            <Route path="/pendientes" element={<Auth><PendientesPuesto /></Auth>} />
+            <Route path="/visitas" element={<Auth><Visitas /></Auth>} />
+
+            {/* Role-scoped */}
+            <Route path="/mapa" element={<ProtectedRoute roles={['supervisor', 'admin']}><MapaSupervisor /></ProtectedRoute>} />
+            <Route path="/metricas" element={<ProtectedRoute roles={['supervisor', 'admin']}><Metricas /></ProtectedRoute>} />
+            <Route path="/reportes-supervisor" element={<ProtectedRoute roles={['supervisor', 'admin']}><ReportesSupervisor /></ProtectedRoute>} />
+            <Route path="/dashboard-operativo" element={<ProtectedRoute roles={['supervisor', 'admin']}><DashboardOperativo /></ProtectedRoute>} />
+            <Route path="/gestion-rh" element={<ProtectedRoute roles={['supervisor', 'admin']}><GestionRH /></ProtectedRoute>} />
+            <Route path="/metas" element={<ProtectedRoute roles={['supervisor', 'admin']}><MetasServicio /></ProtectedRoute>} />
+            <Route path="/reporte-asistencias" element={<ProtectedRoute roles={['supervisor', 'admin']}><ReporteAsistencias /></ProtectedRoute>} />
+            <Route path="/servicios" element={<ProtectedRoute roles={['admin']}><Servicios /></ProtectedRoute>} />
+            <Route path="/estadisticas" element={<ProtectedRoute roles={['admin']}><EstadisticasAdmin /></ProtectedRoute>} />
+            <Route path="/nips" element={<ProtectedRoute roles={['admin']}><RegistrationNips /></ProtectedRoute>} />
+            <Route path="/cliente-reporte-config" element={<ProtectedRoute roles={['admin']}><ClienteReporteConfig /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
@@ -86,3 +97,4 @@ const App = () => (
 );
 
 export default App;
+
