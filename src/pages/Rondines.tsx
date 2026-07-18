@@ -223,7 +223,27 @@ const Rondines = () => {
     toast({ title: '✅ Rondín completado', description: 'Reporte guardado correctamente.' });
   };
 
-  const openScanDialog = (checkpoint: CheckpointItem) => {
+  const openScanDialog = async (checkpoint: CheckpointItem) => {
+    // Bloquear apertura del picker si el guardia no está dentro del radio del punto.
+    if (checkpoint.lat != null && checkpoint.lng != null) {
+      try {
+        const pos = await getCurrentPositionRobust();
+        const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
+        const accuracy = pos.coords.accuracy || 0;
+        const allowed = checkpoint.radius + Math.min(accuracy, 50);
+        if (dist > allowed) {
+          toast({
+            title: '❌ Fuera del punto',
+            description: `Estás a ${Math.round(dist)}m de "${checkpoint.name}" (máx ${checkpoint.radius}m). No puedes tomar foto hasta acercarte.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+      } catch (e: any) {
+        toast({ title: '📍 GPS requerido', description: e?.message || 'Activa la ubicación para verificar el punto.', variant: 'destructive' });
+        return;
+      }
+    }
     setScanTarget(checkpoint);
     setScanFile(null);
     setScanPreview(null);
