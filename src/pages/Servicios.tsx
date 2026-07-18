@@ -26,8 +26,11 @@ interface Servicio {
   cliente: string;
   direccion: string;
   tipo_turno: TipoTurno;
+  rondin_intervalo_minutos: number | null;
+  rondin_tolerancia_minutos: number;
   checkpoints: Checkpoint[];
 }
+
 
 const TIPO_TURNO_LABEL: Record<TipoTurno, string> = {
   '12h': '12 horas',
@@ -60,6 +63,8 @@ const Servicios = () => {
         cliente: s.cliente,
         direccion: s.direccion,
         tipo_turno: ((s as any).tipo_turno || '12h') as TipoTurno,
+        rondin_intervalo_minutos: (s as any).rondin_intervalo_minutos ?? null,
+        rondin_tolerancia_minutos: (s as any).rondin_tolerancia_minutos ?? 10,
         checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
       });
     }
@@ -89,6 +94,16 @@ const Servicios = () => {
     const { error } = await supabase.from('servicios').update({ tipo_turno: tipo } as any).eq('id', servicioId);
     if (error) { toast({ title: 'Error', description: 'No se pudo actualizar el tipo de turno.', variant: 'destructive' }); return; }
     toast({ title: 'Tipo de turno actualizado' });
+    fetchServicios();
+  };
+
+  const updateRondinConfig = async (servicioId: string, intervalo: number | null, tolerancia: number) => {
+    const { error } = await supabase.from('servicios').update({
+      rondin_intervalo_minutos: intervalo,
+      rondin_tolerancia_minutos: tolerancia,
+    } as any).eq('id', servicioId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo guardar la alarma.', variant: 'destructive' }); return; }
+    toast({ title: 'Alarma de rondines guardada' });
     fetchServicios();
   };
 
@@ -230,6 +245,47 @@ const Servicios = () => {
                       <option value="corrido">De corrido</option>
                     </select>
                   </div>
+                  <div className="border-t border-border pt-3">
+                    <h4 className="text-xs font-semibold text-foreground mb-2">⏰ Alarma de rondines</h4>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-1">Cada (minutos)</label>
+                        <Input
+                          type="number"
+                          min="0"
+                          placeholder="Sin alarma"
+                          defaultValue={servicio.rondin_intervalo_minutos ?? ''}
+                          onBlur={e => {
+                            const v = e.target.value.trim() === '' ? null : Math.max(0, parseInt(e.target.value) || 0);
+                            const newVal = v === 0 ? null : v;
+                            if (newVal !== servicio.rondin_intervalo_minutos) {
+                              updateRondinConfig(servicio.id, newVal, servicio.rondin_tolerancia_minutos);
+                            }
+                          }}
+                          className="h-9 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[10px] text-muted-foreground block mb-1">Tolerancia (min)</label>
+                        <Input
+                          type="number"
+                          min="1"
+                          defaultValue={servicio.rondin_tolerancia_minutos}
+                          onBlur={e => {
+                            const v = Math.max(1, parseInt(e.target.value) || 10);
+                            if (v !== servicio.rondin_tolerancia_minutos) {
+                              updateRondinConfig(servicio.id, servicio.rondin_intervalo_minutos, v);
+                            }
+                          }}
+                          className="h-9 text-sm"
+                        />
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      El guardia recibirá una alarma en ese intervalo. Si tarda más de la tolerancia en responder, se registra retraso y se avisa al supervisor.
+                    </p>
+                  </div>
+
                   <div className="border-t border-border pt-3">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-xs font-semibold text-foreground">Puntos de Rondín</h4>

@@ -32,6 +32,7 @@ import ReporteAsistencias from "./pages/ReporteAsistencias";
 import PendientesPuesto from "./pages/PendientesPuesto";
 import RegistrationNips from "./pages/RegistrationNips";
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
+import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 
 const queryClient = new QueryClient();
 
@@ -43,6 +44,7 @@ const App = () => (
         <Sonner />
         <GlobalZoneMonitor />
         <BrowserRouter>
+          <RondinAlarmMonitor />
           <Routes>
             <Route path="/" element={<Navigate to="/login" replace />} />
             <Route path="/login" element={<Login />} />

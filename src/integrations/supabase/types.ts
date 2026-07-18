@@ -682,6 +682,59 @@ export type Database = {
         }
         Relationships: []
       }
+      rondin_alarmas: {
+        Row: {
+          created_at: string
+          cumplido: boolean
+          delay_seconds: number | null
+          falta_generada: boolean
+          guardia_id: string
+          id: string
+          notified_at: string | null
+          responded_at: string | null
+          scheduled_at: string
+          servicio_id: string
+          turno_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          cumplido?: boolean
+          delay_seconds?: number | null
+          falta_generada?: boolean
+          guardia_id: string
+          id?: string
+          notified_at?: string | null
+          responded_at?: string | null
+          scheduled_at: string
+          servicio_id: string
+          turno_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          cumplido?: boolean
+          delay_seconds?: number | null
+          falta_generada?: boolean
+          guardia_id?: string
+          id?: string
+          notified_at?: string | null
+          responded_at?: string | null
+          scheduled_at?: string
+          servicio_id?: string
+          turno_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "rondin_alarmas_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       rondin_scans: {
         Row: {
           checkpoint_id: string
@@ -782,6 +835,8 @@ export type Database = {
           direccion: string
           id: string
           nombre: string
+          rondin_intervalo_minutos: number | null
+          rondin_tolerancia_minutos: number
           tipo_turno: string
           updated_at: string
         }
@@ -792,6 +847,8 @@ export type Database = {
           direccion?: string
           id?: string
           nombre: string
+          rondin_intervalo_minutos?: number | null
+          rondin_tolerancia_minutos?: number
           tipo_turno?: string
           updated_at?: string
         }
@@ -802,6 +859,8 @@ export type Database = {
           direccion?: string
           id?: string
           nombre?: string
+          rondin_intervalo_minutos?: number | null
+          rondin_tolerancia_minutos?: number
           tipo_turno?: string
           updated_at?: string
         }
