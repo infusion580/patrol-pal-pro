@@ -46,12 +46,18 @@ const ClienteDashboard = () => {
   const [servicioFiltro, setServicioFiltro] = useState<string>('all');
   const [fechaInicio, setFechaInicio] = useState<Date>(startOfMonth(new Date()));
   const [fechaFin, setFechaFin] = useState<Date>(new Date());
+  const [config, setConfig] = useState<ClienteReportConfig>(defaultClienteReportConfig());
 
   useEffect(() => { if (user) loadAll(); }, [user]);
 
   const loadAll = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Configuración de secciones visibles definida por el admin
+    const cfg = await loadClienteReportConfig(user.id);
+    setConfig(cfg);
+
 
     // 1. Get assigned services
     const { data: cs } = await supabase
