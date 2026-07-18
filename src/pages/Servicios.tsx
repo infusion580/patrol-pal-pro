@@ -26,8 +26,11 @@ interface Servicio {
   cliente: string;
   direccion: string;
   tipo_turno: TipoTurno;
+  rondin_intervalo_minutos: number | null;
+  rondin_tolerancia_minutos: number;
   checkpoints: Checkpoint[];
 }
+
 
 const TIPO_TURNO_LABEL: Record<TipoTurno, string> = {
   '12h': '12 horas',
