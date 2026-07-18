@@ -148,14 +148,44 @@ const Visitas = () => {
 
     setSubmitting(true);
     try {
+      const visita = visitas.find(v => v.id === visitaId);
       const salidaPath = await uploadPhoto(fotoSalida, 'salidas');
+      const horaSalidaISO = new Date().toISOString();
       const { error } = await supabase.from('visitas').update({
-        hora_salida: new Date().toISOString(),
+        hora_salida: horaSalidaISO,
         foto_salida_url: salidaPath,
         status: 'salió',
       } as any).eq('id', visitaId);
 
       if (error) throw error;
+
+      // Notificación única con entrada + salida
+      if (visita && user) {
+        try {
+          const { notifyVisitaEntradaSalida } = await import('@/lib/notification-helpers');
+          const { data: prof } = await supabase
+            .from('profiles')
+            .select('nombre, apellido')
+            .eq('user_id', user.id)
+            .maybeSingle();
+          const guardiaNombre = prof ? `${prof.nombre ?? ''} ${prof.apellido ?? ''}`.trim() || 'Guardia' : 'Guardia';
+          await notifyVisitaEntradaSalida({
+            guardiaId: user.id,
+            guardiaNombre,
+            nombreVisitante: visita.nombre_visitante,
+            personaAVisitar: visita.persona_a_visitar,
+            areaDestino: visita.area_destino,
+            motivo: visita.motivo,
+            horaEntradaISO: visita.hora_entrada,
+            horaSalidaISO,
+            fotoInePath: visita.foto_ine_url,
+            fotoPlacaPath: visita.foto_placa_url,
+            fotoSalidaPath: salidaPath,
+          });
+        } catch (e) {
+          console.warn('notifyVisita failed', e);
+        }
+      }
 
       toast({ title: '✅ Salida registrada', description: 'Visita finalizada correctamente.' });
       setExitingId(null);
