@@ -191,21 +191,29 @@ const Servicios = () => {
           const isExpanded = expandedId === servicio.id;
           return (
             <div key={servicio.id} className="bg-card rounded-xl shadow-card overflow-hidden">
-              <button onClick={() => setExpandedId(isExpanded ? null : servicio.id)} className="w-full p-4 flex items-center gap-3 text-left">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  <MapPin className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-foreground">{servicio.nombre}</p>
-                  <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos • {TIPO_TURNO_LABEL[servicio.tipo_turno]}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button onClick={(e) => { e.stopPropagation(); removeService(servicio.id); }} className="p-1.5 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors">
+              <div className="w-full p-4 flex items-center gap-3 text-left">
+                <button
+                  onClick={() => setExpandedId(isExpanded ? null : servicio.id)}
+                  className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                  aria-expanded={isExpanded}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                    <MapPin className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-sm text-foreground">{servicio.nombre}</p>
+                    <p className="text-xs text-muted-foreground">{servicio.cliente} • {servicio.checkpoints.length} puntos • {TIPO_TURNO_LABEL[servicio.tipo_turno]}</p>
+                  </div>
+                </button>
+                <div className="flex items-center gap-1 shrink-0">
+                  <button onClick={() => removeService(servicio.id)} className="p-1.5 rounded-lg text-muted-foreground hover:text-emergency hover:bg-emergency/10 transition-colors" aria-label="Eliminar servicio">
                     <Trash2 className="w-4 h-4" />
                   </button>
-                  {isExpanded ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
+                  <button onClick={() => setExpandedId(isExpanded ? null : servicio.id)} className="p-1.5 rounded-lg text-muted-foreground" aria-label={isExpanded ? 'Colapsar' : 'Expandir'}>
+                    {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
                 </div>
-              </button>
+              </div>
 
               {isExpanded && (
                 <div className="px-4 pb-4 space-y-2 animate-slide-up">
