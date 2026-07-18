@@ -348,13 +348,24 @@ const ClienteDashboard = () => {
 
 
         {/* Tabs */}
-        <Tabs defaultValue="resumen" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="servicios">Servicios</TabsTrigger>
-            <TabsTrigger value="guardias">Guardias</TabsTrigger>
-            <TabsTrigger value="historial">Historial</TabsTrigger>
-          </TabsList>
+        {/* Tabs — construidos dinámicamente según lo habilitado por el admin */}
+        {(() => {
+          const showServiciosTab = config.show_lista_servicios || config.show_semaforo;
+          const showGuardiasTab = config.show_lista_guardias;
+          const showHistorialTab = config.show_reportes_incidencias;
+          const tabs: Array<{ value: string; label: string }> = [{ value: 'resumen', label: 'Resumen' }];
+          if (showServiciosTab) tabs.push({ value: 'servicios', label: 'Servicios' });
+          if (showGuardiasTab) tabs.push({ value: 'guardias', label: 'Guardias' });
+          if (showHistorialTab) tabs.push({ value: 'historial', label: 'Historial' });
+          const gridColsClass = ['', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'][tabs.length];
+          return (
+            <Tabs defaultValue="resumen" className="w-full">
+              <TabsList className={cn('grid w-full', gridColsClass)}>
+                {tabs.map(t => (
+                  <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
+                ))}
+              </TabsList>
+
 
           {/* RESUMEN: charts */}
           <TabsContent value="resumen" className="space-y-3 mt-3">
