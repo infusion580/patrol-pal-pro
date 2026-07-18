@@ -2,7 +2,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte';
 
 interface NotifParams {
   tipo: NotifType;
