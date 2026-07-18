@@ -221,8 +221,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user, enforceSingleSession]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
     if (error) throw error;
+    // Registrar el inicio de sesión (con dispositivo) en notificaciones — fire-and-forget.
+    if (data?.user) {
+      const uid = data.user.id;
+      const nombreVisible = data.user.email || 'Usuario';
+      import('./notification-helpers')
+        .then(({ notifySesionInicio }) => notifySesionInicio(uid, nombreVisible))
+        .catch(() => {});
+    }
     return true;
   };
 
