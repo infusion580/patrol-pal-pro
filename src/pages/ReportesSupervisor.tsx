@@ -113,6 +113,11 @@ const ReportesSupervisor = () => {
   const filtered = filter === 'todos' ? reports : reports.filter(r => r.status === filter);
   const pendingCount = reports.filter(r => r.status === 'pendiente').length;
 
+  // Role guard: guards cannot approve/feedback reports
+  if (user && user.role !== 'supervisor' && user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
