@@ -530,46 +530,49 @@ const ClienteDashboard = () => {
           )}
 
 
-          {/* HISTORIAL */}
-          <TabsContent value="historial" className="space-y-3 mt-3">
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary" /> Rondines en el período
-                <span className="text-xs font-normal text-muted-foreground">({filtered.rondines.length})</span>
-              </h3>
-              {filtered.rondines.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">Sin registros en el período.</p>
-              ) : (
-                <div className="max-h-96 overflow-y-auto divide-y divide-border">
-                  {filtered.rondines.slice(0, 100).map(r => {
-                    const g = guardias.find(x => x.user_id === r.guardia_id);
-                    const s = servicios.find(x => x.id === r.servicio_id);
-                    return (
-                      <div key={r.id} className="py-2 flex items-center gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {s?.nombre || 'Servicio'} · {g ? `${g.nombre} ${g.apellido}` : 'Guardia'}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {format(new Date(r.created_at), "dd MMM yyyy 'a las' HH:mm", { locale: es })}
-                          </p>
+          {showHistorialTab && (
+            <TabsContent value="historial" className="space-y-3 mt-3">
+              <Card className="p-4">
+                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" /> Rondines en el período
+                  <span className="text-xs font-normal text-muted-foreground">({filtered.rondines.length})</span>
+                </h3>
+                {filtered.rondines.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">Sin registros en el período.</p>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto divide-y divide-border">
+                    {filtered.rondines.slice(0, 100).map(r => {
+                      const g = guardias.find(x => x.user_id === r.guardia_id);
+                      const s = servicios.find(x => x.id === r.servicio_id);
+                      return (
+                        <div key={r.id} className="py-2 flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {s?.nombre || 'Servicio'} · {g ? `${g.nombre} ${g.apellido}` : 'Guardia'}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {format(new Date(r.created_at), "dd MMM yyyy 'a las' HH:mm", { locale: es })}
+                            </p>
+                          </div>
+                          <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                            r.status === 'completado' ? 'bg-success/15 text-success' :
+                            r.status === 'activo' ? 'bg-primary/15 text-primary' :
+                            'bg-muted text-muted-foreground')}>
+                            {r.status}
+                          </span>
                         </div>
-                        <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                          r.status === 'completado' ? 'bg-success/15 text-success' :
-                          r.status === 'activo' ? 'bg-primary/15 text-primary' :
-                          'bg-muted text-muted-foreground')}>
-                          {r.status}
-                        </span>
-                      </div>
-                    );
-                  })}
-                  {filtered.rondines.length > 100 && (
-                    <p className="text-xs text-muted-foreground text-center pt-2">Mostrando primeros 100. Descarga el reporte para ver todos.</p>
-                  )}
-                </div>
-              )}
-            </Card>
-          </TabsContent>
+                      );
+                    })}
+                    {filtered.rondines.length > 100 && (
+                      <p className="text-xs text-muted-foreground text-center pt-2">Mostrando primeros 100. Descarga el reporte para ver todos.</p>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          )}
+        </Tabs>
+
         </Tabs>
           );
         })()}
