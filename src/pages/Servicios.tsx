@@ -97,6 +97,16 @@ const Servicios = () => {
     fetchServicios();
   };
 
+  const updateRondinConfig = async (servicioId: string, intervalo: number | null, tolerancia: number) => {
+    const { error } = await supabase.from('servicios').update({
+      rondin_intervalo_minutos: intervalo,
+      rondin_tolerancia_minutos: tolerancia,
+    } as any).eq('id', servicioId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo guardar la alarma.', variant: 'destructive' }); return; }
+    toast({ title: 'Alarma de rondines guardada' });
+    fetchServicios();
+  };
+
   const removeService = async (id: string) => {
     await supabase.from('servicios').delete().eq('id', id);
     toast({ title: 'Servicio eliminado' });
