@@ -571,11 +571,10 @@ const ClienteDashboard = () => {
               </Card>
             </TabsContent>
           )}
-        </Tabs>
-
-        </Tabs>
+            </Tabs>
           );
         })()}
+
 
       </div>
 
