@@ -10,7 +10,7 @@ import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
-import { notifyRondinRegistro } from '@/lib/notification-helpers';
+import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/lib/notification-helpers';
 
 interface CheckpointItem {
   id: string;
