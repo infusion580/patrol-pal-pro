@@ -55,12 +55,13 @@ const Notificaciones = () => {
       const { data: profiles } = await supabase.from('profiles').select('user_id, nombre, apellido').in('user_id', guardiaIds);
       const nameMap = new Map((profiles || []).map(p => [p.user_id, `${p.nombre} ${p.apellido}`]));
 
-      setNotifs(data.map(n => ({
+      setNotifs(data.map((n: any) => ({
         id: n.id,
         tipo: n.tipo,
         mensaje: n.mensaje,
         leida: n.leida,
         created_at: n.created_at,
+        foto_url: n.foto_url || null,
         guardia_nombre: nameMap.get(n.guardia_id) || 'Guardia',
       })));
     }
