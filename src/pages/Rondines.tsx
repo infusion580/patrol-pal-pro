@@ -242,8 +242,8 @@ const Rondines = () => {
       setScanning(false);
       return;
     }
-    const { data: pub } = supabase.storage.from('evidencias').getPublicUrl(path);
-    const foto_url = pub.publicUrl;
+    // Bucket is private: store the storage path (signed URLs are generated at read time).
+    const foto_url = path;
 
     const { error } = await supabase.from('rondin_scans').insert({
       rondin_id: rondinId,
