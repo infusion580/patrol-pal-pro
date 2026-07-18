@@ -12,6 +12,7 @@ import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
 import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/lib/notification-helpers';
 import { SignedImg } from '@/components/SignedImg';
+import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
 
 interface CheckpointItem {
   id: string;
@@ -84,13 +85,14 @@ const Rondines = () => {
 
   useZoneMonitor(checkedIn ? selectedServicio : null, zoneCenter);
 
-  useEffect(() => { loadServicios(); }, []);
+  useEffect(() => { if (user) loadServicios(); }, [user]);
   useEffect(() => { if (selectedServicio) loadCheckpoints(selectedServicio); }, [selectedServicio]);
 
   const loadServicios = async () => {
-    const { data } = await supabase.from('servicios').select('id, nombre').order('nombre');
+    if (!user) { setLoading(false); return; }
+    const data = await loadServiciosParaUsuario(user.id, user.role);
     if (data && data.length > 0) {
-      setServicios(data);
+      setServicios(data.map((d: any) => ({ id: d.id, nombre: d.nombre })));
       setSelectedServicio(data[0].id);
     }
     setLoading(false);
