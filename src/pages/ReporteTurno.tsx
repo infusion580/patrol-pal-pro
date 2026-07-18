@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { ArrowLeft, Camera, Mic, Video, PenTool, Send, X, ImageIcon } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Camera, Mic, Video, PenTool, Send, X, ImageIcon, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +24,33 @@ const ReporteTurno = () => {
   const [submitting, setSubmitting] = useState(false);
   const [evidencias, setEvidencias] = useState<Array<{ file: File; preview: string }>>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  // Reporte pendiente de corrección: si el supervisor lo marcó con
+  // retroalimentación, precargamos el contenido y hacemos UPDATE en lugar de INSERT.
+  const [correctingId, setCorrectingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('reportes_turno')
+        .select('id, incidencias, actividades, observaciones, retroalimentacion')
+        .eq('guardia_id', user.id)
+        .eq('status', 'retroalimentacion')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setCorrectingId(data.id);
+        setFeedback(data.retroalimentacion);
+        setForm({
+          incidencias: data.incidencias || '',
+          actividades: data.actividades || '',
+          observaciones: data.observaciones || '',
+        });
+      }
+    })();
+  }, [user]);
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
@@ -76,19 +103,33 @@ const ReporteTurno = () => {
       ? `${form.observaciones}\n\n[Evidencias adjuntas: ${evidenciaUrls.join(', ')}]`
       : form.observaciones;
 
-    const { error } = await supabase.from('reportes_turno').insert({
-      guardia_id: user.id,
+    // Si estamos corrigiendo un reporte con retroalimentación, actualizamos
+    // el registro existente y lo devolvemos a estado "pendiente" para que el
+    // supervisor lo revise de nuevo. Si no, creamos un reporte nuevo.
+    const payload = {
       incidencias: form.incidencias,
       actividades: form.actividades,
       observaciones: observacionesConEvidencia,
       firmado: true,
-    });
+    };
+    const { error } = correctingId
+      ? await supabase.from('reportes_turno').update({
+          ...payload,
+          status: 'pendiente',
+          retroalimentacion: null,
+        }).eq('id', correctingId).eq('guardia_id', user.id)
+      : await supabase.from('reportes_turno').insert({ ...payload, guardia_id: user.id });
     setSubmitting(false);
     if (error) {
       toast({ title: 'Error', description: 'No se pudo enviar el reporte. Intenta de nuevo.', variant: 'destructive' });
       return;
     }
-    toast({ title: '✅ Reporte enviado', description: 'Tu reporte de turno ha sido enviado al supervisor' });
+    toast({
+      title: correctingId ? '✅ Correcciones enviadas' : '✅ Reporte enviado',
+      description: correctingId
+        ? 'El supervisor revisará tu reporte corregido.'
+        : 'Tu reporte de turno ha sido enviado al supervisor',
+    });
     navigate('/dashboard');
   };
 
@@ -99,12 +140,24 @@ const ReporteTurno = () => {
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
             <ArrowLeft className="w-4 h-4" /> Regresar
           </button>
-          <h1 className="text-xl font-display font-bold">Reporte de Turno</h1>
+          <h1 className="text-xl font-display font-bold">
+            {correctingId ? 'Corregir Reporte' : 'Reporte de Turno'}
+          </h1>
           <p className="text-sm opacity-70 mt-1">Bitácora digital — {new Date().toLocaleDateString('es-MX')}</p>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 mt-4 space-y-4">
+        {correctingId && feedback && (
+          <div className="bg-emergency/10 border border-emergency/30 rounded-xl p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-emergency shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-emergency mb-1">Retroalimentación del supervisor</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{feedback}</p>
+              <p className="text-xs text-muted-foreground mt-2">Corrige tu reporte y envíalo de nuevo.</p>
+            </div>
+          </div>
+        )}
         <div className="bg-card rounded-xl p-4 shadow-card space-y-4">
           <div className="space-y-2">
             <Label>Incidencias</Label>
@@ -175,7 +228,7 @@ const ReporteTurno = () => {
         </div>
 
         <Button onClick={handleSubmit} className="w-full h-12 text-base font-semibold" disabled={submitting}>
-          <Send className="w-4 h-4 mr-2" /> {submitting ? (uploadingFiles ? 'Subiendo evidencias...' : 'Enviando...') : 'Enviar Reporte'}
+          <Send className="w-4 h-4 mr-2" /> {submitting ? (uploadingFiles ? 'Subiendo evidencias...' : 'Enviando...') : correctingId ? 'Reenviar Reporte' : 'Enviar Reporte'}
         </Button>
       </div>
 

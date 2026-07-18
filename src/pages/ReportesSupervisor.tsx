@@ -7,6 +7,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
+import { notifyReporteAprobado, notifyReporteRetro } from '@/lib/notification-helpers';
 import BottomNav from '@/components/BottomNav';
 import ReporteDetailDialog from '@/components/ReporteDetailDialog';
 
@@ -34,7 +35,7 @@ const ReportesSupervisor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [filter, setFilter] = useState<'todos' | 'pendiente' | 'aprobado'>('todos');
+  const [filter, setFilter] = useState<'todos' | 'pendiente' | 'aprobado' | 'retroalimentacion'>('todos');
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<any>(null);
@@ -77,7 +78,11 @@ const ReportesSupervisor = () => {
 
   const handleApprove = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await supabase.from('reportes_turno').update({ status: 'aprobado', revisado_por: user?.id }).eq('id', id);
+    const report = reports.find(r => r.id === id);
+    await supabase.from('reportes_turno').update({ status: 'aprobado', revisado_por: user?.id, retroalimentacion: null }).eq('id', id);
+    if (report) {
+      void notifyReporteAprobado(report.guardia_id, user?.id || null, report.fecha);
+    }
     toast({ title: '✅ Reporte aprobado' });
     loadReports();
   };
@@ -92,11 +97,16 @@ const ReportesSupervisor = () => {
   const handleSendFeedback = async () => {
     if (!feedbackReportId || !feedbackText.trim()) return;
     setSendingFeedback(true);
+    const report = reports.find(r => r.id === feedbackReportId);
+    const feedback = feedbackText.trim();
     await supabase.from('reportes_turno').update({
       status: 'retroalimentacion',
       revisado_por: user?.id,
-      retroalimentacion: feedbackText.trim(),
+      retroalimentacion: feedback,
     }).eq('id', feedbackReportId);
+    if (report) {
+      void notifyReporteRetro(report.guardia_id, user?.id || null, report.fecha, feedback);
+    }
     toast({ title: '📝 Retroalimentación enviada' });
     setFeedbackDialogOpen(false);
     setSendingFeedback(false);
@@ -140,9 +150,9 @@ const ReportesSupervisor = () => {
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
         <div className="bg-card rounded-xl p-2 shadow-card mb-4 flex gap-1">
-          {(['todos', 'pendiente', 'aprobado'] as const).map(f => (
+          {(['todos', 'pendiente', 'aprobado', 'retroalimentacion'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${filter === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-              {f === 'todos' ? 'Todos' : f === 'pendiente' ? 'Pendientes' : 'Aprobados'}
+              {f === 'todos' ? 'Todos' : f === 'pendiente' ? 'Pendientes' : f === 'aprobado' ? 'Aprobados' : 'Cambios'}
             </button>
           ))}
         </div>
