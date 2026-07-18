@@ -1,8 +1,9 @@
 import { supabase } from '@/integrations/supabase/client';
 import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
+import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion';
 
 interface NotifParams {
   tipo: NotifType;
