@@ -89,14 +89,19 @@ const VisitaDetailDialog = ({ visita, open, onClose }: Props) => {
                 <p className="text-[10px] font-semibold text-muted-foreground">FOTOGRAFÍAS</p>
                 {photos.map((photo, i) => {
                   const Icon = photo.icon;
-                  const url = getPublicUrl(photo.url);
                   return (
                     <div key={i}>
                       <p className="text-xs font-semibold text-foreground mb-1 flex items-center gap-1">
                         <Icon className="w-3.5 h-3.5 text-primary" /> {photo.label}
                       </p>
-                      <button onClick={() => setViewImage(url)} className="w-full rounded-lg overflow-hidden border border-border">
-                        <img src={url} alt={photo.label} className="w-full h-48 object-cover" />
+                      <button
+                        onClick={async () => {
+                          const u = await getSignedUrl('visitas', photo.url);
+                          if (u) setViewImage(u);
+                        }}
+                        className="w-full rounded-lg overflow-hidden border border-border"
+                      >
+                        <SignedImg bucket="visitas" path={photo.url} alt={photo.label} className="w-full h-48 object-cover" />
                       </button>
                     </div>
                   );
