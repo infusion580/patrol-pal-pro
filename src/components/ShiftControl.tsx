@@ -73,12 +73,15 @@ const ShiftControl = () => {
   };
 
   const loadServicios = async () => {
-    const { data } = await supabase.from('servicios').select('id, nombre, tipo_turno').order('nombre');
-    if (data) {
-      const list = (data as any[]).map(d => ({ id: d.id, nombre: d.nombre, tipo_turno: (d.tipo_turno || '12h') as TipoTurno }));
-      setServicios(list);
-      if (list.length > 0) setSelectedServicio(list[0].id);
-    }
+    if (!user) return;
+    const data = await loadServiciosParaUsuario(user.id, user.role);
+    const list = data.map((d: any) => ({
+      id: d.id,
+      nombre: d.nombre,
+      tipo_turno: (d.tipo_turno || '12h') as TipoTurno,
+    }));
+    setServicios(list);
+    if (list.length > 0) setSelectedServicio(list[0].id);
   };
 
   const startShift = async () => {
