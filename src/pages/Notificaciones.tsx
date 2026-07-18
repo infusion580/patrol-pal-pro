@@ -141,9 +141,16 @@ const Notificaciones = () => {
                 </div>
                 <p className="text-sm text-foreground whitespace-pre-line">{n.mensaje}</p>
                 {n.foto_url && (
-                  <a href={n.foto_url} target="_blank" rel="noopener noreferrer" className="block mt-2">
-                    <img src={n.foto_url} alt="Evidencia" className="w-full max-h-48 object-cover rounded-lg border border-border" loading="lazy" />
-                  </a>
+                  <button
+                    onClick={async (e) => {
+                      e.stopPropagation();
+                      const u = await getSignedUrl('evidencias', n.foto_url);
+                      if (u) window.open(u, '_blank', 'noopener,noreferrer');
+                    }}
+                    className="block mt-2 w-full text-left"
+                  >
+                    <SignedImg bucket="evidencias" path={n.foto_url} alt="Evidencia" className="w-full max-h-48 object-cover rounded-lg border border-border" loading="lazy" />
+                  </button>
                 )}
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {new Date(n.created_at).toLocaleString('es-MX', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })}
