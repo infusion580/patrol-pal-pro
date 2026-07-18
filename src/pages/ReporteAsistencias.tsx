@@ -23,7 +23,9 @@ interface Asistencia {
   duracion_minutos: number | null;
   status: string;
   observaciones: string;
+  horas_extra: number | null;
 }
+
 interface Profile { user_id: string; nombre: string; apellido: string; numero_empleado: string; }
 
 const ReporteAsistencias = () => {
@@ -181,6 +183,7 @@ const ReporteAsistencias = () => {
     const filasAsist = asistencias.map(a => {
       const prof = profiles.get(a.guardia_id);
       const dur = a.duracion_minutos != null ? `${Math.floor(a.duracion_minutos / 60)}h ${a.duracion_minutos % 60}m` : '—';
+      const extras = a.horas_extra != null ? Number(a.horas_extra) : 0;
       return {
         'Servicio': servicio?.nombre || '',
         'Empleado #': prof?.numero_empleado || '',
@@ -189,10 +192,12 @@ const ReporteAsistencias = () => {
         'Fecha y hora de entrada': new Date(a.inicio).toLocaleString('es-MX'),
         'Fecha y hora de salida': a.fin ? new Date(a.fin).toLocaleString('es-MX') : '—',
         'Duración trabajada': dur,
+        'Horas extra': extras > 0 ? extras.toFixed(2) : '0',
         'Estatus': a.status,
         'Observaciones': a.observaciones || '',
       };
     });
+
 
     // Hoja 2: Faltas
     const faltas = await calcularFaltas();

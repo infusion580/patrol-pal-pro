@@ -47,9 +47,20 @@ const Register = () => {
       return;
     }
     setLoading(true);
+    // Traducción de mensajes técnicos del backend a lenguaje humano
+    const humanize = (msg?: string) => {
+      const m = (msg || '').toLowerCase();
+      if (m.includes('nip inválido') || m.includes('invalid')) return 'El código NIP no existe. Verifica que lo hayas escrito correctamente.';
+      if (m.includes('ya utilizado') || m.includes('already')) return 'Este código NIP ya fue utilizado por otra persona. Solicita uno nuevo.';
+      if (m.includes('vencido') || m.includes('expired')) return 'El código NIP ya expiró. Pídele a tu administrador uno nuevo.';
+      if (m.includes('user already registered') || m.includes('already registered')) return 'Este correo ya está registrado. Intenta iniciar sesión.';
+      if (m.includes('password') && m.includes('pwned')) return 'Esta contraseña aparece en fugas de datos conocidas. Elige una diferente.';
+      if (m.includes('rate') && m.includes('limit')) return 'Demasiados intentos. Espera unos minutos y vuelve a intentar.';
+      return msg || 'Ocurrió un error. Intenta de nuevo.';
+    };
+
     try {
       // 1. VALIDAR el NIP ANTES de crear la cuenta (no lo consume).
-      //    Si no es válido, no se crea ningún usuario ni se inicia sesión.
       const { data: previewRole, error: validateError } = await supabase.rpc(
         'validate_registration_nip' as any,
         { _code: form.nip.trim().toUpperCase() }
@@ -57,7 +68,7 @@ const Register = () => {
       if (validateError || !previewRole) {
         toast({
           title: 'NIP no válido',
-          description: validateError?.message || 'El NIP es incorrecto, ya fue usado o venció. Solicita un NIP nuevo a tu administrador.',
+          description: humanize(validateError?.message),
           variant: 'destructive',
         });
         setLoading(false);
@@ -80,11 +91,16 @@ const Register = () => {
         _user_id: signInData.user.id,
       });
       if (nipError) {
-        // En caso muy raro (race condition): otro usuario consumió el NIP justo ahora
+        // Race condition: eliminar la cuenta huérfana antes de cerrar sesión
+        try {
+          await supabase.functions.invoke('cleanup-orphan-user');
+        } catch (cleanupErr) {
+          console.error('Cleanup failed', cleanupErr);
+        }
         await supabase.auth.signOut();
         toast({
-          title: 'NIP no disponible',
-          description: nipError.message || 'El NIP fue utilizado por otra persona durante el registro. Pide uno nuevo.',
+          title: 'No pudimos completar el registro',
+          description: humanize(nipError.message),
           variant: 'destructive',
         });
         setLoading(false);
@@ -99,13 +115,14 @@ const Register = () => {
     } catch (error: any) {
       console.error('Registration error:', error);
       toast({
-        title: 'Error',
-        description: error?.message || 'No se pudo crear la cuenta. Intenta de nuevo.',
+        title: 'No se pudo crear la cuenta',
+        description: humanize(error?.message),
         variant: 'destructive',
       });
     }
     setLoading(false);
   };
+
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 

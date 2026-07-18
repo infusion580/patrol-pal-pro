@@ -95,13 +95,22 @@ const Visitas = () => {
 
   const handleRegister = async () => {
     if (!user || !nombre.trim()) {
-      toast({ title: 'Error', description: 'Ingresa el nombre del visitante.', variant: 'destructive' });
+      toast({ title: 'Falta información', description: 'Ingresa el nombre del visitante.', variant: 'destructive' });
+      return;
+    }
+    if (!personaAVisitar.trim()) {
+      toast({ title: 'Falta información', description: 'Indica a quién visita.', variant: 'destructive' });
+      return;
+    }
+    if (!areaDestino.trim()) {
+      toast({ title: 'Falta información', description: 'Indica el área o departamento al que se dirige.', variant: 'destructive' });
       return;
     }
     if (!fotoPlaca || !fotoIne) {
-      toast({ title: 'Error', description: 'Debes capturar la foto de la placa y el INE.', variant: 'destructive' });
+      toast({ title: 'Faltan fotos', description: 'Debes capturar la foto de la placa y el INE.', variant: 'destructive' });
       return;
     }
+
 
     setSubmitting(true);
     try {

@@ -32,12 +32,18 @@ const Login = () => {
       // Don't navigate here — the useEffect above handles it after profile loads
     } catch (error: any) {
       console.error('Login error:', error);
+      const m = (error?.message || '').toLowerCase();
+      let description = 'Correo o contraseña incorrectos.';
+      if (m.includes('email not confirmed')) description = 'Aún no confirmas tu correo. Revisa tu bandeja de entrada.';
+      else if (m.includes('rate') && m.includes('limit')) description = 'Demasiados intentos. Espera unos minutos.';
+      else if (m.includes('network')) description = 'Sin conexión a internet. Verifica tu red.';
       toast({
-        title: 'Error',
-        description: 'Correo o contraseña incorrectos.',
+        title: 'No pudimos iniciar sesión',
+        description,
         variant: 'destructive'
       });
     }
+
     setLoading(false);
   };
 
