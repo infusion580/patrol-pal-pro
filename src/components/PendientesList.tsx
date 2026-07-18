@@ -167,13 +167,11 @@ const PendientesList = () => {
       if (foto) {
         const ext = foto.name.split('.').pop() || 'jpg';
         const path = `${user.id}/${openItem.id}-${Date.now()}.${ext}`;
-        const { error: upErr } = await supabase.storage.from('pendientes').upload(path, foto, {
-          cacheControl: '3600',
-          upsert: false,
-          contentType: foto.type,
-        });
-        if (upErr) throw upErr;
-        // Private bucket: store the path; signed URLs are generated at read time.
+        const { uploadPhotoResilient } = await import('@/lib/offline-photo-queue');
+        const { queued } = await uploadPhotoResilient('pendientes', path, foto, foto.type);
+        if (queued) {
+          toast({ title: '📥 Foto en cola', description: 'Se subirá al recuperar la señal.' });
+        }
         fotoUrl = path;
       }
 
