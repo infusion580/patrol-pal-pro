@@ -88,8 +88,8 @@ const Visitas = () => {
   const uploadPhoto = async (file: File, folder: string): Promise<string> => {
     const ext = file.name.split('.').pop() || 'jpg';
     const path = `${user!.id}/${folder}/${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('visitas').upload(path, file, { contentType: file.type });
-    if (error) throw error;
+    const { uploadPhotoResilient } = await import('@/lib/offline-photo-queue');
+    await uploadPhotoResilient('visitas', path, file, file.type);
     return path;
   };
 
