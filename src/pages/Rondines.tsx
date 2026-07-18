@@ -408,7 +408,8 @@ const Rondines = () => {
             ) : (
               <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent">
                 <Camera className="w-8 h-8 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground">Tomar / seleccionar foto</span>
+                <span className="text-sm text-muted-foreground">Tomar foto con la cámara</span>
+                <span className="text-[10px] text-muted-foreground mt-1">No se permiten fotos de la galería</span>
                 <input
                   type="file"
                   accept="image/*"
