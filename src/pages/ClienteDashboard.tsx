@@ -358,52 +358,61 @@ const ClienteDashboard = () => {
 
           {/* RESUMEN: charts */}
           <TabsContent value="resumen" className="space-y-3 mt-3">
-            <Card className="p-4">
-              <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por día</h3>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={rondinesPorDia}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="fecha" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
-                    <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                    <Line type="monotone" dataKey="rondines" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-
-            <div className="grid md:grid-cols-2 gap-3">
+            {config.show_chart_rondines_dia && (
               <Card className="p-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por servicio</h3>
+                <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por día</h3>
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={rondinesPorServicio}>
+                    <LineChart data={rondinesPorDia}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="nombre" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                      <XAxis dataKey="fecha" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
                       <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                      <Bar dataKey="rondines" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                    </BarChart>
+                      <Line type="monotone" dataKey="rondines" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               </Card>
+            )}
 
-              <Card className="p-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground">Distribución de turnos</h3>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={distribucionTurnos} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={(e) => `${e.value}`}>
-                        {distribucionTurnos.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <ReTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
+            {(config.show_chart_rondines_servicio || config.show_chart_distribucion_turnos) && (
+              <div className="grid md:grid-cols-2 gap-3">
+                {config.show_chart_rondines_servicio && (
+                  <Card className="p-4">
+                    <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por servicio</h3>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={rondinesPorServicio}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="nombre" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
+                          <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                          <Bar dataKey="rondines" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
+
+                {config.show_chart_distribucion_turnos && (
+                  <Card className="p-4">
+                    <h3 className="text-sm font-semibold mb-3 text-foreground">Distribución de turnos</h3>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={distribucionTurnos} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={(e) => `${e.value}`}>
+                            {distribucionTurnos.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                          </Pie>
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <ReTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            )}
+
 
             <Card className="p-4">
               <h3 className="text-sm font-semibold mb-3 text-foreground">🏆 Guardias más puntuales</h3>
