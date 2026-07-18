@@ -89,9 +89,10 @@ const Rondines = () => {
   useEffect(() => { if (selectedServicio) loadCheckpoints(selectedServicio); }, [selectedServicio]);
 
   const loadServicios = async () => {
-    const { data } = await supabase.from('servicios').select('id, nombre').order('nombre');
+    if (!user) { setLoading(false); return; }
+    const data = await loadServiciosParaUsuario(user.id, user.role);
     if (data && data.length > 0) {
-      setServicios(data);
+      setServicios(data.map((d: any) => ({ id: d.id, nombre: d.nombre })));
       setSelectedServicio(data[0].id);
     }
     setLoading(false);
