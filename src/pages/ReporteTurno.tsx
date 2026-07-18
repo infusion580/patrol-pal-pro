@@ -140,12 +140,24 @@ const ReporteTurno = () => {
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
             <ArrowLeft className="w-4 h-4" /> Regresar
           </button>
-          <h1 className="text-xl font-display font-bold">Reporte de Turno</h1>
+          <h1 className="text-xl font-display font-bold">
+            {correctingId ? 'Corregir Reporte' : 'Reporte de Turno'}
+          </h1>
           <p className="text-sm opacity-70 mt-1">Bitácora digital — {new Date().toLocaleDateString('es-MX')}</p>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 mt-4 space-y-4">
+        {correctingId && feedback && (
+          <div className="bg-emergency/10 border border-emergency/30 rounded-xl p-4 flex gap-3">
+            <AlertCircle className="w-5 h-5 text-emergency shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold text-emergency mb-1">Retroalimentación del supervisor</p>
+              <p className="text-sm text-foreground whitespace-pre-wrap">{feedback}</p>
+              <p className="text-xs text-muted-foreground mt-2">Corrige tu reporte y envíalo de nuevo.</p>
+            </div>
+          </div>
+        )}
         <div className="bg-card rounded-xl p-4 shadow-card space-y-4">
           <div className="space-y-2">
             <Label>Incidencias</Label>
