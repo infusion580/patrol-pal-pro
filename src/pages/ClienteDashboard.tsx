@@ -18,6 +18,12 @@ import {
 import * as XLSX from 'xlsx';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
+import {
+  defaultClienteReportConfig,
+  loadClienteReportConfig,
+  type ClienteReportConfig,
+} from '@/lib/cliente-report-config';
+
 
 interface Servicio { id: string; nombre: string; cliente: string; direccion: string; }
 interface Guardia { user_id: string; nombre: string; apellido: string; numero_empleado: string; servicio_id: string | null; }
@@ -40,12 +46,18 @@ const ClienteDashboard = () => {
   const [servicioFiltro, setServicioFiltro] = useState<string>('all');
   const [fechaInicio, setFechaInicio] = useState<Date>(startOfMonth(new Date()));
   const [fechaFin, setFechaFin] = useState<Date>(new Date());
+  const [config, setConfig] = useState<ClienteReportConfig>(defaultClienteReportConfig());
 
   useEffect(() => { if (user) loadAll(); }, [user]);
 
   const loadAll = async () => {
     if (!user) return;
     setLoading(true);
+
+    // Configuración de secciones visibles definida por el admin
+    const cfg = await loadClienteReportConfig(user.id);
+    setConfig(cfg);
+
 
     // 1. Get assigned services
     const { data: cs } = await supabase
@@ -310,77 +322,108 @@ const ClienteDashboard = () => {
             </Popover>
           </div>
 
-          <Button onClick={descargarReporte} className="h-9 mt-5 ml-auto">
-            <Download className="w-4 h-4 mr-2" />
-            Descargar reporte
-          </Button>
+          {config.show_export_excel && (
+            <Button onClick={descargarReporte} className="h-9 mt-5 ml-auto">
+              <Download className="w-4 h-4 mr-2" />
+              Descargar reporte
+            </Button>
+          )}
         </Card>
 
-        {/* KPIs */}
+        {/* KPIs — cada uno se muestra si el admin lo habilitó */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KPI icon={CheckCircle2} label="Rondines totales" value={String(kpis.totalRondines)} hint={`${kpis.rondinesCompletados} completados`} color="text-success" />
-          <KPI icon={TrendingUp} label="Cumplimiento turnos" value={`${kpis.cumplimiento}%`} hint={`${kpis.turnosTotales} turnos`} color="text-primary" />
-          <KPI icon={AlertTriangle} label="Incidencias" value={String(kpis.incidencias)} hint="reportes" color="text-warning" />
-          <KPI icon={Users} label="Guardias" value={String(kpis.guardiasActivos)} hint="en tus servicios" color="text-secondary" />
+          {config.show_kpi_rondines && (
+            <KPI icon={CheckCircle2} label="Rondines totales" value={String(kpis.totalRondines)} hint={`${kpis.rondinesCompletados} completados`} color="text-success" />
+          )}
+          {config.show_kpi_cumplimiento && (
+            <KPI icon={TrendingUp} label="Cumplimiento turnos" value={`${kpis.cumplimiento}%`} hint={`${kpis.turnosTotales} turnos`} color="text-primary" />
+          )}
+          {config.show_kpi_incidencias && (
+            <KPI icon={AlertTriangle} label="Incidencias" value={String(kpis.incidencias)} hint="reportes" color="text-warning" />
+          )}
+          {config.show_kpi_guardias && (
+            <KPI icon={Users} label="Guardias" value={String(kpis.guardiasActivos)} hint="en tus servicios" color="text-secondary" />
+          )}
         </div>
 
+
         {/* Tabs */}
-        <Tabs defaultValue="resumen" className="w-full">
-          <TabsList className="grid grid-cols-4 w-full">
-            <TabsTrigger value="resumen">Resumen</TabsTrigger>
-            <TabsTrigger value="servicios">Servicios</TabsTrigger>
-            <TabsTrigger value="guardias">Guardias</TabsTrigger>
-            <TabsTrigger value="historial">Historial</TabsTrigger>
-          </TabsList>
+        {/* Tabs — construidos dinámicamente según lo habilitado por el admin */}
+        {(() => {
+          const showServiciosTab = config.show_lista_servicios || config.show_semaforo;
+          const showGuardiasTab = config.show_lista_guardias;
+          const showHistorialTab = config.show_reportes_incidencias;
+          const tabs: Array<{ value: string; label: string }> = [{ value: 'resumen', label: 'Resumen' }];
+          if (showServiciosTab) tabs.push({ value: 'servicios', label: 'Servicios' });
+          if (showGuardiasTab) tabs.push({ value: 'guardias', label: 'Guardias' });
+          if (showHistorialTab) tabs.push({ value: 'historial', label: 'Historial' });
+          const gridColsClass = ['', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'][tabs.length];
+          return (
+            <Tabs defaultValue="resumen" className="w-full">
+              <TabsList className={cn('grid w-full', gridColsClass)}>
+                {tabs.map(t => (
+                  <TabsTrigger key={t.value} value={t.value}>{t.label}</TabsTrigger>
+                ))}
+              </TabsList>
+
 
           {/* RESUMEN: charts */}
           <TabsContent value="resumen" className="space-y-3 mt-3">
-            <Card className="p-4">
-              <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por día</h3>
-              <div className="h-56">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={rondinesPorDia}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                    <XAxis dataKey="fecha" stroke="hsl(var(--muted-foreground))" fontSize={11} />
-                    <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
-                    <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                    <Line type="monotone" dataKey="rondines" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </Card>
-
-            <div className="grid md:grid-cols-2 gap-3">
+            {config.show_chart_rondines_dia && (
               <Card className="p-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por servicio</h3>
+                <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por día</h3>
                 <div className="h-56">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={rondinesPorServicio}>
+                    <LineChart data={rondinesPorDia}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                      <XAxis dataKey="nombre" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                      <XAxis dataKey="fecha" stroke="hsl(var(--muted-foreground))" fontSize={11} />
                       <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
                       <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
-                      <Bar dataKey="rondines" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
-                    </BarChart>
+                      <Line type="monotone" dataKey="rondines" stroke="hsl(var(--primary))" strokeWidth={2} dot={{ r: 3 }} />
+                    </LineChart>
                   </ResponsiveContainer>
                 </div>
               </Card>
+            )}
 
-              <Card className="p-4">
-                <h3 className="text-sm font-semibold mb-3 text-foreground">Distribución de turnos</h3>
-                <div className="h-56">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <PieChart>
-                      <Pie data={distribucionTurnos} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={(e) => `${e.value}`}>
-                        {distribucionTurnos.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
-                      </Pie>
-                      <Legend wrapperStyle={{ fontSize: 12 }} />
-                      <ReTooltip />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-              </Card>
-            </div>
+            {(config.show_chart_rondines_servicio || config.show_chart_distribucion_turnos) && (
+              <div className="grid md:grid-cols-2 gap-3">
+                {config.show_chart_rondines_servicio && (
+                  <Card className="p-4">
+                    <h3 className="text-sm font-semibold mb-3 text-foreground">Rondines por servicio</h3>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={rondinesPorServicio}>
+                          <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                          <XAxis dataKey="nombre" stroke="hsl(var(--muted-foreground))" fontSize={10} />
+                          <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} allowDecimals={false} />
+                          <ReTooltip contentStyle={{ background: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: 8 }} />
+                          <Bar dataKey="rondines" fill="hsl(var(--primary))" radius={[6, 6, 0, 0]} />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
+
+                {config.show_chart_distribucion_turnos && (
+                  <Card className="p-4">
+                    <h3 className="text-sm font-semibold mb-3 text-foreground">Distribución de turnos</h3>
+                    <div className="h-56">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <PieChart>
+                          <Pie data={distribucionTurnos} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={70} label={(e) => `${e.value}`}>
+                            {distribucionTurnos.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+                          </Pie>
+                          <Legend wrapperStyle={{ fontSize: 12 }} />
+                          <ReTooltip />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </Card>
+                )}
+              </div>
+            )}
+
 
             <Card className="p-4">
               <h3 className="text-sm font-semibold mb-3 text-foreground">🏆 Guardias más puntuales</h3>
@@ -406,118 +449,133 @@ const ClienteDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* SERVICIOS: semáforo */}
-          <TabsContent value="servicios" className="space-y-3 mt-3">
-            <p className="text-xs text-muted-foreground">
-              Semáforo basado en cumplimiento de turnos: 🟢 ≥90% &nbsp; 🟡 70–89% &nbsp; 🔴 &lt;70% o sin actividad
-            </p>
-            {semaforoServicios.map(s => (
-              <Card key={s.id} className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      <h3 className="font-semibold text-foreground truncate">{s.nombre}</h3>
+          {/* SERVICIOS: semáforo + listado */}
+          {showServiciosTab && (
+            <TabsContent value="servicios" className="space-y-3 mt-3">
+              {config.show_semaforo && (
+                <p className="text-xs text-muted-foreground">
+                  Semáforo basado en cumplimiento de turnos: 🟢 ≥90% &nbsp; 🟡 70–89% &nbsp; 🔴 &lt;70% o sin actividad
+                </p>
+              )}
+              {semaforoServicios.map(s => (
+                <Card key={s.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        <h3 className="font-semibold text-foreground truncate">{s.nombre}</h3>
+                      </div>
+                      {s.cliente && <p className="text-xs text-muted-foreground mt-0.5">{s.cliente}</p>}
+                      {s.direccion && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" />{s.direccion}</p>}
                     </div>
-                    {s.cliente && <p className="text-xs text-muted-foreground mt-0.5">{s.cliente}</p>}
-                    {s.direccion && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" />{s.direccion}</p>}
+                    {config.show_semaforo && (
+                      <span className={cn('px-3 py-1 rounded-full text-xs font-bold uppercase', semaforoColor(s.color))}>
+                        {s.color === 'verde' ? '🟢 Óptimo' : s.color === 'amarillo' ? '🟡 Atención' : '🔴 Crítico'}
+                      </span>
+                    )}
                   </div>
-                  <span className={cn('px-3 py-1 rounded-full text-xs font-bold uppercase', semaforoColor(s.color))}>
-                    {s.color === 'verde' ? '🟢 Óptimo' : s.color === 'amarillo' ? '🟡 Atención' : '🔴 Crítico'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                  <div className="bg-accent/40 rounded-lg p-2">
-                    <p className="text-lg font-bold text-foreground">{s.pct}%</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Cumplimiento</p>
+                  <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                    <div className="bg-accent/40 rounded-lg p-2">
+                      <p className="text-lg font-bold text-foreground">{s.pct}%</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">Cumplimiento</p>
+                    </div>
+                    <div className="bg-accent/40 rounded-lg p-2">
+                      <p className="text-lg font-bold text-foreground">{s.rondines}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">Rondines</p>
+                    </div>
+                    <div className="bg-accent/40 rounded-lg p-2">
+                      <p className="text-lg font-bold text-foreground">{guardiasByServicio[s.id]?.length || 0}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">Guardias</p>
+                    </div>
                   </div>
-                  <div className="bg-accent/40 rounded-lg p-2">
-                    <p className="text-lg font-bold text-foreground">{s.rondines}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Rondines</p>
-                  </div>
-                  <div className="bg-accent/40 rounded-lg p-2">
-                    <p className="text-lg font-bold text-foreground">{guardiasByServicio[s.id]?.length || 0}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Guardias</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </TabsContent>
+                </Card>
+              ))}
+            </TabsContent>
+          )}
+
 
           {/* GUARDIAS: por servicio */}
-          <TabsContent value="guardias" className="space-y-3 mt-3">
-            {servicios.filter(s => servicioFiltro === 'all' || s.id === servicioFiltro).map(s => {
-              const ids = guardiasByServicio[s.id] || [];
-              const list = ids.map(id => guardias.find(g => g.user_id === id)).filter(Boolean) as Guardia[];
-              return (
-                <Card key={s.id} className="p-4">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
-                    <Building2 className="w-4 h-4 text-primary" /> {s.nombre}
-                    <span className="text-xs font-normal text-muted-foreground">({list.length} guardias)</span>
-                  </h3>
-                  {list.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic">Sin guardias asignados.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {list.map(g => (
-                        <div key={g.user_id} className="flex items-center gap-3 p-2 rounded-lg bg-accent/40">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">{g.nombre[0]}{g.apellido[0]}</span>
+          {showGuardiasTab && (
+            <TabsContent value="guardias" className="space-y-3 mt-3">
+              {servicios.filter(s => servicioFiltro === 'all' || s.id === servicioFiltro).map(s => {
+                const ids = guardiasByServicio[s.id] || [];
+                const list = ids.map(id => guardias.find(g => g.user_id === id)).filter(Boolean) as Guardia[];
+                return (
+                  <Card key={s.id} className="p-4">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
+                      <Building2 className="w-4 h-4 text-primary" /> {s.nombre}
+                      <span className="text-xs font-normal text-muted-foreground">({list.length} guardias)</span>
+                    </h3>
+                    {list.length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic">Sin guardias asignados.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {list.map(g => (
+                          <div key={g.user_id} className="flex items-center gap-3 p-2 rounded-lg bg-accent/40">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-xs font-bold text-primary">{g.nombre[0]}{g.apellido[0]}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{g.nombre} {g.apellido}</p>
+                              <p className="text-[11px] text-muted-foreground font-mono">#{g.numero_empleado}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">{g.nombre} {g.apellido}</p>
-                            <p className="text-[11px] text-muted-foreground font-mono">#{g.numero_empleado}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
-          </TabsContent>
-
-          {/* HISTORIAL */}
-          <TabsContent value="historial" className="space-y-3 mt-3">
-            <Card className="p-4">
-              <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
-                <FileText className="w-4 h-4 text-primary" /> Rondines en el período
-                <span className="text-xs font-normal text-muted-foreground">({filtered.rondines.length})</span>
-              </h3>
-              {filtered.rondines.length === 0 ? (
-                <p className="text-sm text-muted-foreground italic">Sin registros en el período.</p>
-              ) : (
-                <div className="max-h-96 overflow-y-auto divide-y divide-border">
-                  {filtered.rondines.slice(0, 100).map(r => {
-                    const g = guardias.find(x => x.user_id === r.guardia_id);
-                    const s = servicios.find(x => x.id === r.servicio_id);
-                    return (
-                      <div key={r.id} className="py-2 flex items-center gap-3">
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground truncate">
-                            {s?.nombre || 'Servicio'} · {g ? `${g.nombre} ${g.apellido}` : 'Guardia'}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground">
-                            {format(new Date(r.created_at), "dd MMM yyyy 'a las' HH:mm", { locale: es })}
-                          </p>
-                        </div>
-                        <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full',
-                          r.status === 'completado' ? 'bg-success/15 text-success' :
-                          r.status === 'activo' ? 'bg-primary/15 text-primary' :
-                          'bg-muted text-muted-foreground')}>
-                          {r.status}
-                        </span>
+                        ))}
                       </div>
-                    );
-                  })}
-                  {filtered.rondines.length > 100 && (
-                    <p className="text-xs text-muted-foreground text-center pt-2">Mostrando primeros 100. Descarga el reporte para ver todos.</p>
-                  )}
-                </div>
-              )}
-            </Card>
-          </TabsContent>
-        </Tabs>
+                    )}
+                  </Card>
+                );
+              })}
+            </TabsContent>
+          )}
+
+
+          {showHistorialTab && (
+            <TabsContent value="historial" className="space-y-3 mt-3">
+              <Card className="p-4">
+                <h3 className="font-semibold text-foreground mb-3 flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-primary" /> Rondines en el período
+                  <span className="text-xs font-normal text-muted-foreground">({filtered.rondines.length})</span>
+                </h3>
+                {filtered.rondines.length === 0 ? (
+                  <p className="text-sm text-muted-foreground italic">Sin registros en el período.</p>
+                ) : (
+                  <div className="max-h-96 overflow-y-auto divide-y divide-border">
+                    {filtered.rondines.slice(0, 100).map(r => {
+                      const g = guardias.find(x => x.user_id === r.guardia_id);
+                      const s = servicios.find(x => x.id === r.servicio_id);
+                      return (
+                        <div key={r.id} className="py-2 flex items-center gap-3">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">
+                              {s?.nombre || 'Servicio'} · {g ? `${g.nombre} ${g.apellido}` : 'Guardia'}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {format(new Date(r.created_at), "dd MMM yyyy 'a las' HH:mm", { locale: es })}
+                            </p>
+                          </div>
+                          <span className={cn('text-[10px] font-semibold px-2 py-0.5 rounded-full',
+                            r.status === 'completado' ? 'bg-success/15 text-success' :
+                            r.status === 'activo' ? 'bg-primary/15 text-primary' :
+                            'bg-muted text-muted-foreground')}>
+                            {r.status}
+                          </span>
+                        </div>
+                      );
+                    })}
+                    {filtered.rondines.length > 100 && (
+                      <p className="text-xs text-muted-foreground text-center pt-2">Mostrando primeros 100. Descarga el reporte para ver todos.</p>
+                    )}
+                  </div>
+                )}
+              </Card>
+            </TabsContent>
+          )}
+            </Tabs>
+          );
+        })()}
+
+
       </div>
 
       <BottomNav />

@@ -31,6 +31,8 @@ import CuadroHonor from "./pages/CuadroHonor";
 import ReporteAsistencias from "./pages/ReporteAsistencias";
 import PendientesPuesto from "./pages/PendientesPuesto";
 import RegistrationNips from "./pages/RegistrationNips";
+import ClienteReporteConfig from "./pages/ClienteReporteConfig";
+
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 
@@ -73,6 +75,8 @@ const App = () => (
             <Route path="/reporte-asistencias" element={<ReporteAsistencias />} />
             <Route path="/pendientes" element={<PendientesPuesto />} />
             <Route path="/nips" element={<RegistrationNips />} />
+            <Route path="/cliente-reporte-config" element={<ClienteReporteConfig />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
