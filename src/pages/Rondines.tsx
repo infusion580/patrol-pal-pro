@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation, Camera, X, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Textarea } from '@/components/ui/textarea';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -18,6 +20,7 @@ interface CheckpointItem {
   lat: number | null;
   lng: number | null;
   radius: number;
+  foto_url?: string | null;
 }
 
 function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -28,54 +31,29 @@ function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: numbe
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-/**
- * Robust GPS getter: tries high-accuracy first, falls back to low-accuracy with cached position.
- * Returns position or throws an Error with a user-friendly message.
- */
 async function getCurrentPositionRobust(): Promise<GeolocationPosition> {
-  if (!('geolocation' in navigator)) {
-    throw new Error('Tu dispositivo no soporta geolocalización.');
-  }
-
-  // Check permission state if available (not supported on all browsers)
+  if (!('geolocation' in navigator)) throw new Error('Tu dispositivo no soporta geolocalización.');
   try {
     if ('permissions' in navigator) {
       const status = await (navigator as any).permissions.query({ name: 'geolocation' });
-      if (status.state === 'denied') {
-        throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador para este sitio.');
-      }
+      if (status.state === 'denied') throw new Error('Permiso de ubicación denegado.');
     }
-  } catch (e: any) {
-    if (e?.message?.includes('denegado')) throw e;
-    // ignore — permissions API not available
-  }
-
+  } catch (e: any) { if (e?.message?.includes('denegado')) throw e; }
   const tryGet = (opts: PositionOptions) =>
     new Promise<GeolocationPosition>((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, opts)
     );
-
   try {
-    // First attempt: high accuracy, allow recent cached fix (up to 10s)
     return await tryGet({ enableHighAccuracy: true, timeout: 12000, maximumAge: 10000 });
   } catch (err: any) {
-    if (err?.code === 1) {
-      throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador.');
-    }
-    // Fallback: lower accuracy, accept older cache (up to 60s) — works better indoors
+    if (err?.code === 1) throw new Error('Permiso de ubicación denegado.');
     try {
       return await tryGet({ enableHighAccuracy: false, timeout: 15000, maximumAge: 60000 });
     } catch (err2: any) {
-      if (err2?.code === 1) {
-        throw new Error('Permiso de ubicación denegado. Habilítalo en los ajustes del navegador.');
-      }
-      if (err2?.code === 2) {
-        throw new Error('GPS no disponible. Verifica que la ubicación esté activada y tengas señal.');
-      }
-      if (err2?.code === 3) {
-        throw new Error('Tiempo agotado al obtener GPS. Sal a un área abierta e inténtalo de nuevo.');
-      }
-      throw new Error('No se pudo obtener tu ubicación. Inténtalo de nuevo.');
+      if (err2?.code === 1) throw new Error('Permiso de ubicación denegado.');
+      if (err2?.code === 2) throw new Error('GPS no disponible.');
+      if (err2?.code === 3) throw new Error('Tiempo agotado obteniendo GPS.');
+      throw new Error('No se pudo obtener tu ubicación.');
     }
   }
 }
@@ -88,12 +66,21 @@ const Rondines = () => {
   const [rondinId, setRondinId] = useState<string | null>(null);
   const [points, setPoints] = useState<CheckpointItem[]>([]);
   const [loading, setLoading] = useState(true);
-  const [scanning, setScanning] = useState<string | null>(null);
+  const [scanning, setScanning] = useState(false);
   const [servicios, setServicios] = useState<Array<{ id: string; nombre: string }>>([]);
   const [selectedServicio, setSelectedServicio] = useState<string | null>(null);
   const [zoneCenter, setZoneCenter] = useState<{ lat: number; lng: number; radius: number } | undefined>();
 
-  // Monitor zone exit using first checkpoint as zone center
+  // Scan dialog state
+  const [scanTarget, setScanTarget] = useState<CheckpointItem | null>(null);
+  const [scanFile, setScanFile] = useState<File | null>(null);
+  const [scanPreview, setScanPreview] = useState<string | null>(null);
+
+  // Checkout dialog state
+  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [reporte, setReporte] = useState('');
+  const [submittingCheckout, setSubmittingCheckout] = useState(false);
+
   useZoneMonitor(checkedIn ? selectedServicio : null, zoneCenter);
 
   useEffect(() => { loadServicios(); }, []);
@@ -110,151 +97,169 @@ const Rondines = () => {
 
   const loadCheckpoints = async (servicioId: string) => {
     const { data: cps } = await supabase.from('checkpoints').select('*').eq('servicio_id', servicioId).order('created_at');
+    if (!user) return;
 
-    if (user) {
-      const { data: activeRondin } = await supabase
-        .from('rondines').select('*')
-        .eq('guardia_id', user.id).eq('status', 'activo')
-        .maybeSingle();
+    const { data: activeRondin } = await supabase
+      .from('rondines').select('*')
+      .eq('guardia_id', user.id).eq('status', 'activo')
+      .maybeSingle();
 
-      if (activeRondin) {
-        setRondinId(activeRondin.id);
-        setCheckedIn(true);
-
-        const { data: scans } = await supabase
-          .from('rondin_scans').select('checkpoint_id, scanned_at')
-          .eq('rondin_id', activeRondin.id);
-
-        const scannedMap = new Map(scans?.map((s) => [s.checkpoint_id, s.scanned_at]) || []);
-
-        const mapped = (cps || []).map((cp: any) => ({
-          id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
-          scanned: scannedMap.has(cp.id),
-          time: scannedMap.has(cp.id)
-            ? new Date(scannedMap.get(cp.id)!).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-            : null,
-        }));
-        setPoints(mapped);
-        // Set zone center from first checkpoint with coordinates
-        const first = mapped.find(p => p.lat && p.lng);
-        if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
-      } else {
-        const mapped = (cps || []).map((cp: any) => ({
-          id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
-          scanned: false, time: null,
-        }));
-        setPoints(mapped);
-        const first = mapped.find(p => p.lat && p.lng);
-        if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
-      }
+    let scannedMap = new Map<string, { scanned_at: string; foto_url: string | null }>();
+    if (activeRondin) {
+      setRondinId(activeRondin.id);
+      setCheckedIn(true);
+      const { data: scans } = await supabase
+        .from('rondin_scans').select('checkpoint_id, scanned_at, foto_url')
+        .eq('rondin_id', activeRondin.id);
+      scannedMap = new Map(scans?.map((s: any) => [s.checkpoint_id, { scanned_at: s.scanned_at, foto_url: s.foto_url }]) || []);
     }
+
+    const mapped = (cps || []).map((cp: any) => {
+      const s = scannedMap.get(cp.id);
+      return {
+        id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
+        scanned: !!s,
+        time: s ? new Date(s.scanned_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : null,
+        foto_url: s?.foto_url || null,
+      };
+    });
+    setPoints(mapped);
+    const first = mapped.find(p => p.lat && p.lng);
+    if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
   };
 
   const handleCheckIn = async () => {
     if (!user || !selectedServicio) return;
     if (checkedIn && rondinId) {
-      await supabase.from('rondines').update({ status: 'completado', checkout_at: new Date().toISOString() }).eq('id', rondinId);
-      setCheckedIn(false);
-      setRondinId(null);
-      setPoints((prev) => prev.map((p) => ({ ...p, scanned: false, time: null })));
-    } else {
-      // Get current position for check-in
-      let lat: number | null = null;
-      let lng: number | null = null;
+      // Open checkout dialog to request report
+      setReporte('');
+      setCheckoutOpen(true);
+      return;
+    }
+    let lat: number | null = null, lng: number | null = null;
+    try {
+      const pos = await getCurrentPositionRobust();
+      lat = pos.coords.latitude; lng = pos.coords.longitude;
+    } catch (e: any) {
+      toast({ title: 'Aviso GPS', description: e?.message || 'Check-in sin coordenadas.' });
+    }
+    const { data } = await supabase.from('rondines').insert({
+      guardia_id: user.id,
+      servicio_id: selectedServicio,
+      checkin_at: new Date().toISOString(),
+      checkin_lat: lat, checkin_lng: lng,
+    }).select().single();
+    if (data) {
+      setRondinId(data.id);
+      setCheckedIn(true);
+      const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+      notifyRondinRegistro(user.id, `${user.nombre} ${user.apellido}`, svcName);
+    }
+  };
+
+  const submitCheckout = async () => {
+    if (!rondinId) return;
+    if (reporte.trim().length < 10) {
+      toast({ title: 'Reporte requerido', description: 'Escribe al menos 10 caracteres describiendo el rondín.', variant: 'destructive' });
+      return;
+    }
+    setSubmittingCheckout(true);
+    const { error } = await supabase.from('rondines').update({
+      status: 'completado',
+      checkout_at: new Date().toISOString(),
+      reporte: reporte.trim(),
+    }).eq('id', rondinId);
+    setSubmittingCheckout(false);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo cerrar el rondín.', variant: 'destructive' });
+      return;
+    }
+    setCheckoutOpen(false);
+    setCheckedIn(false);
+    setRondinId(null);
+    setReporte('');
+    setPoints(prev => prev.map(p => ({ ...p, scanned: false, time: null, foto_url: null })));
+    toast({ title: '✅ Rondín completado', description: 'Reporte guardado correctamente.' });
+  };
+
+  const openScanDialog = (checkpoint: CheckpointItem) => {
+    setScanTarget(checkpoint);
+    setScanFile(null);
+    setScanPreview(null);
+  };
+
+  const onSelectPhoto = (file: File | null) => {
+    if (!file) { setScanFile(null); setScanPreview(null); return; }
+    if (file.size > 8 * 1024 * 1024) {
+      toast({ title: 'Foto muy grande', description: 'Máximo 8MB.', variant: 'destructive' });
+      return;
+    }
+    setScanFile(file);
+    setScanPreview(URL.createObjectURL(file));
+  };
+
+  const confirmScan = async () => {
+    if (!scanTarget || !rondinId || !user) return;
+    if (!scanFile) {
+      toast({ title: 'Foto requerida', description: 'Debes adjuntar una foto de evidencia del punto.', variant: 'destructive' });
+      return;
+    }
+    setScanning(true);
+
+    // GPS check
+    let lat: number | null = null, lng: number | null = null;
+    if (scanTarget.lat && scanTarget.lng) {
       try {
         const pos = await getCurrentPositionRobust();
-        lat = pos.coords.latitude;
-        lng = pos.coords.longitude;
+        lat = pos.coords.latitude; lng = pos.coords.longitude;
+        const dist = getDistanceMeters(lat, lng, scanTarget.lat, scanTarget.lng);
+        const accuracy = pos.coords.accuracy || 0;
+        const allowed = scanTarget.radius + Math.min(accuracy, 50);
+        if (dist > allowed) {
+          toast({ title: '❌ Fuera de rango', description: `Estás a ${Math.round(dist)}m (máx ${scanTarget.radius}m).`, variant: 'destructive' });
+          setScanning(false);
+          return;
+        }
       } catch (e: any) {
-        toast({ title: 'Aviso GPS', description: e?.message || 'Check-in sin coordenadas.', variant: 'default' });
-      }
-
-      const { data, error } = await supabase.from('rondines').insert({
-        guardia_id: user.id,
-        servicio_id: selectedServicio,
-        checkin_at: new Date().toISOString(),
-        checkin_lat: lat,
-        checkin_lng: lng,
-      }).select().single();
-
-      if (data) {
-        setRondinId(data.id);
-        setCheckedIn(true);
-        const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
-        notifyRondinRegistro(user.id, `${user.nombre} ${user.apellido}`, svcName);
-      }
-    }
-  };
-
-  const handleScan = async (checkpoint: CheckpointItem) => {
-    if (!rondinId) return;
-    setScanning(checkpoint.id);
-
-    // Verify GPS proximity if checkpoint has coordinates
-    if (checkpoint.lat && checkpoint.lng) {
-      let pos: GeolocationPosition;
-      try {
-        pos = await getCurrentPositionRobust();
-      } catch (e: any) {
-        toast({
-          title: '📍 GPS no disponible',
-          description: e?.message || 'No se pudo obtener tu ubicación.',
-          variant: 'destructive',
-        });
-        setScanning(null);
+        toast({ title: '📍 GPS no disponible', description: e?.message || 'Sin ubicación.', variant: 'destructive' });
+        setScanning(false);
         return;
       }
-
-      const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
-      const accuracy = pos.coords.accuracy || 0;
-      // Allow checkpoint radius + GPS accuracy margin (so a 30m accuracy fix doesn't unfairly block)
-      const allowed = checkpoint.radius + Math.min(accuracy, 50);
-
-      if (dist > allowed) {
-        toast({
-          title: '❌ Fuera de rango',
-          description: `Estás a ${Math.round(dist)}m del punto (precisión GPS: ±${Math.round(accuracy)}m). Debes estar a menos de ${checkpoint.radius}m.`,
-          variant: 'destructive',
-        });
-        setScanning(null);
-        return;
-      }
-
-      // Save scan with GPS
-      const { error } = await supabase.from('rondin_scans').insert({
-        rondin_id: rondinId,
-        checkpoint_id: checkpoint.id,
-        lat: pos.coords.latitude,
-        lng: pos.coords.longitude,
-      });
-      if (!error) {
-        setPoints((prev) => prev.map((p) =>
-          p.id === checkpoint.id
-            ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
-            : p
-        ));
-        toast({ title: '✅ Punto confirmado', description: `${checkpoint.name} verificado a ${Math.round(dist)}m (±${Math.round(accuracy)}m).` });
-      } else {
-        toast({ title: 'Error', description: 'No se pudo guardar el escaneo. Reintenta.', variant: 'destructive' });
-      }
-    } else {
-      // No coordinates configured, allow scan without GPS check
-      const { error } = await supabase.from('rondin_scans').insert({
-        rondin_id: rondinId,
-        checkpoint_id: checkpoint.id,
-      });
-      if (!error) {
-        setPoints((prev) => prev.map((p) =>
-          p.id === checkpoint.id
-            ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) }
-            : p
-        ));
-      }
     }
-    setScanning(null);
+
+    // Upload photo
+    const ext = scanFile.name.split('.').pop() || 'jpg';
+    const path = `${user.id}/${rondinId}/${scanTarget.id}-${Date.now()}.${ext}`;
+    const { error: upErr } = await supabase.storage.from('evidencias').upload(path, scanFile, { upsert: false });
+    if (upErr) {
+      toast({ title: 'Error', description: 'No se pudo subir la foto.', variant: 'destructive' });
+      setScanning(false);
+      return;
+    }
+    const { data: pub } = supabase.storage.from('evidencias').getPublicUrl(path);
+    const foto_url = pub.publicUrl;
+
+    const { error } = await supabase.from('rondin_scans').insert({
+      rondin_id: rondinId,
+      checkpoint_id: scanTarget.id,
+      lat, lng,
+      foto_url,
+    });
+    setScanning(false);
+    if (error) {
+      toast({ title: 'Error', description: 'No se pudo guardar el escaneo.', variant: 'destructive' });
+      return;
+    }
+    setPoints(prev => prev.map(p => p.id === scanTarget.id
+      ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), foto_url }
+      : p));
+    toast({ title: '✅ Punto confirmado', description: `${scanTarget.name} con evidencia guardada.` });
+    setScanTarget(null);
+    setScanFile(null);
+    setScanPreview(null);
   };
 
-  const scannedCount = points.filter((p) => p.scanned).length;
+  const scannedCount = points.filter(p => p.scanned).length;
 
   if (loading) {
     return (
@@ -307,7 +312,7 @@ const Rondines = () => {
               }`}
             >
               <MapPin className="w-5 h-5 mr-2" />
-              {checkedIn ? 'Hacer Check-out' : 'Hacer Check-in'}
+              {checkedIn ? 'Hacer Check-out y enviar reporte' : 'Hacer Check-in'}
             </Button>
             {checkedIn && <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>}
           </div>
@@ -341,18 +346,16 @@ const Rondines = () => {
                     )}
                     {point.lat && point.lng && !point.scanned && (
                       <p className="text-[10px] text-primary flex items-center gap-1">
-                        <Navigation className="w-3 h-3" /> GPS requerido (r:{point.radius}m)
+                        <Navigation className="w-3 h-3" /> GPS + foto requeridos (r:{point.radius}m)
                       </p>
                     )}
                   </div>
+                  {point.scanned && point.foto_url && (
+                    <img src={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
+                  )}
                   {!point.scanned && checkedIn && (
-                    <Button
-                      size="sm"
-                      onClick={() => handleScan(point)}
-                      disabled={scanning === point.id}
-                      className="text-xs h-8"
-                    >
-                      {scanning === point.id ? 'Verificando...' : 'Confirmar'}
+                    <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">
+                      <Camera className="w-3 h-3 mr-1" /> Verificar
                     </Button>
                   )}
                 </div>
@@ -361,6 +364,83 @@ const Rondines = () => {
           </>
         )}
       </div>
+
+      {/* Scan dialog */}
+      <Dialog open={!!scanTarget} onOpenChange={(o) => { if (!o) { setScanTarget(null); setScanFile(null); setScanPreview(null); } }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Camera className="w-5 h-5 text-primary" />
+              Evidencia del punto
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Toma una foto del punto <span className="font-semibold text-foreground">{scanTarget?.name}</span> para confirmarlo.
+            </p>
+            {scanPreview ? (
+              <div className="relative">
+                <img src={scanPreview} alt="Preview" className="w-full h-56 object-cover rounded-lg border border-border" />
+                <button
+                  onClick={() => onSelectPhoto(null)}
+                  className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1"
+                >
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent">
+                <Camera className="w-8 h-8 text-muted-foreground mb-2" />
+                <span className="text-sm text-muted-foreground">Tomar / seleccionar foto</span>
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={(e) => onSelectPhoto(e.target.files?.[0] || null)}
+                />
+              </label>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setScanTarget(null)} disabled={scanning}>Cancelar</Button>
+            <Button onClick={confirmScan} disabled={scanning || !scanFile}>
+              {scanning ? 'Guardando...' : 'Confirmar punto'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Checkout dialog */}
+      <Dialog open={checkoutOpen} onOpenChange={setCheckoutOpen}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="w-5 h-5 text-primary" />
+              Reporte del rondín
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <p className="text-sm text-muted-foreground">
+              Describe cómo transcurrió el rondín: observaciones, incidencias, novedades, condiciones del área.
+            </p>
+            <Textarea
+              value={reporte}
+              onChange={(e) => setReporte(e.target.value)}
+              placeholder="Ej. Rondín sin novedad. Todas las puertas cerradas correctamente. Luminarias operando..."
+              rows={6}
+              maxLength={1500}
+            />
+            <p className="text-[10px] text-muted-foreground text-right">{reporte.length}/1500</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCheckoutOpen(false)} disabled={submittingCheckout}>Cancelar</Button>
+            <Button onClick={submitCheckout} disabled={submittingCheckout}>
+              {submittingCheckout ? 'Guardando...' : 'Finalizar rondín'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <EmergencyButton />
       <BottomNav />
