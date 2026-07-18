@@ -388,28 +388,34 @@ export type Database = {
       notificaciones: {
         Row: {
           created_at: string
+          foto_url: string | null
           guardia_id: string
           id: string
           leida: boolean
           mensaje: string
+          metadata: Json | null
           supervisor_id: string | null
           tipo: string
         }
         Insert: {
           created_at?: string
+          foto_url?: string | null
           guardia_id: string
           id?: string
           leida?: boolean
           mensaje?: string
+          metadata?: Json | null
           supervisor_id?: string | null
           tipo?: string
         }
         Update: {
           created_at?: string
+          foto_url?: string | null
           guardia_id?: string
           id?: string
           leida?: boolean
           mensaje?: string
+          metadata?: Json | null
           supervisor_id?: string | null
           tipo?: string
         }
