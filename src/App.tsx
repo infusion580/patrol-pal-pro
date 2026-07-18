@@ -73,6 +73,8 @@ const App = () => (
             <Route path="/reporte-asistencias" element={<ReporteAsistencias />} />
             <Route path="/pendientes" element={<PendientesPuesto />} />
             <Route path="/nips" element={<RegistrationNips />} />
+            <Route path="/cliente-reporte-config" element={<ClienteReporteConfig />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
