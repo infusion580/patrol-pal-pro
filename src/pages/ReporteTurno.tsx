@@ -228,7 +228,7 @@ const ReporteTurno = () => {
         </div>
 
         <Button onClick={handleSubmit} className="w-full h-12 text-base font-semibold" disabled={submitting}>
-          <Send className="w-4 h-4 mr-2" /> {submitting ? (uploadingFiles ? 'Subiendo evidencias...' : 'Enviando...') : 'Enviar Reporte'}
+          <Send className="w-4 h-4 mr-2" /> {submitting ? (uploadingFiles ? 'Subiendo evidencias...' : 'Enviando...') : correctingId ? 'Reenviar Reporte' : 'Enviar Reporte'}
         </Button>
       </div>
 
