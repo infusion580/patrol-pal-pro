@@ -253,6 +253,8 @@ const Rondines = () => {
     setPoints(prev => prev.map(p => p.id === scanTarget.id
       ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), foto_url }
       : p));
+    const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+    notifyRondinPunto(user.id, `${user.nombre} ${user.apellido}`, scanTarget.name, svcName, foto_url);
     toast({ title: '✅ Punto confirmado', description: `${scanTarget.name} con evidencia guardada.` });
     setScanTarget(null);
     setScanFile(null);
