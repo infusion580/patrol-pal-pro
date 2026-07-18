@@ -23,7 +23,9 @@ interface Asistencia {
   duracion_minutos: number | null;
   status: string;
   observaciones: string;
+  horas_extra: number | null;
 }
+
 interface Profile { user_id: string; nombre: string; apellido: string; numero_empleado: string; }
 
 const ReporteAsistencias = () => {
