@@ -31,6 +31,8 @@ import CuadroHonor from "./pages/CuadroHonor";
 import ReporteAsistencias from "./pages/ReporteAsistencias";
 import PendientesPuesto from "./pages/PendientesPuesto";
 import RegistrationNips from "./pages/RegistrationNips";
+import ClienteReporteConfig from "./pages/ClienteReporteConfig";
+
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 
