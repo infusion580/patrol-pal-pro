@@ -151,6 +151,17 @@ const AdminDashboard = () => {
   };
 
   const setServicioPrincipal = async (guardiaId: string, servicioId: string) => {
+    // 1) Desmarcar cualquier principal previo para evitar violar el índice único parcial
+    const { error: unsetErr } = await supabase
+      .from('guardia_servicios' as any)
+      .update({ es_principal: false } as any)
+      .eq('guardia_id', guardiaId)
+      .eq('es_principal', true);
+    if (unsetErr) {
+      toast({ title: 'Error', description: 'No se pudo actualizar el principal.', variant: 'destructive' });
+      return;
+    }
+    // 2) Marcar el nuevo principal
     const { error } = await supabase
       .from('guardia_servicios' as any)
       .update({ es_principal: true } as any)
