@@ -22,6 +22,7 @@ export type Database = {
           fin: string | null
           fin_esperado: string | null
           guardia_id: string
+          horas_extra: number
           id: string
           inicio: string
           observaciones: string | null
@@ -38,6 +39,7 @@ export type Database = {
           fin?: string | null
           fin_esperado?: string | null
           guardia_id: string
+          horas_extra?: number
           id?: string
           inicio?: string
           observaciones?: string | null
@@ -54,6 +56,7 @@ export type Database = {
           fin?: string | null
           fin_esperado?: string | null
           guardia_id?: string
+          horas_extra?: number
           id?: string
           inicio?: string
           observaciones?: string | null
