@@ -233,16 +233,14 @@ const Rondines = () => {
       }
     }
 
-    // Upload photo
+    // Upload photo (resilient: si no hay red se encola y sube al reconectar)
     const ext = scanFile.name.split('.').pop() || 'jpg';
     const path = `${user.id}/${rondinId}/${scanTarget.id}-${Date.now()}.${ext}`;
-    const { error: upErr } = await supabase.storage.from('evidencias').upload(path, scanFile, { upsert: false });
-    if (upErr) {
-      toast({ title: 'Error', description: 'No se pudo subir la foto.', variant: 'destructive' });
-      setScanning(false);
-      return;
+    const { uploadPhotoResilient } = await import('@/lib/offline-photo-queue');
+    const { queued } = await uploadPhotoResilient('evidencias', path, scanFile, scanFile.type);
+    if (queued) {
+      toast({ title: '📥 Foto en cola', description: 'Se subirá automáticamente al recuperar la señal.' });
     }
-    // Bucket is private: store the storage path (signed URLs are generated at read time).
     const foto_url = path;
 
     const { error } = await supabase.from('rondin_scans').insert({
