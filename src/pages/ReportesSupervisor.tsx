@@ -78,7 +78,11 @@ const ReportesSupervisor = () => {
 
   const handleApprove = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    await supabase.from('reportes_turno').update({ status: 'aprobado', revisado_por: user?.id }).eq('id', id);
+    const report = reports.find(r => r.id === id);
+    await supabase.from('reportes_turno').update({ status: 'aprobado', revisado_por: user?.id, retroalimentacion: null }).eq('id', id);
+    if (report) {
+      void notifyReporteAprobado(report.guardia_id, user?.id || null, report.fecha);
+    }
     toast({ title: '✅ Reporte aprobado' });
     loadReports();
   };
@@ -93,11 +97,16 @@ const ReportesSupervisor = () => {
   const handleSendFeedback = async () => {
     if (!feedbackReportId || !feedbackText.trim()) return;
     setSendingFeedback(true);
+    const report = reports.find(r => r.id === feedbackReportId);
+    const feedback = feedbackText.trim();
     await supabase.from('reportes_turno').update({
       status: 'retroalimentacion',
       revisado_por: user?.id,
-      retroalimentacion: feedbackText.trim(),
+      retroalimentacion: feedback,
     }).eq('id', feedbackReportId);
+    if (report) {
+      void notifyReporteRetro(report.guardia_id, user?.id || null, report.fecha, feedback);
+    }
     toast({ title: '📝 Retroalimentación enviada' });
     setFeedbackDialogOpen(false);
     setSendingFeedback(false);
