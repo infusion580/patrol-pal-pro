@@ -183,7 +183,8 @@ const Visitas = () => {
             fotoSalidaPath: salidaPath,
           });
         } catch (e) {
-          console.warn('notifyVisita failed', e);
+          console.error('notifyVisitaEntradaSalida failed', e);
+          toast({ title: 'Aviso', description: 'La visita se registró, pero la notificación falló.', variant: 'destructive' });
         }
       }
 
