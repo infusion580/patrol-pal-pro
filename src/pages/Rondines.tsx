@@ -153,7 +153,7 @@ const Rondines = () => {
       setRondinId(data.id);
       setCheckedIn(true);
       const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
-      notifyRondinRegistro(user.id, `${user.nombre} ${user.apellido}`, svcName);
+      notifyRondinCheckIn(user.id, `${user.nombre} ${user.apellido}`, svcName);
     }
   };
 
