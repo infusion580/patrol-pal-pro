@@ -12,6 +12,7 @@ interface Notificacion {
   leida: boolean;
   created_at: string;
   guardia_nombre?: string;
+  foto_url?: string | null;
 }
 
 const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: string; label: string }> = {
@@ -54,12 +55,13 @@ const Notificaciones = () => {
       const { data: profiles } = await supabase.from('profiles').select('user_id, nombre, apellido').in('user_id', guardiaIds);
       const nameMap = new Map((profiles || []).map(p => [p.user_id, `${p.nombre} ${p.apellido}`]));
 
-      setNotifs(data.map(n => ({
+      setNotifs(data.map((n: any) => ({
         id: n.id,
         tipo: n.tipo,
         mensaje: n.mensaje,
         leida: n.leida,
         created_at: n.created_at,
+        foto_url: n.foto_url || null,
         guardia_nombre: nameMap.get(n.guardia_id) || 'Guardia',
       })));
     }
@@ -136,6 +138,11 @@ const Notificaciones = () => {
                   </span>
                 </div>
                 <p className="text-sm text-foreground whitespace-pre-line">{n.mensaje}</p>
+                {n.foto_url && (
+                  <a href={n.foto_url} target="_blank" rel="noopener noreferrer" className="block mt-2">
+                    <img src={n.foto_url} alt="Evidencia" className="w-full max-h-48 object-cover rounded-lg border border-border" loading="lazy" />
+                  </a>
+                )}
                 <p className="text-[10px] text-muted-foreground mt-1">
                   {new Date(n.created_at).toLocaleString('es-MX', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                   {n.guardia_nombre && ` · ${n.guardia_nombre}`}

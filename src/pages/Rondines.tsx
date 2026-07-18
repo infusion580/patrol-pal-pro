@@ -10,7 +10,7 @@ import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
 import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
-import { notifyRondinRegistro } from '@/lib/notification-helpers';
+import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/lib/notification-helpers';
 
 interface CheckpointItem {
   id: string;
@@ -153,7 +153,7 @@ const Rondines = () => {
       setRondinId(data.id);
       setCheckedIn(true);
       const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
-      notifyRondinRegistro(user.id, `${user.nombre} ${user.apellido}`, svcName);
+      notifyRondinCheckIn(user.id, `${user.nombre} ${user.apellido}`, svcName);
     }
   };
 
@@ -173,6 +173,11 @@ const Rondines = () => {
     if (error) {
       toast({ title: 'Error', description: 'No se pudo cerrar el rondín.', variant: 'destructive' });
       return;
+    }
+    if (user) {
+      const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+      const escaneados = points.filter(p => p.scanned).length;
+      notifyRondinCheckOut(user.id, `${user.nombre} ${user.apellido}`, svcName, reporte.trim(), escaneados, points.length);
     }
     setCheckoutOpen(false);
     setCheckedIn(false);
@@ -253,6 +258,8 @@ const Rondines = () => {
     setPoints(prev => prev.map(p => p.id === scanTarget.id
       ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), foto_url }
       : p));
+    const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+    notifyRondinPunto(user.id, `${user.nombre} ${user.apellido}`, scanTarget.name, svcName, foto_url);
     toast({ title: '✅ Punto confirmado', description: `${scanTarget.name} con evidencia guardada.` });
     setScanTarget(null);
     setScanFile(null);
