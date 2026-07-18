@@ -114,7 +114,7 @@ const ShiftControl = () => {
     setActiveAsistenciaId((asist as any)?.id || null);
     setActiveTipoTurno(tipoTurno);
     toast({ title: '✅ Turno iniciado', description: `Tipo: ${tipoTurnoLabel(tipoTurno)}.` });
-    notifyTurnoInicio(user.id, `${user.nombre} ${user.apellido}`);
+    notifyTurnoInicio(user.id, `${user.nombre} ${user.apellido}`, servicio?.nombre);
   };
 
   const endShift = async (forzarIncompleto = false) => {
