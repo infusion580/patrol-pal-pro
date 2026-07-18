@@ -1,5 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import { queuedInsert } from './offline-queue';
+import { sendPushTo } from './push-notifications';
 
 type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia';
 
@@ -33,6 +34,13 @@ export async function createNotification(params: NotifParams) {
     foto_url: params.foto_url || null,
     metadata: params.metadata || null,
   });
+  // Fire OS-level push in parallel to any subscribed device of the same
+  // guard (and the supervisor if targeted). Fire-and-forget: any failure
+  // here is logged, never surfaced to the caller.
+  const targets = [params.guardia_id, params.supervisor_id].filter(Boolean) as string[];
+  const title = params.mensaje.split('\n')[0] || 'Defender';
+  const body = params.mensaje.split('\n').slice(1).join(' · ').slice(0, 300);
+  void sendPushTo(targets, title, body, '/notificaciones');
 }
 
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {

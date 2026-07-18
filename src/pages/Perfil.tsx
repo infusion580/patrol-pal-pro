@@ -7,6 +7,7 @@ import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
+import PushToggle from '@/components/PushToggle';
 
 const Perfil = () => {
   const { user, logout } = useAuth();
@@ -118,6 +119,8 @@ const Perfil = () => {
             </div>
           </div>
         </div>
+
+        <PushToggle />
 
         {menuItems.map((item) => (
           <button
