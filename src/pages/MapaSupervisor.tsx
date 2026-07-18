@@ -106,13 +106,19 @@ const MapaSupervisor = () => {
           )}
         </div>
 
-        <div className="flex items-center gap-4 mb-4 px-1">
-          {Object.entries(statusLabels).map(([key, label]) => (
-            <div key={key} className="flex items-center gap-1.5">
-              <div className={`w-2.5 h-2.5 rounded-full ${key === 'activo' ? 'bg-success' : 'bg-primary'}`} />
-              <span className="text-xs text-muted-foreground">{label}</span>
-            </div>
-          ))}
+        <div className="flex items-center gap-4 mb-4 px-1 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-success" />
+            <span className="text-xs text-muted-foreground">En Ronda</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-primary" />
+            <span className="text-xs text-muted-foreground">Completado</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-muted-foreground/50" />
+            <span className="text-xs text-muted-foreground">Sin señal &gt; {FRESH_MINUTES} min</span>
+          </div>
         </div>
 
         <h2 className="text-sm font-semibold text-muted-foreground mb-3">Ubicación de Elementos</h2>
@@ -120,17 +126,24 @@ const MapaSupervisor = () => {
           {guards.length === 0 && (
             <p className="text-sm text-muted-foreground text-center py-4">Sin guardias activos hoy</p>
           )}
-          {guards.map(guard => (
-            <div key={guard.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
-              <div className={`w-3 h-3 rounded-full ${guard.status === 'activo' ? 'bg-success' : 'bg-primary'}`} />
-              <div className="flex-1">
-                <p className="text-sm font-semibold text-foreground">{guard.nombre}</p>
-                <p className="text-xs text-muted-foreground">{guard.lat.toFixed(4)}, {guard.lng.toFixed(4)}</p>
+          {guards.map(guard => {
+            const dotColor = !guard.fresh
+              ? 'bg-muted-foreground/50'
+              : guard.status === 'activo' ? 'bg-success' : 'bg-primary';
+            const ageLabel = guard.ageMinutes < 1 ? 'ahora' : `hace ${guard.ageMinutes} min`;
+            return (
+              <div key={guard.id} className={`bg-card rounded-xl p-4 shadow-card flex items-center gap-3 ${!guard.fresh ? 'opacity-70' : ''}`}>
+                <div className={`w-3 h-3 rounded-full ${dotColor}`} />
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-foreground">{guard.nombre}</p>
+                  <p className="text-xs text-muted-foreground">{guard.lat.toFixed(4)}, {guard.lng.toFixed(4)} • {ageLabel}</p>
+                </div>
+                <span className="text-xs text-muted-foreground">{statusLabels[guard.status] || guard.status}</span>
               </div>
-              <span className="text-xs text-muted-foreground">{statusLabels[guard.status] || guard.status}</span>
-            </div>
-          ))}
+            );
+          })}
         </div>
+
       </div>
 
       <BottomNav />
