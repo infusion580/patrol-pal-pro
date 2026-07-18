@@ -338,12 +338,17 @@ const Rondines = () => {
           <div className="bg-card rounded-xl p-4 shadow-card mb-6">
             <Button
               onClick={handleCheckIn}
+              disabled={checkedIn && (points.length === 0 || scannedCount < points.length)}
               className={`w-full h-14 text-base font-bold rounded-xl ${
                 checkedIn ? 'bg-emergency text-emergency-foreground hover:bg-emergency/90' : 'bg-success text-success-foreground hover:bg-success/90'
               }`}
             >
               <MapPin className="w-5 h-5 mr-2" />
-              {checkedIn ? 'Hacer Check-out y enviar reporte' : 'Hacer Check-in'}
+              {checkedIn
+                ? (scannedCount < points.length
+                    ? `Faltan ${points.length - scannedCount} punto(s)`
+                    : 'Hacer Check-out y enviar reporte')
+                : 'Hacer Check-in'}
             </Button>
             {checkedIn && <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>}
           </div>
