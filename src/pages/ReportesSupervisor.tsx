@@ -7,6 +7,7 @@ import { useNavigate, Navigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
+import { notifyReporteAprobado, notifyReporteRetro } from '@/lib/notification-helpers';
 import BottomNav from '@/components/BottomNav';
 import ReporteDetailDialog from '@/components/ReporteDetailDialog';
 
