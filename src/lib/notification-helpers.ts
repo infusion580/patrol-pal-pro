@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'visita';
 
 interface NotifParams {
   tipo: NotifType;
@@ -202,5 +202,65 @@ export async function notifyReporteRetro(
     mensaje,
     guardia_id: guardiaId,
     supervisor_id: supervisorId,
+  });
+}
+
+/**
+ * Notificación única de visita: se emite al registrar la SALIDA del visitante,
+ * e incluye tanto los datos de entrada como los de salida en un solo evento.
+ */
+export async function notifyVisitaEntradaSalida(params: {
+  guardiaId: string;
+  guardiaNombre: string;
+  nombreVisitante: string;
+  personaAVisitar?: string | null;
+  areaDestino?: string | null;
+  motivo?: string | null;
+  horaEntradaISO: string;
+  horaSalidaISO: string;
+  fotoInePath?: string | null;
+  fotoPlacaPath?: string | null;
+  fotoSalidaPath?: string | null;
+}) {
+  const fmt = (iso: string) => {
+    const d = new Date(iso);
+    return {
+      fecha: d.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' }),
+      hora: d.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }),
+    };
+  };
+  const ent = fmt(params.horaEntradaISO);
+  const sal = fmt(params.horaSalidaISO);
+  const durMin = Math.max(0, Math.round((new Date(params.horaSalidaISO).getTime() - new Date(params.horaEntradaISO).getTime()) / 60000));
+  const dur = durMin >= 60 ? `${Math.floor(durMin / 60)}h ${durMin % 60}m` : `${durMin}m`;
+
+  const mensaje =
+    `🚪 VISITA REGISTRADA\n` +
+    `Visitante: ${params.nombreVisitante}\n` +
+    (params.personaAVisitar ? `Visita a: ${params.personaAVisitar}\n` : '') +
+    (params.areaDestino ? `Área: ${params.areaDestino}\n` : '') +
+    (params.motivo ? `Motivo: ${params.motivo}\n` : '') +
+    `Guardia: ${params.guardiaNombre}\n` +
+    `Entrada: ${ent.fecha} ${ent.hora}\n` +
+    `Salida: ${sal.fecha} ${sal.hora}\n` +
+    `Duración: ${dur}`;
+
+  await createNotification({
+    tipo: 'visita',
+    mensaje,
+    guardia_id: params.guardiaId,
+    foto_url: params.fotoSalidaPath || params.fotoInePath || null,
+    metadata: {
+      visitante: params.nombreVisitante,
+      persona_a_visitar: params.personaAVisitar || null,
+      area_destino: params.areaDestino || null,
+      motivo: params.motivo || null,
+      hora_entrada: params.horaEntradaISO,
+      hora_salida: params.horaSalidaISO,
+      duracion_minutos: durMin,
+      foto_ine: params.fotoInePath || null,
+      foto_placa: params.fotoPlacaPath || null,
+      foto_salida: params.fotoSalidaPath || null,
+    },
   });
 }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, AlertTriangle, CheckCircle2, MapPin, Clock, Shield, Filter, FileText, LogIn } from 'lucide-react';
+import { ArrowLeft, Bell, AlertTriangle, CheckCircle2, MapPin, Clock, Shield, Filter, FileText, LogIn, DoorOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -26,6 +26,7 @@ const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: st
   emergencia: { icon: Shield, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Emergencia' },
   reporte: { icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Reporte' },
   sesion: { icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Inicio de Sesión' },
+  visita: { icon: DoorOpen, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Visita' },
 };
 
 const Notificaciones = () => {
