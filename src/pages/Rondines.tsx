@@ -12,6 +12,7 @@ import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
 import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/lib/notification-helpers';
 import { SignedImg } from '@/components/SignedImg';
+import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
 
 interface CheckpointItem {
   id: string;
