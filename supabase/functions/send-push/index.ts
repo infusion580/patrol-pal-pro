@@ -27,7 +27,7 @@ const BodySchema = z.object({
   user_ids: z.array(z.string().uuid()).min(1).max(500),
   title: z.string().min(1).max(120),
   body: z.string().min(1).max(500),
-  url: z.string().url().optional(),
+  url: z.string().min(1).max(500).optional(),
   tag: z.string().max(60).optional(),
 });
 
