@@ -495,37 +495,40 @@ const ClienteDashboard = () => {
 
 
           {/* GUARDIAS: por servicio */}
-          <TabsContent value="guardias" className="space-y-3 mt-3">
-            {servicios.filter(s => servicioFiltro === 'all' || s.id === servicioFiltro).map(s => {
-              const ids = guardiasByServicio[s.id] || [];
-              const list = ids.map(id => guardias.find(g => g.user_id === id)).filter(Boolean) as Guardia[];
-              return (
-                <Card key={s.id} className="p-4">
-                  <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
-                    <Building2 className="w-4 h-4 text-primary" /> {s.nombre}
-                    <span className="text-xs font-normal text-muted-foreground">({list.length} guardias)</span>
-                  </h3>
-                  {list.length === 0 ? (
-                    <p className="text-sm text-muted-foreground italic">Sin guardias asignados.</p>
-                  ) : (
-                    <div className="space-y-2">
-                      {list.map(g => (
-                        <div key={g.user_id} className="flex items-center gap-3 p-2 rounded-lg bg-accent/40">
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <span className="text-xs font-bold text-primary">{g.nombre[0]}{g.apellido[0]}</span>
+          {showGuardiasTab && (
+            <TabsContent value="guardias" className="space-y-3 mt-3">
+              {servicios.filter(s => servicioFiltro === 'all' || s.id === servicioFiltro).map(s => {
+                const ids = guardiasByServicio[s.id] || [];
+                const list = ids.map(id => guardias.find(g => g.user_id === id)).filter(Boolean) as Guardia[];
+                return (
+                  <Card key={s.id} className="p-4">
+                    <h3 className="font-semibold text-foreground flex items-center gap-2 mb-2">
+                      <Building2 className="w-4 h-4 text-primary" /> {s.nombre}
+                      <span className="text-xs font-normal text-muted-foreground">({list.length} guardias)</span>
+                    </h3>
+                    {list.length === 0 ? (
+                      <p className="text-sm text-muted-foreground italic">Sin guardias asignados.</p>
+                    ) : (
+                      <div className="space-y-2">
+                        {list.map(g => (
+                          <div key={g.user_id} className="flex items-center gap-3 p-2 rounded-lg bg-accent/40">
+                            <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                              <span className="text-xs font-bold text-primary">{g.nombre[0]}{g.apellido[0]}</span>
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-semibold text-foreground truncate">{g.nombre} {g.apellido}</p>
+                              <p className="text-[11px] text-muted-foreground font-mono">#{g.numero_empleado}</p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-sm font-semibold text-foreground truncate">{g.nombre} {g.apellido}</p>
-                            <p className="text-[11px] text-muted-foreground font-mono">#{g.numero_empleado}</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </Card>
-              );
-            })}
-          </TabsContent>
+                        ))}
+                      </div>
+                    )}
+                  </Card>
+                );
+              })}
+            </TabsContent>
+          )}
+
 
           {/* HISTORIAL */}
           <TabsContent value="historial" className="space-y-3 mt-3">
