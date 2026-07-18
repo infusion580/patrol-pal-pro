@@ -322,19 +322,30 @@ const ClienteDashboard = () => {
             </Popover>
           </div>
 
-          <Button onClick={descargarReporte} className="h-9 mt-5 ml-auto">
-            <Download className="w-4 h-4 mr-2" />
-            Descargar reporte
-          </Button>
+          {config.show_export_excel && (
+            <Button onClick={descargarReporte} className="h-9 mt-5 ml-auto">
+              <Download className="w-4 h-4 mr-2" />
+              Descargar reporte
+            </Button>
+          )}
         </Card>
 
-        {/* KPIs */}
+        {/* KPIs — cada uno se muestra si el admin lo habilitó */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <KPI icon={CheckCircle2} label="Rondines totales" value={String(kpis.totalRondines)} hint={`${kpis.rondinesCompletados} completados`} color="text-success" />
-          <KPI icon={TrendingUp} label="Cumplimiento turnos" value={`${kpis.cumplimiento}%`} hint={`${kpis.turnosTotales} turnos`} color="text-primary" />
-          <KPI icon={AlertTriangle} label="Incidencias" value={String(kpis.incidencias)} hint="reportes" color="text-warning" />
-          <KPI icon={Users} label="Guardias" value={String(kpis.guardiasActivos)} hint="en tus servicios" color="text-secondary" />
+          {config.show_kpi_rondines && (
+            <KPI icon={CheckCircle2} label="Rondines totales" value={String(kpis.totalRondines)} hint={`${kpis.rondinesCompletados} completados`} color="text-success" />
+          )}
+          {config.show_kpi_cumplimiento && (
+            <KPI icon={TrendingUp} label="Cumplimiento turnos" value={`${kpis.cumplimiento}%`} hint={`${kpis.turnosTotales} turnos`} color="text-primary" />
+          )}
+          {config.show_kpi_incidencias && (
+            <KPI icon={AlertTriangle} label="Incidencias" value={String(kpis.incidencias)} hint="reportes" color="text-warning" />
+          )}
+          {config.show_kpi_guardias && (
+            <KPI icon={Users} label="Guardias" value={String(kpis.guardiasActivos)} hint="en tus servicios" color="text-secondary" />
+          )}
         </div>
+
 
         {/* Tabs */}
         <Tabs defaultValue="resumen" className="w-full">
