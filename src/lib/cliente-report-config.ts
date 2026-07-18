@@ -42,7 +42,7 @@ export const REPORT_SECTIONS: ReportSection[] = [
   { key: 'show_kpi_cumplimiento',       label: 'KPI: % de cumplimiento de turnos', description: 'Porcentaje de turnos finalizados respecto al total.', group: 'KPIs' },
   { key: 'show_kpi_rondines',           label: 'KPI: Total de rondines',           description: 'Cantidad total de rondines en el período.',           group: 'KPIs' },
   { key: 'show_kpi_incidencias',        label: 'KPI: Incidencias',                 description: 'Número de reportes con incidencias.',                 group: 'KPIs' },
-  { key: 'show_kpi_guardias',           label: 'KPI: Guardias asignados',          label_alt: 'Guardias', description: 'Total de guardias en los servicios visibles.', group: 'KPIs' } as ReportSection,
+  { key: 'show_kpi_guardias',           label: 'KPI: Guardias asignados',          description: 'Total de guardias en los servicios visibles.',       group: 'KPIs' },
   { key: 'show_chart_rondines_dia',        label: 'Gráfica: Rondines por día',       description: 'Línea de tiempo con rondines diarios.',              group: 'Gráficas' },
   { key: 'show_chart_rondines_servicio',   label: 'Gráfica: Rondines por servicio',  description: 'Barras comparando rondines por ubicación.',          group: 'Gráficas' },
   { key: 'show_chart_distribucion_turnos', label: 'Gráfica: Distribución de turnos', description: 'Pastel de turnos finalizados vs abiertos.',          group: 'Gráficas' },
