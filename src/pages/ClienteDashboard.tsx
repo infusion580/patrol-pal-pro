@@ -18,6 +18,12 @@ import {
 import * as XLSX from 'xlsx';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
+import {
+  defaultClienteReportConfig,
+  loadClienteReportConfig,
+  type ClienteReportConfig,
+} from '@/lib/cliente-report-config';
+
 
 interface Servicio { id: string; nombre: string; cliente: string; direccion: string; }
 interface Guardia { user_id: string; nombre: string; apellido: string; numero_empleado: string; servicio_id: string | null; }
