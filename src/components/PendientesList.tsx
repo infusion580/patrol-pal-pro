@@ -173,8 +173,8 @@ const PendientesList = () => {
           contentType: foto.type,
         });
         if (upErr) throw upErr;
-        const { data } = supabase.storage.from('pendientes').getPublicUrl(path);
-        fotoUrl = data.publicUrl;
+        // Private bucket: store the path; signed URLs are generated at read time.
+        fotoUrl = path;
       }
 
       const { data: turno } = await supabase
