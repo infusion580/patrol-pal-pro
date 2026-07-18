@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import { notifyTurnoInicio, notifyTurnoFin } from '@/lib/notification-helpers';
 import { TipoTurno, tipoTurnoLabel, tipoTurnoHoras, generarAsistenciasCorridoFaltantes } from '@/lib/asistencias-helpers';
+import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
 
 interface Turno {
   id: string;
