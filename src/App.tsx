@@ -37,6 +37,11 @@ import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ConnectionBanner from "./components/ConnectionBanner";
+import OfflineQueueIndicator from "./components/OfflineQueueIndicator";
+import { initOfflineQueue } from "./lib/offline-queue";
+
+// Start replaying any pending offline writes as soon as the app boots.
+initOfflineQueue();
 
 /**
  * Global react-query defaults tuned for a long-lived operational app:
