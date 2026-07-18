@@ -561,6 +561,9 @@ const ClienteDashboard = () => {
             </Card>
           </TabsContent>
         </Tabs>
+          );
+        })()}
+
       </div>
 
       <BottomNav />
