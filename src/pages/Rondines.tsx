@@ -85,7 +85,7 @@ const Rondines = () => {
 
   useZoneMonitor(checkedIn ? selectedServicio : null, zoneCenter);
 
-  useEffect(() => { loadServicios(); }, []);
+  useEffect(() => { if (user) loadServicios(); }, [user]);
   useEffect(() => { if (selectedServicio) loadCheckpoints(selectedServicio); }, [selectedServicio]);
 
   const loadServicios = async () => {
