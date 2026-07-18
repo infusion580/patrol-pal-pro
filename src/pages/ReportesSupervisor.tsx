@@ -35,7 +35,7 @@ const ReportesSupervisor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-  const [filter, setFilter] = useState<'todos' | 'pendiente' | 'aprobado'>('todos');
+  const [filter, setFilter] = useState<'todos' | 'pendiente' | 'aprobado' | 'retroalimentacion'>('todos');
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedReport, setSelectedReport] = useState<any>(null);
