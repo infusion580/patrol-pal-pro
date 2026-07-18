@@ -359,7 +359,7 @@ const Rondines = () => {
                     )}
                   </div>
                   {point.scanned && point.foto_url && (
-                    <img src={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
+                    <SignedImg bucket="evidencias" path={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
                   )}
                   {!point.scanned && checkedIn && (
                     <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">
