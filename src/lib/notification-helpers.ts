@@ -151,3 +151,36 @@ export async function notifyIncidencia(guardiaId: string, guardiaNombre: string,
     guardia_id: guardiaId,
   });
 }
+
+/**
+ * Notifica al guardia que su reporte de turno fue aprobado por el supervisor.
+ */
+export async function notifyReporteAprobado(guardiaId: string, supervisorId: string | null, fechaReporte: string) {
+  const { fecha, hora } = fechaHoraLarga();
+  await createNotification({
+    tipo: 'reporte',
+    mensaje: `✅ REPORTE APROBADO\nTu reporte del ${fechaReporte} fue aprobado.\nFecha revisión: ${fecha}\nHora: ${hora}`,
+    guardia_id: guardiaId,
+    supervisor_id: supervisorId,
+  });
+}
+
+/**
+ * Notifica al guardia que su reporte requiere correcciones, incluyendo la
+ * retroalimentación del supervisor.
+ */
+export async function notifyReporteRetro(
+  guardiaId: string,
+  supervisorId: string | null,
+  fechaReporte: string,
+  retroalimentacion: string,
+) {
+  const { fecha, hora } = fechaHoraLarga();
+  const mensaje = `📝 REPORTE REQUIERE CAMBIOS\nReporte del ${fechaReporte}\nRetroalimentación: ${retroalimentacion}\nFecha revisión: ${fecha}\nHora: ${hora}`;
+  await createNotification({
+    tipo: 'reporte',
+    mensaje,
+    guardia_id: guardiaId,
+    supervisor_id: supervisorId,
+  });
+}
