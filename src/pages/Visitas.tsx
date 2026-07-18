@@ -26,9 +26,9 @@ interface Visita {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-function getPublicUrl(path: string) {
-  if (!path) return '';
-  return `${SUPABASE_URL}/storage/v1/object/public/visitas/${path}`;
+async function openImage(path: string, setViewImage: (u: string | null) => void) {
+  const url = await getSignedUrl('visitas', path);
+  if (url) setViewImage(url);
 }
 
 const Visitas = () => {
