@@ -1,5 +1,5 @@
-import { useState, useRef } from 'react';
-import { ArrowLeft, Camera, Mic, Video, PenTool, Send, X, ImageIcon } from 'lucide-react';
+import { useState, useRef, useEffect } from 'react';
+import { ArrowLeft, Camera, Mic, Video, PenTool, Send, X, ImageIcon, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -24,6 +24,33 @@ const ReporteTurno = () => {
   const [submitting, setSubmitting] = useState(false);
   const [evidencias, setEvidencias] = useState<Array<{ file: File; preview: string }>>([]);
   const [uploadingFiles, setUploadingFiles] = useState(false);
+  // Reporte pendiente de corrección: si el supervisor lo marcó con
+  // retroalimentación, precargamos el contenido y hacemos UPDATE en lugar de INSERT.
+  const [correctingId, setCorrectingId] = useState<string | null>(null);
+  const [feedback, setFeedback] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase
+        .from('reportes_turno')
+        .select('id, incidencias, actividades, observaciones, retroalimentacion')
+        .eq('guardia_id', user.id)
+        .eq('status', 'retroalimentacion')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (data) {
+        setCorrectingId(data.id);
+        setFeedback(data.retroalimentacion);
+        setForm({
+          incidencias: data.incidencias || '',
+          actividades: data.actividades || '',
+          observaciones: data.observaciones || '',
+        });
+      }
+    })();
+  }, [user]);
 
   const update = (field: string, value: string) => setForm((prev) => ({ ...prev, [field]: value }));
 
