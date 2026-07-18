@@ -14,7 +14,7 @@ interface NotifParams {
 function fechaHoraLarga() {
   const now = new Date();
   const fecha = now.toLocaleDateString('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-  const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const hora = now.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
   return { fecha, hora, iso: now.toISOString() };
 }
 
