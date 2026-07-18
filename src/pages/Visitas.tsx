@@ -403,7 +403,7 @@ const Visitas = () => {
                     </div>
                     <div className="flex gap-1">
                       {v.foto_placa_url && (
-                        <button onClick={() => setViewImage(getPublicUrl(v.foto_placa_url))}>
+                        <button onClick={() => openImage(v.foto_placa_url, setViewImage)}>
                           <Eye className="w-4 h-4 text-muted-foreground" />
                         </button>
                       )}
