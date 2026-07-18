@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
+import { SignedImg } from '@/components/SignedImg';
+import { getSignedUrl } from '@/lib/storage-helpers';
 
 interface Visita {
   id: string;
@@ -24,9 +26,9 @@ interface Visita {
 
 const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
 
-function getPublicUrl(path: string) {
-  if (!path) return '';
-  return `${SUPABASE_URL}/storage/v1/object/public/visitas/${path}`;
+async function openImage(path: string, setViewImage: (u: string | null) => void) {
+  const url = await getSignedUrl('visitas', path);
+  if (url) setViewImage(url);
 }
 
 const Visitas = () => {
@@ -336,14 +338,14 @@ const Visitas = () => {
                   {/* Thumbnails */}
                   <div className="flex gap-2 mb-3">
                     {v.foto_placa_url && (
-                      <button onClick={() => setViewImage(getPublicUrl(v.foto_placa_url))} className="relative">
-                        <img src={getPublicUrl(v.foto_placa_url)} alt="Placa" className="w-16 h-12 object-cover rounded-md" />
+                      <button onClick={() => openImage(v.foto_placa_url, setViewImage)} className="relative">
+                        <SignedImg bucket="visitas" path={v.foto_placa_url} alt="Placa" className="w-16 h-12 object-cover rounded-md" />
                         <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center rounded-b-md">Placa</span>
                       </button>
                     )}
                     {v.foto_ine_url && (
-                      <button onClick={() => setViewImage(getPublicUrl(v.foto_ine_url))} className="relative">
-                        <img src={getPublicUrl(v.foto_ine_url)} alt="INE" className="w-16 h-12 object-cover rounded-md" />
+                      <button onClick={() => openImage(v.foto_ine_url, setViewImage)} className="relative">
+                        <SignedImg bucket="visitas" path={v.foto_ine_url} alt="INE" className="w-16 h-12 object-cover rounded-md" />
                         <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center rounded-b-md">INE</span>
                       </button>
                     )}
@@ -401,7 +403,7 @@ const Visitas = () => {
                     </div>
                     <div className="flex gap-1">
                       {v.foto_placa_url && (
-                        <button onClick={() => setViewImage(getPublicUrl(v.foto_placa_url))}>
+                        <button onClick={() => openImage(v.foto_placa_url, setViewImage)}>
                           <Eye className="w-4 h-4 text-muted-foreground" />
                         </button>
                       )}

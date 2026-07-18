@@ -11,6 +11,7 @@ import EmergencyButton from '@/components/EmergencyButton';
 import { useZoneMonitor } from '@/hooks/use-zone-monitor';
 import { useToast } from '@/hooks/use-toast';
 import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/lib/notification-helpers';
+import { SignedImg } from '@/components/SignedImg';
 
 interface CheckpointItem {
   id: string;
@@ -241,8 +242,8 @@ const Rondines = () => {
       setScanning(false);
       return;
     }
-    const { data: pub } = supabase.storage.from('evidencias').getPublicUrl(path);
-    const foto_url = pub.publicUrl;
+    // Bucket is private: store the storage path (signed URLs are generated at read time).
+    const foto_url = path;
 
     const { error } = await supabase.from('rondin_scans').insert({
       rondin_id: rondinId,
@@ -358,7 +359,7 @@ const Rondines = () => {
                     )}
                   </div>
                   {point.scanned && point.foto_url && (
-                    <img src={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
+                    <SignedImg bucket="evidencias" path={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
                   )}
                   {!point.scanned && checkedIn && (
                     <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">

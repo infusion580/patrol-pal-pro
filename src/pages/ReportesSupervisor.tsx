@@ -3,7 +3,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Clock, FileText, MessageCircle, Eye, 
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -112,6 +112,11 @@ const ReportesSupervisor = () => {
 
   const filtered = filter === 'todos' ? reports : reports.filter(r => r.status === filter);
   const pendingCount = reports.filter(r => r.status === 'pendiente').length;
+
+  // Role guard: guards cannot approve/feedback reports
+  if (user && user.role !== 'supervisor' && user.role !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   if (loading) {
     return (
