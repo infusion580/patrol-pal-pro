@@ -330,6 +330,33 @@ const AdminDashboard = () => {
                   </button>
                 </div>
 
+                {(() => {
+                  const asignados = u.role === 'cliente'
+                    ? u.clienteServicios.map(sid => servicios.find(s => s.id === sid)?.nombre).filter(Boolean) as string[]
+                    : u.role === 'guardia'
+                      ? u.servicios.map(gs => {
+                          const nombre = servicios.find(s => s.id === gs.servicio_id)?.nombre;
+                          return nombre ? (gs.es_principal ? `★ ${nombre}` : nombre) : null;
+                        }).filter(Boolean) as string[]
+                      : u.servicio_asignado_id
+                        ? [servicios.find(s => s.id === u.servicio_asignado_id)?.nombre].filter(Boolean) as string[]
+                        : [];
+                  if (u.role === 'admin') return null;
+                  return (
+                    <div className="mt-2 pl-13 flex flex-wrap gap-1">
+                      {asignados.length === 0 ? (
+                        <span className="text-[10px] text-muted-foreground italic">Sin servicios asignados</span>
+                      ) : asignados.map((nombre, i) => (
+                        <span key={i} className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-primary/10 text-primary">
+                          {nombre}
+                        </span>
+                      ))}
+                    </div>
+                  );
+                })()}
+
+
+
                 {isEditing && (
                   <div className="mt-3 pt-3 border-t border-border space-y-3">
                     <div>
