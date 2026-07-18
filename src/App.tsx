@@ -36,8 +36,28 @@ import ClienteReporteConfig from "./pages/ClienteReporteConfig";
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 import ProtectedRoute from "./components/ProtectedRoute";
+import ConnectionBanner from "./components/ConnectionBanner";
 
-const queryClient = new QueryClient();
+/**
+ * Global react-query defaults tuned for a long-lived operational app:
+ *  - `refetchOnReconnect`: re-sync when the network returns.
+ *  - `refetchOnWindowFocus`: refresh when the user returns to the tab.
+ *  - `staleTime` 30s: avoids thrashing during rapid navigation.
+ *  - `retry` with backoff: survives transient blips without user action.
+ */
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      gcTime: 5 * 60_000,
+      refetchOnReconnect: true,
+      refetchOnWindowFocus: true,
+      retry: 2,
+      retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 8000),
+    },
+    mutations: { retry: 1 },
+  },
+});
 
 /** Helper: any authenticated user. */
 const Auth = ({ children }: { children: JSX.Element }) => (
@@ -50,6 +70,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
+        <ConnectionBanner />
         <GlobalZoneMonitor />
         <BrowserRouter>
           <RondinAlarmMonitor />
