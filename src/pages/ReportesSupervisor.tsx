@@ -34,12 +34,6 @@ const ReportesSupervisor = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
-
-  // Role guard: guards cannot approve/feedback their own reports
-  if (user && user.role !== 'supervisor' && user.role !== 'admin') {
-    return <Navigate to="/dashboard" replace />;
-  }
-
   const [filter, setFilter] = useState<'todos' | 'pendiente' | 'aprobado'>('todos');
   const [reports, setReports] = useState<Report[]>([]);
   const [loading, setLoading] = useState(true);
