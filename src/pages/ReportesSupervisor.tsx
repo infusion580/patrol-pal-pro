@@ -150,9 +150,9 @@ const ReportesSupervisor = () => {
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
         <div className="bg-card rounded-xl p-2 shadow-card mb-4 flex gap-1">
-          {(['todos', 'pendiente', 'aprobado'] as const).map(f => (
+          {(['todos', 'pendiente', 'aprobado', 'retroalimentacion'] as const).map(f => (
             <button key={f} onClick={() => setFilter(f)} className={`flex-1 py-2 rounded-lg text-xs font-semibold transition-colors ${filter === f ? 'bg-primary text-primary-foreground' : 'text-muted-foreground hover:text-foreground'}`}>
-              {f === 'todos' ? 'Todos' : f === 'pendiente' ? 'Pendientes' : 'Aprobados'}
+              {f === 'todos' ? 'Todos' : f === 'pendiente' ? 'Pendientes' : f === 'aprobado' ? 'Aprobados' : 'Cambios'}
             </button>
           ))}
         </div>
