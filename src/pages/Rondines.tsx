@@ -151,12 +151,33 @@ const Rondines = () => {
       setCheckoutOpen(true);
       return;
     }
+    // Validar ubicación ANTES de crear el rondín: debe estar dentro de la zona del servicio
+    // (usamos el checkpoint más cercano como referencia — debe estar dentro de su radio).
+    const cpsConGps = points.filter(p => p.lat != null && p.lng != null);
+    if (cpsConGps.length === 0) {
+      toast({ title: 'Servicio sin puntos GPS', description: 'Configura al menos un punto con coordenadas antes de iniciar el rondín.', variant: 'destructive' });
+      return;
+    }
     let lat: number | null = null, lng: number | null = null;
     try {
       const pos = await getCurrentPositionRobust();
       lat = pos.coords.latitude; lng = pos.coords.longitude;
+      const accuracy = pos.coords.accuracy || 0;
+      const nearest = cpsConGps
+        .map(p => ({ p, dist: getDistanceMeters(lat!, lng!, p.lat!, p.lng!) }))
+        .sort((a, b) => a.dist - b.dist)[0];
+      const allowed = nearest.p.radius + Math.min(accuracy, 50);
+      if (nearest.dist > allowed) {
+        toast({
+          title: '❌ Fuera de la ubicación del servicio',
+          description: `Estás a ${Math.round(nearest.dist)}m del punto más cercano (máx ${nearest.p.radius}m). Acércate al servicio para iniciar el rondín.`,
+          variant: 'destructive',
+        });
+        return;
+      }
     } catch (e: any) {
-      toast({ title: 'Aviso GPS', description: e?.message || 'Check-in sin coordenadas.' });
+      toast({ title: '📍 GPS requerido', description: e?.message || 'Activa la ubicación para iniciar el rondín.', variant: 'destructive' });
+      return;
     }
     const { data } = await supabase.from('rondines').insert({
       guardia_id: user.id,
