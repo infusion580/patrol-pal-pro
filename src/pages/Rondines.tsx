@@ -151,12 +151,33 @@ const Rondines = () => {
       setCheckoutOpen(true);
       return;
     }
+    // Validar ubicación ANTES de crear el rondín: debe estar dentro de la zona del servicio
+    // (usamos el checkpoint más cercano como referencia — debe estar dentro de su radio).
+    const cpsConGps = points.filter(p => p.lat != null && p.lng != null);
+    if (cpsConGps.length === 0) {
+      toast({ title: 'Servicio sin puntos GPS', description: 'Configura al menos un punto con coordenadas antes de iniciar el rondín.', variant: 'destructive' });
+      return;
+    }
     let lat: number | null = null, lng: number | null = null;
     try {
       const pos = await getCurrentPositionRobust();
       lat = pos.coords.latitude; lng = pos.coords.longitude;
+      const accuracy = pos.coords.accuracy || 0;
+      const nearest = cpsConGps
+        .map(p => ({ p, dist: getDistanceMeters(lat!, lng!, p.lat!, p.lng!) }))
+        .sort((a, b) => a.dist - b.dist)[0];
+      const allowed = nearest.p.radius + Math.min(accuracy, 50);
+      if (nearest.dist > allowed) {
+        toast({
+          title: '❌ Fuera de la ubicación del servicio',
+          description: `Estás a ${Math.round(nearest.dist)}m del punto más cercano (máx ${nearest.p.radius}m). Acércate al servicio para iniciar el rondín.`,
+          variant: 'destructive',
+        });
+        return;
+      }
     } catch (e: any) {
-      toast({ title: 'Aviso GPS', description: e?.message || 'Check-in sin coordenadas.' });
+      toast({ title: '📍 GPS requerido', description: e?.message || 'Activa la ubicación para iniciar el rondín.', variant: 'destructive' });
+      return;
     }
     const { data } = await supabase.from('rondines').insert({
       guardia_id: user.id,
@@ -202,7 +223,27 @@ const Rondines = () => {
     toast({ title: '✅ Rondín completado', description: 'Reporte guardado correctamente.' });
   };
 
-  const openScanDialog = (checkpoint: CheckpointItem) => {
+  const openScanDialog = async (checkpoint: CheckpointItem) => {
+    // Bloquear apertura del picker si el guardia no está dentro del radio del punto.
+    if (checkpoint.lat != null && checkpoint.lng != null) {
+      try {
+        const pos = await getCurrentPositionRobust();
+        const dist = getDistanceMeters(pos.coords.latitude, pos.coords.longitude, checkpoint.lat, checkpoint.lng);
+        const accuracy = pos.coords.accuracy || 0;
+        const allowed = checkpoint.radius + Math.min(accuracy, 50);
+        if (dist > allowed) {
+          toast({
+            title: '❌ Fuera del punto',
+            description: `Estás a ${Math.round(dist)}m de "${checkpoint.name}" (máx ${checkpoint.radius}m). No puedes tomar foto hasta acercarte.`,
+            variant: 'destructive',
+          });
+          return;
+        }
+      } catch (e: any) {
+        toast({ title: '📍 GPS requerido', description: e?.message || 'Activa la ubicación para verificar el punto.', variant: 'destructive' });
+        return;
+      }
+    }
     setScanTarget(checkpoint);
     setScanFile(null);
     setScanPreview(null);
