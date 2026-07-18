@@ -49,17 +49,14 @@ const ReporteTurno = () => {
 
   const uploadEvidencias = async (): Promise<string[]> => {
     if (!user || evidencias.length === 0) return [];
-    const urls: string[] = [];
+    const paths: string[] = [];
     for (const ev of evidencias) {
       const ext = ev.file.name.split('.').pop();
       const path = `${user.id}/${Date.now()}_${Math.random().toString(36).slice(2)}.${ext}`;
       const { error } = await supabase.storage.from('evidencias').upload(path, ev.file);
-      if (!error) {
-        const { data: { publicUrl } } = supabase.storage.from('evidencias').getPublicUrl(path);
-        urls.push(publicUrl);
-      }
+      if (!error) paths.push(path);
     }
-    return urls;
+    return paths;
   };
 
   const handleSubmit = async () => {
