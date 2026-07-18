@@ -338,14 +338,14 @@ const Visitas = () => {
                   {/* Thumbnails */}
                   <div className="flex gap-2 mb-3">
                     {v.foto_placa_url && (
-                      <button onClick={() => setViewImage(getPublicUrl(v.foto_placa_url))} className="relative">
-                        <img src={getPublicUrl(v.foto_placa_url)} alt="Placa" className="w-16 h-12 object-cover rounded-md" />
+                      <button onClick={() => openImage(v.foto_placa_url, setViewImage)} className="relative">
+                        <SignedImg bucket="visitas" path={v.foto_placa_url} alt="Placa" className="w-16 h-12 object-cover rounded-md" />
                         <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center rounded-b-md">Placa</span>
                       </button>
                     )}
                     {v.foto_ine_url && (
-                      <button onClick={() => setViewImage(getPublicUrl(v.foto_ine_url))} className="relative">
-                        <img src={getPublicUrl(v.foto_ine_url)} alt="INE" className="w-16 h-12 object-cover rounded-md" />
+                      <button onClick={() => openImage(v.foto_ine_url, setViewImage)} className="relative">
+                        <SignedImg bucket="visitas" path={v.foto_ine_url} alt="INE" className="w-16 h-12 object-cover rounded-md" />
                         <span className="absolute bottom-0 left-0 right-0 bg-black/60 text-[8px] text-white text-center rounded-b-md">INE</span>
                       </button>
                     )}
