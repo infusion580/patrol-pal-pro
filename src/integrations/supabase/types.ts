@@ -561,6 +561,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          active_session_id: string | null
           apellido: string
           avatar_url: string | null
           created_at: string
@@ -575,6 +576,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          active_session_id?: string | null
           apellido?: string
           avatar_url?: string | null
           created_at?: string
@@ -589,6 +591,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          active_session_id?: string | null
           apellido?: string
           avatar_url?: string | null
           created_at?: string
