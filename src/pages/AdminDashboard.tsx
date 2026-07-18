@@ -311,7 +311,8 @@ const AdminDashboard = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-sm text-foreground truncate">{u.nombre}</p>
-                    <div className="flex items-center gap-2">
+                    <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
+                    <div className="flex items-center gap-2 flex-wrap">
                       <span className="text-[10px] text-muted-foreground font-mono">{u.empleado}</span>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${role.cls}`}>{role.label}</span>
                       <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${(statusColors[u.status] || statusColors.activo).cls}`}>
