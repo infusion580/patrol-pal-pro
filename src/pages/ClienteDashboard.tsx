@@ -449,43 +449,50 @@ const ClienteDashboard = () => {
             </Card>
           </TabsContent>
 
-          {/* SERVICIOS: semáforo */}
-          <TabsContent value="servicios" className="space-y-3 mt-3">
-            <p className="text-xs text-muted-foreground">
-              Semáforo basado en cumplimiento de turnos: 🟢 ≥90% &nbsp; 🟡 70–89% &nbsp; 🔴 &lt;70% o sin actividad
-            </p>
-            {semaforoServicios.map(s => (
-              <Card key={s.id} className="p-4">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <Building2 className="w-4 h-4 text-primary" />
-                      <h3 className="font-semibold text-foreground truncate">{s.nombre}</h3>
+          {/* SERVICIOS: semáforo + listado */}
+          {showServiciosTab && (
+            <TabsContent value="servicios" className="space-y-3 mt-3">
+              {config.show_semaforo && (
+                <p className="text-xs text-muted-foreground">
+                  Semáforo basado en cumplimiento de turnos: 🟢 ≥90% &nbsp; 🟡 70–89% &nbsp; 🔴 &lt;70% o sin actividad
+                </p>
+              )}
+              {semaforoServicios.map(s => (
+                <Card key={s.id} className="p-4">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <Building2 className="w-4 h-4 text-primary" />
+                        <h3 className="font-semibold text-foreground truncate">{s.nombre}</h3>
+                      </div>
+                      {s.cliente && <p className="text-xs text-muted-foreground mt-0.5">{s.cliente}</p>}
+                      {s.direccion && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" />{s.direccion}</p>}
                     </div>
-                    {s.cliente && <p className="text-xs text-muted-foreground mt-0.5">{s.cliente}</p>}
-                    {s.direccion && <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1"><MapPin className="w-3 h-3" />{s.direccion}</p>}
+                    {config.show_semaforo && (
+                      <span className={cn('px-3 py-1 rounded-full text-xs font-bold uppercase', semaforoColor(s.color))}>
+                        {s.color === 'verde' ? '🟢 Óptimo' : s.color === 'amarillo' ? '🟡 Atención' : '🔴 Crítico'}
+                      </span>
+                    )}
                   </div>
-                  <span className={cn('px-3 py-1 rounded-full text-xs font-bold uppercase', semaforoColor(s.color))}>
-                    {s.color === 'verde' ? '🟢 Óptimo' : s.color === 'amarillo' ? '🟡 Atención' : '🔴 Crítico'}
-                  </span>
-                </div>
-                <div className="grid grid-cols-3 gap-2 mt-3 text-center">
-                  <div className="bg-accent/40 rounded-lg p-2">
-                    <p className="text-lg font-bold text-foreground">{s.pct}%</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Cumplimiento</p>
+                  <div className="grid grid-cols-3 gap-2 mt-3 text-center">
+                    <div className="bg-accent/40 rounded-lg p-2">
+                      <p className="text-lg font-bold text-foreground">{s.pct}%</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">Cumplimiento</p>
+                    </div>
+                    <div className="bg-accent/40 rounded-lg p-2">
+                      <p className="text-lg font-bold text-foreground">{s.rondines}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">Rondines</p>
+                    </div>
+                    <div className="bg-accent/40 rounded-lg p-2">
+                      <p className="text-lg font-bold text-foreground">{guardiasByServicio[s.id]?.length || 0}</p>
+                      <p className="text-[10px] text-muted-foreground uppercase">Guardias</p>
+                    </div>
                   </div>
-                  <div className="bg-accent/40 rounded-lg p-2">
-                    <p className="text-lg font-bold text-foreground">{s.rondines}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Rondines</p>
-                  </div>
-                  <div className="bg-accent/40 rounded-lg p-2">
-                    <p className="text-lg font-bold text-foreground">{guardiasByServicio[s.id]?.length || 0}</p>
-                    <p className="text-[10px] text-muted-foreground uppercase">Guardias</p>
-                  </div>
-                </div>
-              </Card>
-            ))}
-          </TabsContent>
+                </Card>
+              ))}
+            </TabsContent>
+          )}
+
 
           {/* GUARDIAS: por servicio */}
           <TabsContent value="guardias" className="space-y-3 mt-3">
