@@ -63,6 +63,8 @@ const Servicios = () => {
         cliente: s.cliente,
         direccion: s.direccion,
         tipo_turno: ((s as any).tipo_turno || '12h') as TipoTurno,
+        rondin_intervalo_minutos: (s as any).rondin_intervalo_minutos ?? null,
+        rondin_tolerancia_minutos: (s as any).rondin_tolerancia_minutos ?? 10,
         checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
       });
     }
