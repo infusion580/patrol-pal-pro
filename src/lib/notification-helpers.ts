@@ -27,21 +27,40 @@ function fechaHoraLarga() {
  * connectivity blips. The queue replays them automatically on reconnect.
  */
 export async function createNotification(params: NotifParams) {
+  // Anexa dispositivo desde el que se genera el evento (auditoría).
+  const dev = getDeviceInfo();
+  const mensajeConDispositivo = `${params.mensaje}\nDispositivo: ${dev.label}`;
+  const metadata = { ...(params.metadata || {}), dispositivo: dev };
   await queuedInsert('notificaciones', {
     tipo: params.tipo,
-    mensaje: params.mensaje,
+    mensaje: mensajeConDispositivo,
     guardia_id: params.guardia_id,
     supervisor_id: params.supervisor_id || null,
     foto_url: params.foto_url || null,
-    metadata: params.metadata || null,
+    metadata,
   });
   // Fire OS-level push in parallel to any subscribed device of the same
   // guard (and the supervisor if targeted). Fire-and-forget: any failure
   // here is logged, never surfaced to the caller.
   const targets = [params.guardia_id, params.supervisor_id].filter(Boolean) as string[];
-  const title = params.mensaje.split('\n')[0] || 'Defender';
-  const body = params.mensaje.split('\n').slice(1).join(' · ').slice(0, 300);
+  const title = mensajeConDispositivo.split('\n')[0] || 'Defender';
+  const body = mensajeConDispositivo.split('\n').slice(1).join(' · ').slice(0, 300);
   void sendPushTo(targets, title, body, '/notificaciones');
+}
+
+/**
+ * Registra el inicio de sesión de un usuario e incluye el dispositivo usado.
+ * Se dispara desde el auth-context al iniciar sesión correctamente.
+ */
+export async function notifySesionInicio(userId: string, userNombre: string) {
+  const { fecha, hora } = fechaHoraLarga();
+  const mensaje = `🔐 INICIO DE SESIÓN\nUsuario: ${userNombre}\nFecha: ${fecha}\nHora: ${hora}`;
+  await createNotification({
+    tipo: 'sesion',
+    mensaje,
+    guardia_id: userId,
+    metadata: { usuario: userNombre },
+  });
 }
 
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {
