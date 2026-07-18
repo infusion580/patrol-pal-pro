@@ -200,9 +200,20 @@ const Rondines = () => {
       toast({ title: 'Foto muy grande', description: 'Máximo 8MB.', variant: 'destructive' });
       return;
     }
+    // Bloquear fotos de galería: solo aceptar imágenes tomadas al momento (< 2 min).
+    const ageMs = Date.now() - file.lastModified;
+    if (Number.isFinite(ageMs) && ageMs > 2 * 60 * 1000) {
+      toast({
+        title: 'Solo cámara en vivo',
+        description: 'No se permiten fotos de la galería. Toma la foto con la cámara en este momento.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setScanFile(file);
     setScanPreview(URL.createObjectURL(file));
   };
+
 
   const confirmScan = async () => {
     if (!scanTarget || !rondinId || !user) return;
@@ -397,7 +408,8 @@ const Rondines = () => {
             ) : (
               <label className="flex flex-col items-center justify-center h-40 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-accent">
                 <Camera className="w-8 h-8 text-muted-foreground mb-2" />
-                <span className="text-sm text-muted-foreground">Tomar / seleccionar foto</span>
+                <span className="text-sm text-muted-foreground">Tomar foto con la cámara</span>
+                <span className="text-[10px] text-muted-foreground mt-1">No se permiten fotos de la galería</span>
                 <input
                   type="file"
                   accept="image/*"
