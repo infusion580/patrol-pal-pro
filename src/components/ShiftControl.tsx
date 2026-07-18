@@ -195,6 +195,14 @@ const ShiftControl = () => {
             </div>
           </div>
 
+          {cumpleTiempo && activeTipoTurno !== 'corrido' && (horasReales - horasRequeridas) > 0.01 && (
+            <div className="bg-success/5 border border-success/30 rounded-lg p-2 mb-3">
+              <p className="text-[11px] text-foreground">
+                <strong>1 turno completo</strong> + <strong>{(horasReales - horasRequeridas).toFixed(2)} hrs extra</strong> acumuladas. Se seguirán contando hasta que finalices.
+              </p>
+            </div>
+          )}
+
           {activeTipoTurno === 'corrido' && (
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-2 mb-3">
               <p className="text-[11px] text-foreground">
@@ -202,6 +210,7 @@ const ShiftControl = () => {
               </p>
             </div>
           )}
+
 
           {!showHandoff ? (
             <Button
