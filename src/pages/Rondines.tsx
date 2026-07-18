@@ -174,6 +174,11 @@ const Rondines = () => {
       toast({ title: 'Error', description: 'No se pudo cerrar el rondín.', variant: 'destructive' });
       return;
     }
+    if (user) {
+      const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+      const escaneados = points.filter(p => p.scanned).length;
+      notifyRondinCheckOut(user.id, `${user.nombre} ${user.apellido}`, svcName, reporte.trim(), escaneados, points.length);
+    }
     setCheckoutOpen(false);
     setCheckedIn(false);
     setRondinId(null);
