@@ -84,10 +84,21 @@ async function purgeLocalSession() {
   }
 }
 
+const SESSION_TOKEN_KEY = 'defender-session-token';
+
+/** Genera un token de sesión y lo registra como la sesión activa del usuario. */
+async function claimActiveSession(userId: string): Promise<string> {
+  const token = (crypto as any).randomUUID?.() || `${Date.now()}-${Math.random()}`;
+  localStorage.setItem(SESSION_TOKEN_KEY, token);
+  await supabase.from('profiles').update({ active_session_id: token } as any).eq('user_id', userId);
+  return token;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const busRef = useRef<BroadcastChannel | null>(null);
+  const sessionWatchRef = useRef<number | null>(null);
 
   // Announce logout across tabs so every open window returns to /login together.
   const broadcastLogout = useCallback(() => {
@@ -95,6 +106,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       busRef.current?.postMessage({ type: 'signed_out' });
     } catch {
       /* ignore */
+    }
+  }, []);
+
+  /**
+   * Cierra la sesión local si otra sesión tomó el lugar.
+   * Reglas: si el token guardado en el perfil difiere del local => forzar logout.
+   */
+  const enforceSingleSession = useCallback(async (userId: string) => {
+    const local = localStorage.getItem(SESSION_TOKEN_KEY);
+    if (!local) return;
+    const { data } = await supabase
+      .from('profiles')
+      .select('active_session_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const remote = (data as any)?.active_session_id;
+    if (remote && remote !== local) {
+      try { await supabase.auth.signOut({ scope: 'local' }); } catch { /* ignore */ }
+      await purgeLocalSession();
+      localStorage.removeItem(SESSION_TOKEN_KEY);
+      setUser(null);
+      toast.error('Tu sesión se cerró: se inició sesión en otro dispositivo.');
     }
   }, []);
 
@@ -128,6 +161,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           const profile = await fetchUserProfile(session.user.id);
           setUser(profile);
           setLoading(false);
+          if (event === 'SIGNED_IN') {
+            // Nuevo login en esta pestaña => reclamar sesión (invalida las demás).
+            await claimActiveSession(session.user.id);
+          } else {
+            await enforceSingleSession(session.user.id);
+          }
         }, 0);
       } else {
         setUser(null);
@@ -140,7 +179,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .getSession()
       .then(async ({ data: { session }, error }) => {
         if (error) {
-          // Refresh token was rejected (expired/revoked): treat as signed out.
           await purgeLocalSession();
           setUser(null);
           setLoading(false);
@@ -149,6 +187,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           const profile = await fetchUserProfile(session.user.id);
           setUser(profile);
+          await enforceSingleSession(session.user.id);
         }
         setLoading(false);
       })
@@ -161,8 +200,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       subscription.unsubscribe();
       busRef.current?.close();
       busRef.current = null;
+      if (sessionWatchRef.current) window.clearInterval(sessionWatchRef.current);
     };
-  }, []);
+  }, [enforceSingleSession]);
+
+  // Vigilar cambios de sesión: cada 20s + al volver el foco.
+  useEffect(() => {
+    if (!user) return;
+    const check = () => enforceSingleSession(user.id);
+    sessionWatchRef.current = window.setInterval(check, 20000);
+    const onFocus = () => check();
+    window.addEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onFocus);
+    return () => {
+      if (sessionWatchRef.current) window.clearInterval(sessionWatchRef.current);
+      sessionWatchRef.current = null;
+      window.removeEventListener('focus', onFocus);
+      document.removeEventListener('visibilitychange', onFocus);
+    };
+  }, [user, enforceSingleSession]);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -189,13 +245,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(async () => {
     try {
-      // `scope: 'local'` avoids invalidating other devices' sessions —
-      // matches the "logout from this browser" UX and keeps mobile logged in.
       await supabase.auth.signOut({ scope: 'local' });
     } catch {
       /* even if the network call fails we still want to clear locally */
     }
     await purgeLocalSession();
+    localStorage.removeItem(SESSION_TOKEN_KEY);
     setUser(null);
     broadcastLogout();
     toast.success('Sesión cerrada correctamente');
