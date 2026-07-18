@@ -7,6 +7,8 @@ import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
+import { SignedImg } from '@/components/SignedImg';
+import { getSignedUrl } from '@/lib/storage-helpers';
 
 interface Visita {
   id: string;
