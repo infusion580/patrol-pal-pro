@@ -286,6 +286,8 @@ const AdminDashboard = () => {
             { icon: ClipboardList, label: 'Asistencias', path: '/reporte-asistencias' },
             { icon: ClipboardList, label: 'Pendientes', path: '/pendientes' },
             { icon: KeyRound, label: 'NIPs', path: '/nips' },
+            { icon: SlidersHorizontal, label: 'Reporte Cliente', path: '/cliente-reporte-config' },
+
           ].map(a => (
             <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-1.5 hover:shadow-elevated transition-shadow active:scale-[0.98]">
               <a.icon className="w-5 h-5 text-primary" />
