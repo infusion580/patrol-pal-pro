@@ -38,6 +38,9 @@ export default defineConfig(({ mode }) => ({
       },
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
+        // Bundle Web Push handlers into the same SW that manages the
+        // app-shell cache, so there is a single service worker per scope.
+        importScripts: ["/push-handler.js"],
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.mode === "navigate",
