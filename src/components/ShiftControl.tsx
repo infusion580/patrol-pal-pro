@@ -125,6 +125,7 @@ const ShiftControl = () => {
     const horasRequeridas = tipoTurnoHoras(activeTipoTurno);
     const completado = horasReales >= horasRequeridas - 0.01;
     const status = completado ? 'completo' : 'incompleto';
+    const horasExtra = completado ? Math.max(0, +(horasReales - horasRequeridas).toFixed(2)) : 0;
 
     await supabase.from('turnos').update({
       fin: ahora.toISOString(),
@@ -134,11 +135,13 @@ const ShiftControl = () => {
     } as any).eq('id', activeTurno.id);
 
     if (activeAsistenciaId) {
+      const obsExtra = horasExtra > 0 ? ` | Horas extra: ${horasExtra.toFixed(2)}h` : '';
       await supabase.from('asistencias' as any).update({
         fin: ahora.toISOString(),
         duracion_minutos: Math.round((ahora.getTime() - inicio.getTime()) / 60000),
         status,
-        observaciones: comentario || (status === 'incompleto' ? 'Finalizado antes del tiempo requerido' : ''),
+        horas_extra: horasExtra,
+        observaciones: (comentario || (status === 'incompleto' ? 'Finalizado antes del tiempo requerido' : '')) + obsExtra,
       } as any).eq('id', activeAsistenciaId);
     }
 
@@ -148,12 +151,17 @@ const ShiftControl = () => {
     setComentario('');
     setGuardiaEntrante('');
     toast({
-      title: completado ? '✅ Turno completo' : '⚠️ Turno incompleto',
-      description: completado ? 'Cumpliste el tiempo requerido.' : `Solo se trabajaron ${horasReales.toFixed(1)} de ${horasRequeridas} hrs.`,
+      title: completado ? (horasExtra > 0 ? '✅ Turno completo + horas extra' : '✅ Turno completo') : '⚠️ Turno incompleto',
+      description: completado
+        ? (horasExtra > 0
+            ? `Se contabiliza 1 turno + ${horasExtra.toFixed(2)} hrs extra.`
+            : 'Cumpliste el tiempo requerido.')
+        : `Solo se trabajaron ${horasReales.toFixed(1)} de ${horasRequeridas} hrs.`,
     });
     const servicioFin = servicios.find(s => s.id === activeTurno.servicio_id);
     notifyTurnoFin(user.id, `${user.nombre} ${user.apellido}`, servicioFin?.nombre, status);
   };
+
 
   if (loading) return null;
 
