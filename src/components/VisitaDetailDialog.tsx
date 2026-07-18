@@ -1,14 +1,8 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Users, Clock, Car, CreditCard, LogOut } from 'lucide-react';
 import { useState } from 'react';
-
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL;
-
-function getPublicUrl(path: string) {
-  if (!path) return '';
-  if (path.startsWith('http')) return path;
-  return `${SUPABASE_URL}/storage/v1/object/public/visitas/${path}`;
-}
+import { SignedImg } from '@/components/SignedImg';
+import { getSignedUrl } from '@/lib/storage-helpers';
 
 interface VisitaDetail {
   id: string;
