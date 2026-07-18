@@ -169,6 +169,60 @@ export type Database = {
           },
         ]
       }
+      cliente_reporte_config: {
+        Row: {
+          cliente_id: string
+          created_at: string
+          show_chart_distribucion_turnos: boolean
+          show_chart_rondines_dia: boolean
+          show_chart_rondines_servicio: boolean
+          show_export_excel: boolean
+          show_kpi_cumplimiento: boolean
+          show_kpi_guardias: boolean
+          show_kpi_incidencias: boolean
+          show_kpi_rondines: boolean
+          show_lista_guardias: boolean
+          show_lista_servicios: boolean
+          show_reportes_incidencias: boolean
+          show_semaforo: boolean
+          updated_at: string
+        }
+        Insert: {
+          cliente_id: string
+          created_at?: string
+          show_chart_distribucion_turnos?: boolean
+          show_chart_rondines_dia?: boolean
+          show_chart_rondines_servicio?: boolean
+          show_export_excel?: boolean
+          show_kpi_cumplimiento?: boolean
+          show_kpi_guardias?: boolean
+          show_kpi_incidencias?: boolean
+          show_kpi_rondines?: boolean
+          show_lista_guardias?: boolean
+          show_lista_servicios?: boolean
+          show_reportes_incidencias?: boolean
+          show_semaforo?: boolean
+          updated_at?: string
+        }
+        Update: {
+          cliente_id?: string
+          created_at?: string
+          show_chart_distribucion_turnos?: boolean
+          show_chart_rondines_dia?: boolean
+          show_chart_rondines_servicio?: boolean
+          show_export_excel?: boolean
+          show_kpi_cumplimiento?: boolean
+          show_kpi_guardias?: boolean
+          show_kpi_incidencias?: boolean
+          show_kpi_rondines?: boolean
+          show_lista_guardias?: boolean
+          show_lista_servicios?: boolean
+          show_reportes_incidencias?: boolean
+          show_semaforo?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_servicios: {
         Row: {
           cliente_id: string
