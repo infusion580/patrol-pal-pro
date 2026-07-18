@@ -103,19 +103,33 @@ const ReporteTurno = () => {
       ? `${form.observaciones}\n\n[Evidencias adjuntas: ${evidenciaUrls.join(', ')}]`
       : form.observaciones;
 
-    const { error } = await supabase.from('reportes_turno').insert({
-      guardia_id: user.id,
+    // Si estamos corrigiendo un reporte con retroalimentación, actualizamos
+    // el registro existente y lo devolvemos a estado "pendiente" para que el
+    // supervisor lo revise de nuevo. Si no, creamos un reporte nuevo.
+    const payload = {
       incidencias: form.incidencias,
       actividades: form.actividades,
       observaciones: observacionesConEvidencia,
       firmado: true,
-    });
+    };
+    const { error } = correctingId
+      ? await supabase.from('reportes_turno').update({
+          ...payload,
+          status: 'pendiente',
+          retroalimentacion: null,
+        }).eq('id', correctingId).eq('guardia_id', user.id)
+      : await supabase.from('reportes_turno').insert({ ...payload, guardia_id: user.id });
     setSubmitting(false);
     if (error) {
       toast({ title: 'Error', description: 'No se pudo enviar el reporte. Intenta de nuevo.', variant: 'destructive' });
       return;
     }
-    toast({ title: '✅ Reporte enviado', description: 'Tu reporte de turno ha sido enviado al supervisor' });
+    toast({
+      title: correctingId ? '✅ Correcciones enviadas' : '✅ Reporte enviado',
+      description: correctingId
+        ? 'El supervisor revisará tu reporte corregido.'
+        : 'Tu reporte de turno ha sido enviado al supervisor',
+    });
     navigate('/dashboard');
   };
 
