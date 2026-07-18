@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { queuedInsert } from './offline-queue';
 
 type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia';
 
@@ -18,16 +19,20 @@ function fechaHoraLarga() {
   return { fecha, hora, iso: now.toISOString() };
 }
 
+/**
+ * Notifications are fire-and-forget log entries — safe to route through
+ * the offline queue so a guard's shift/rondín events are never lost when
+ * connectivity blips. The queue replays them automatically on reconnect.
+ */
 export async function createNotification(params: NotifParams) {
-  const { error } = await supabase.from('notificaciones').insert({
+  await queuedInsert('notificaciones', {
     tipo: params.tipo,
     mensaje: params.mensaje,
     guardia_id: params.guardia_id,
     supervisor_id: params.supervisor_id || null,
     foto_url: params.foto_url || null,
     metadata: params.metadata || null,
-  } as any);
-  if (error) console.error('Error creating notification:', error);
+  });
 }
 
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {
