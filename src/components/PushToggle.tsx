@@ -109,7 +109,7 @@ export default function PushToggle() {
       <p className="text-xs text-muted-foreground">
         {supported
           ? 'Recibe alertas de turno, rondín y zona en tu dispositivo aunque la app esté cerrada.'
-          : 'Este navegador no soporta notificaciones push. Instala la app y usa Chrome, Edge o Safari (iOS 16.4+).'}
+          : reason}
       </p>
       {supported && (
         <Button
