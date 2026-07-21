@@ -11,8 +11,47 @@ import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
 import { enablePush, disablePush, isPushEnabled, isPushSupported } from '@/lib/push-notifications';
 
+function detectContext() {
+  if (typeof window === 'undefined') return { supported: false, reason: '' };
+  const inIframe = window.self !== window.top;
+  const host = window.location.hostname;
+  const isPreview =
+    host.startsWith('id-preview--') ||
+    host.startsWith('preview--') ||
+    host.endsWith('.lovableproject.com') ||
+    host.endsWith('.lovableproject-dev.com') ||
+    host.endsWith('.beta.lovable.dev');
+  const ua = navigator.userAgent;
+  const isIOS = /iPad|iPhone|iPod/.test(ua) && !(window as any).MSStream;
+  const isStandalone =
+    window.matchMedia?.('(display-mode: standalone)').matches ||
+    (navigator as any).standalone === true;
+
+  if (inIframe || isPreview) {
+    return {
+      supported: false,
+      reason:
+        'Las notificaciones push no funcionan dentro del editor/preview de Lovable. Abre la app publicada (guardiadefender.org) en una pestaña normal.',
+    };
+  }
+  if (!isPushSupported()) {
+    if (isIOS && !isStandalone) {
+      return {
+        supported: false,
+        reason:
+          'En iPhone/iPad debes primero instalar la app: Compartir → Añadir a pantalla de inicio, y abrirla desde el ícono. Requiere iOS 16.4+.',
+      };
+    }
+    return {
+      supported: false,
+      reason: 'Este navegador no soporta notificaciones push. Usa Chrome, Edge, Firefox o Safari (iOS 16.4+).',
+    };
+  }
+  return { supported: true, reason: '' };
+}
+
 export default function PushToggle() {
-  const [supported] = useState(() => isPushSupported());
+  const [{ supported, reason }] = useState(detectContext);
   const [enabled, setEnabled] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
