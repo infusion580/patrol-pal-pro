@@ -28,11 +28,23 @@ interface RegistroRH {
   guardia_nombre?: string;
 }
 
+/**
+ * Tipos de registro de RH.
+ * `vacaciones`, `incapacidad` y `permiso` son ausencias justificadas: cuando el
+ * registro queda APROBADO, los días cubiertos dejan de contar como falta en el
+ * Reporte de Asistencias.
+ */
 const tipoConfig: Record<string, { label: string; icon: any; color: string }> = {
   turno_extra: { label: 'Turno Extra', icon: Clock, color: 'text-primary' },
   prestamo: { label: 'Préstamo', icon: DollarSign, color: 'text-warning' },
   vacaciones: { label: 'Vacaciones', icon: Calendar, color: 'text-success' },
+  incapacidad: { label: 'Incapacidad', icon: Calendar, color: 'text-emergency' },
+  permiso: { label: 'Permiso', icon: Calendar, color: 'text-secondary' },
 };
+
+/** Tipos que generan ausencia justificada (requieren rango de fechas). */
+const TIPOS_AUSENCIA = ['vacaciones', 'incapacidad', 'permiso'];
+
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
   pendiente: { label: 'Pendiente', cls: 'bg-warning/10 text-warning' },
