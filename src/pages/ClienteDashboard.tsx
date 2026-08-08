@@ -240,7 +240,7 @@ const ClienteDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="w-10 h-10 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
@@ -248,7 +248,7 @@ const ClienteDashboard = () => {
 
   if (servicios.length === 0) {
     return (
-      <div className="min-h-screen bg-background pb-20">
+      <div className="min-h-dvh bg-background pb-20">
         <AppHeader eyebrow="Portal Cliente" title={`${user?.nombre} ${user?.apellido}`} subtitle="Sin servicios asignados" />
         <div className="max-w-lg mx-auto px-4 mt-6">
           <Card className="p-6 text-center">
@@ -270,7 +270,7 @@ const ClienteDashboard = () => {
     'bg-emergency text-emergency-foreground';
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-dvh bg-background pb-24">
       <AppHeader
         eyebrow="Portal Cliente"
         title={`${user?.nombre} ${user?.apellido}`}

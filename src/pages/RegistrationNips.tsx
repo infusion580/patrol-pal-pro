@@ -120,7 +120,7 @@ const RegistrationNips = () => {
   const vencidos = nips.filter(n => !n.used && n.expires_at && new Date(n.expires_at) <= new Date());
 
   return (
-    <div className="min-h-screen bg-background pb-24">
+    <div className="min-h-dvh bg-background pb-24">
       <AppHeader
         eyebrow="Administración"
         title="NIPs de Registro"

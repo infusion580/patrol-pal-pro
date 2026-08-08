@@ -85,7 +85,7 @@ const MapaSupervisor = () => {
 
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <AppHeader
         showBack
         backLabel="Regresar"

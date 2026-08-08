@@ -101,7 +101,7 @@ const CuadroHonor = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="bg-gradient-to-br from-warning via-warning/80 to-destructive text-warning-foreground px-4 pt-12 pb-6 rounded-b-3xl">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
