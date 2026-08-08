@@ -18,6 +18,8 @@
  */
 
 import { supabase } from '@/integrations/supabase/client';
+import { compressImage } from '@/lib/image-compress';
+
 
 type Bucket = 'evidencias' | 'visitas' | 'pendientes';
 interface QueuedPhoto {
