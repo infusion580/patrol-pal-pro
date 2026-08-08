@@ -298,13 +298,20 @@ const AdminDashboard = () => {
             { icon: ClipboardList, label: 'Pendientes', path: '/pendientes' },
             { icon: KeyRound, label: 'NIPs', path: '/nips' },
             { icon: SlidersHorizontal, label: 'Reporte Cliente', path: '/cliente-reporte-config' },
+            { icon: ShieldCheck, label: 'Auditoría', path: '/auditoria' },
 
           ].map(a => (
-            <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-1.5 hover:shadow-elevated transition-shadow active:scale-[0.98]">
-              <a.icon className="w-5 h-5 text-primary" />
+            <button
+              key={a.label}
+              onClick={() => navigate(a.path)}
+              aria-label={a.label}
+              className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center justify-center gap-1.5 min-h-[64px] hover:shadow-elevated transition-shadow active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <a.icon className="w-5 h-5 text-primary" aria-hidden="true" />
               <span className="text-[10px] font-semibold text-foreground">{a.label}</span>
             </button>
           ))}
+
         </div>
 
         <div className="flex items-center justify-between">
