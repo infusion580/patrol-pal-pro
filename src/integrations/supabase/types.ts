@@ -68,6 +68,45 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_log: {
+        Row: {
+          accion: string
+          actor_email: string | null
+          actor_id: string | null
+          created_at: string
+          datos_antes: Json | null
+          datos_despues: Json | null
+          dispositivo: Json | null
+          id: string
+          registro_id: string | null
+          tabla: string
+        }
+        Insert: {
+          accion: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          datos_antes?: Json | null
+          datos_despues?: Json | null
+          dispositivo?: Json | null
+          id?: string
+          registro_id?: string | null
+          tabla: string
+        }
+        Update: {
+          accion?: string
+          actor_email?: string | null
+          actor_id?: string | null
+          created_at?: string
+          datos_antes?: Json | null
+          datos_despues?: Json | null
+          dispositivo?: Json | null
+          id?: string
+          registro_id?: string | null
+          tabla?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string
@@ -1095,6 +1134,10 @@ export type Database = {
       consume_registration_nip: {
         Args: { _code: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
+      }
+      es_ausencia_justificada: {
+        Args: { _fecha: string; _guardia_id: string }
+        Returns: boolean
       }
       get_assigned_supervisor: { Args: { _user_id: string }; Returns: string }
       get_user_role: {
