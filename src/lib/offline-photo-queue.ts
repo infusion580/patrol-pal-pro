@@ -141,19 +141,24 @@ export async function uploadPhotoResilient(
   file: Blob,
   contentType?: string,
 ): Promise<{ path: string; queued: boolean }> {
-  const type = contentType || (file as File).type || 'image/jpeg';
+  // Compress before anything else so both the immediate upload and the
+  // IndexedDB fallback store the small version (saves mobile data + storage).
+  const compressed = await compressImage(file);
+  const type = compressed === file ? contentType || (file as File).type || 'image/jpeg' : 'image/jpeg';
+
   if (navigator.onLine) {
     try {
-      const { error } = await supabase.storage.from(bucket).upload(path, file, { contentType: type, upsert: false });
+      const { error } = await supabase.storage.from(bucket).upload(path, compressed, { contentType: type, upsert: false });
       if (!error) return { path, queued: false };
     } catch {
       // fall through to queue
     }
   }
   const id = `${bucket}:${path}:${Date.now()}`;
-  await putPhoto({ id, bucket, path, blob: file, contentType: type, attempts: 0, createdAt: Date.now() });
+  await putPhoto({ id, bucket, path, blob: compressed, contentType: type, attempts: 0, createdAt: Date.now() });
   return { path, queued: true };
 }
+
 
 let initialized = false;
 export function initPhotoQueue() {
