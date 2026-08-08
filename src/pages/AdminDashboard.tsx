@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -243,14 +243,14 @@ const AdminDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
         <div className="max-w-lg mx-auto flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
@@ -298,13 +298,20 @@ const AdminDashboard = () => {
             { icon: ClipboardList, label: 'Pendientes', path: '/pendientes' },
             { icon: KeyRound, label: 'NIPs', path: '/nips' },
             { icon: SlidersHorizontal, label: 'Reporte Cliente', path: '/cliente-reporte-config' },
+            { icon: ShieldCheck, label: 'Auditoría', path: '/auditoria' },
 
           ].map(a => (
-            <button key={a.label} onClick={() => navigate(a.path)} className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center gap-1.5 hover:shadow-elevated transition-shadow active:scale-[0.98]">
-              <a.icon className="w-5 h-5 text-primary" />
+            <button
+              key={a.label}
+              onClick={() => navigate(a.path)}
+              aria-label={a.label}
+              className="bg-card rounded-xl p-3 shadow-card flex flex-col items-center justify-center gap-1.5 min-h-[64px] hover:shadow-elevated transition-shadow active:scale-[0.98] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+            >
+              <a.icon className="w-5 h-5 text-primary" aria-hidden="true" />
               <span className="text-[10px] font-semibold text-foreground">{a.label}</span>
             </button>
           ))}
+
         </div>
 
         <div className="flex items-center justify-between">

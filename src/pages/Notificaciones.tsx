@@ -83,14 +83,14 @@ const Notificaciones = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="bg-emergency text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">

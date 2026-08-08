@@ -96,8 +96,15 @@ const ReporteAsistencias = () => {
     toast({ title: '✅ Reporte generado', description: `${list.length} asistencias encontradas.` });
   };
 
+  /**
+   * Faltas = días del rango en los que un guardia asignado al servicio no tiene
+   * asistencia completa o activa.
+   *
+   * Excepción: si RH tiene un registro APROBADO de vacaciones, incapacidad o
+   * permiso que cubre ese día, no se considera falta — se reporta como
+   * "Ausencia justificada" en una columna aparte.
+   */
   const calcularFaltas = async () => {
-    // Faltas: guardias asignados al servicio que NO tienen asistencia "completo" en cada día del rango.
     const { data: asignados } = await supabase
       .from('guardia_servicios')
       .select('guardia_id')
@@ -111,6 +118,27 @@ const ReporteAsistencias = () => {
       .select('user_id, nombre, apellido, numero_empleado')
       .in('user_id', guardIds);
     const profMap = new Map((profs || []).map(p => [p.user_id, p as Profile]));
+
+    // Ausencias autorizadas por RH que solapan el rango consultado.
+    const { data: ausencias } = await supabase
+      .from('registros_rh' as any)
+      .select('guardia_id, tipo, fecha, fecha_fin')
+      .in('guardia_id', guardIds)
+      .eq('status', 'aprobado')
+      .in('tipo', ['vacaciones', 'incapacidad', 'permiso'])
+      .lte('fecha', fechaFin);
+
+    /** guardia -> fecha (YYYY-MM-DD) -> tipo de ausencia justificada */
+    const justificadas = new Map<string, Map<string, string>>();
+    for (const a of (ausencias || []) as any[]) {
+      const desde = new Date(a.fecha + 'T00:00:00');
+      const hasta = new Date((a.fecha_fin || a.fecha) + 'T00:00:00');
+      if (!justificadas.has(a.guardia_id)) justificadas.set(a.guardia_id, new Map());
+      const m = justificadas.get(a.guardia_id)!;
+      for (let d = new Date(desde); d <= hasta; d.setDate(d.getDate() + 1)) {
+        m.set(d.toISOString().slice(0, 10), a.tipo);
+      }
+    }
 
     const servicio = servicios.find(s => s.id === servicioId);
     const tipoEsperado = servicio?.tipo_turno || '12h';
@@ -137,6 +165,12 @@ const ReporteAsistencias = () => {
       }
     }
 
+    const TIPO_LABEL: Record<string, string> = {
+      vacaciones: 'Vacaciones autorizadas',
+      incapacidad: 'Incapacidad',
+      permiso: 'Permiso autorizado',
+    };
+
     const faltas: any[] = [];
     for (const gid of guardIds) {
       const prof = profMap.get(gid);
@@ -144,33 +178,33 @@ const ReporteAsistencias = () => {
       const numEmp = prof?.numero_empleado || '';
       const cumplidos = asistMap.get(gid) || new Set();
       const incomp = incompletas.get(gid) || new Set();
+      const just = justificadas.get(gid) || new Map<string, string>();
 
       for (const day of days) {
-        if (!cumplidos.has(day)) {
-          if (incomp.has(day)) {
-            faltas.push({
-              'Empleado #': numEmp,
-              'Guardia': nombre,
-              'Servicio': servicio?.nombre || '',
-              'Fecha': day,
-              'Tipo de turno esperado': tipoTurnoLabel(tipoEsperado),
-              'Motivo': 'No completó turno',
-            });
-          } else {
-            faltas.push({
-              'Empleado #': numEmp,
-              'Guardia': nombre,
-              'Servicio': servicio?.nombre || '',
-              'Fecha': day,
-              'Tipo de turno esperado': tipoTurnoLabel(tipoEsperado),
-              'Motivo': 'No inició turno',
-            });
-          }
-        }
+        if (cumplidos.has(day)) continue;
+
+        const tipoJustificado = just.get(day);
+        const motivo = tipoJustificado
+          ? TIPO_LABEL[tipoJustificado]
+          : incomp.has(day)
+            ? 'No completó turno'
+            : 'No inició turno';
+
+        faltas.push({
+          'Empleado #': numEmp,
+          'Guardia': nombre,
+          'Servicio': servicio?.nombre || '',
+          'Fecha': day,
+          'Tipo de turno esperado': tipoTurnoLabel(tipoEsperado),
+          'Motivo': motivo,
+          'Justificada': tipoJustificado ? 'Sí' : 'No',
+          'Cuenta como falta': tipoJustificado ? 'No' : 'Sí',
+        });
       }
     }
     return faltas;
   };
+
 
   const exportarExcel = async () => {
     if (asistencias.length === 0) {
@@ -221,7 +255,7 @@ const ReporteAsistencias = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm opacity-80 mb-2">

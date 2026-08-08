@@ -75,7 +75,7 @@ const GuardDashboard = () => {
 
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <AppHeader
         eyebrow="Bienvenido de vuelta"
         title={`${user?.nombre ?? ''} ${user?.apellido ?? ''}`.trim()}

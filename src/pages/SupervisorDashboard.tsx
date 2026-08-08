@@ -83,7 +83,7 @@ const SupervisorDashboard = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
         <div className="max-w-lg mx-auto flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">

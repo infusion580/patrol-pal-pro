@@ -28,11 +28,23 @@ interface RegistroRH {
   guardia_nombre?: string;
 }
 
+/**
+ * Tipos de registro de RH.
+ * `vacaciones`, `incapacidad` y `permiso` son ausencias justificadas: cuando el
+ * registro queda APROBADO, los días cubiertos dejan de contar como falta en el
+ * Reporte de Asistencias.
+ */
 const tipoConfig: Record<string, { label: string; icon: any; color: string }> = {
   turno_extra: { label: 'Turno Extra', icon: Clock, color: 'text-primary' },
   prestamo: { label: 'Préstamo', icon: DollarSign, color: 'text-warning' },
   vacaciones: { label: 'Vacaciones', icon: Calendar, color: 'text-success' },
+  incapacidad: { label: 'Incapacidad', icon: Calendar, color: 'text-emergency' },
+  permiso: { label: 'Permiso', icon: Calendar, color: 'text-secondary' },
 };
+
+/** Tipos que generan ausencia justificada (requieren rango de fechas). */
+const TIPOS_AUSENCIA = ['vacaciones', 'incapacidad', 'permiso'];
+
 
 const statusConfig: Record<string, { label: string; cls: string }> = {
   pendiente: { label: 'Pendiente', cls: 'bg-warning/10 text-warning' },
@@ -130,14 +142,14 @@ const GestionRH = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="min-h-dvh flex items-center justify-center bg-background">
         <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-dvh bg-background pb-20">
       <div className="text-primary-foreground px-4 pt-12 pb-6 rounded-b-3xl app-header">
         <div className="max-w-lg mx-auto">
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
@@ -146,7 +158,7 @@ const GestionRH = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-display font-bold">Gestión RH</h1>
-              <p className="text-sm opacity-70 mt-1">Turnos extra, préstamos y vacaciones</p>
+              <p className="text-sm opacity-70 mt-1">Turnos extra, préstamos, vacaciones, incapacidades y permisos</p>
             </div>
             <Button size="sm" variant="secondary" onClick={() => setShowForm(!showForm)} className="gap-1">
               <Plus className="w-4 h-4" /> Nuevo
@@ -183,6 +195,8 @@ const GestionRH = () => {
                 <option value="turno_extra">Turno Extra</option>
                 <option value="prestamo">Préstamo</option>
                 <option value="vacaciones">Vacaciones</option>
+                <option value="incapacidad">Incapacidad</option>
+                <option value="permiso">Permiso</option>
               </select>
             </div>
 
@@ -191,7 +205,7 @@ const GestionRH = () => {
                 <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Fecha</label>
                 <Input type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className="h-9 text-sm" />
               </div>
-              {form.tipo === 'vacaciones' && (
+              {TIPOS_AUSENCIA.includes(form.tipo) && (
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Fecha Fin</label>
                   <Input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} className="h-9 text-sm" />
