@@ -158,7 +158,7 @@ const GestionRH = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-xl font-display font-bold">Gestión RH</h1>
-              <p className="text-sm opacity-70 mt-1">Turnos extra, préstamos y vacaciones</p>
+              <p className="text-sm opacity-70 mt-1">Turnos extra, préstamos, vacaciones, incapacidades y permisos</p>
             </div>
             <Button size="sm" variant="secondary" onClick={() => setShowForm(!showForm)} className="gap-1">
               <Plus className="w-4 h-4" /> Nuevo
@@ -195,6 +195,8 @@ const GestionRH = () => {
                 <option value="turno_extra">Turno Extra</option>
                 <option value="prestamo">Préstamo</option>
                 <option value="vacaciones">Vacaciones</option>
+                <option value="incapacidad">Incapacidad</option>
+                <option value="permiso">Permiso</option>
               </select>
             </div>
 
@@ -203,7 +205,7 @@ const GestionRH = () => {
                 <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Fecha</label>
                 <Input type="date" value={form.fecha} onChange={e => setForm(f => ({ ...f, fecha: e.target.value }))} className="h-9 text-sm" />
               </div>
-              {form.tipo === 'vacaciones' && (
+              {TIPOS_AUSENCIA.includes(form.tipo) && (
                 <div>
                   <label className="text-[10px] font-semibold text-muted-foreground block mb-1">Fecha Fin</label>
                   <Input type="date" value={form.fecha_fin} onChange={e => setForm(f => ({ ...f, fecha_fin: e.target.value }))} className="h-9 text-sm" />
