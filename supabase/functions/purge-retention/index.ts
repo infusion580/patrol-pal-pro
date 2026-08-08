@@ -77,8 +77,8 @@ Deno.serve(async (req) => {
     // ---- 2. Rondín evidence ------------------------------------------------
     const { data: scans, error: sErr } = await supabase
       .from('rondin_scans')
-      .select('id, foto_url, created_at')
-      .lt('created_at', evidenciasCutoff)
+      .select('id, foto_url, scanned_at')
+      .lt('scanned_at', evidenciasCutoff)
       .neq('foto_url', '');
     if (sErr) throw sErr;
 
