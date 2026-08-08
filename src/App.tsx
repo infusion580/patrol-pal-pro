@@ -32,6 +32,7 @@ import ReporteAsistencias from "./pages/ReporteAsistencias";
 import PendientesPuesto from "./pages/PendientesPuesto";
 import RegistrationNips from "./pages/RegistrationNips";
 import ClienteReporteConfig from "./pages/ClienteReporteConfig";
+import AuditLog from "./pages/AuditLog";
 
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
@@ -40,10 +41,12 @@ import ConnectionBanner from "./components/ConnectionBanner";
 import OfflineQueueIndicator from "./components/OfflineQueueIndicator";
 import { initOfflineQueue } from "./lib/offline-queue";
 import { initPhotoQueue } from "./lib/offline-photo-queue";
+import { initErrorMonitor } from "./lib/error-monitor";
 
 // Start replaying any pending offline writes / photo uploads on boot.
 initOfflineQueue();
 initPhotoQueue();
+initErrorMonitor();
 
 /**
  * Global react-query defaults tuned for a long-lived operational app:
@@ -115,6 +118,7 @@ const App = () => (
             <Route path="/servicios" element={<ProtectedRoute roles={['admin']}><Servicios /></ProtectedRoute>} />
             <Route path="/estadisticas" element={<ProtectedRoute roles={['admin']}><EstadisticasAdmin /></ProtectedRoute>} />
             <Route path="/nips" element={<ProtectedRoute roles={['admin']}><RegistrationNips /></ProtectedRoute>} />
+            <Route path="/auditoria" element={<ProtectedRoute roles={['admin']}><AuditLog /></ProtectedRoute>} />
             <Route path="/cliente-reporte-config" element={<ProtectedRoute roles={['admin']}><ClienteReporteConfig /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
