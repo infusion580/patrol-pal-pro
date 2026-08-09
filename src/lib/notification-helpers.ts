@@ -95,7 +95,7 @@ export async function notifySesionCierreEnTurno(
     : 'N/A';
   const mensaje = `⚠️ CIERRE DE SESIÓN CON TURNO ACTIVO\nEmpleado: ${userNombre}\nServicio: ${servicioNombre || 'N/A'}\nTurno iniciado: ${desde}\nFecha: ${fecha}\nHora: ${hora}`;
   await createNotification({
-    tipo: 'alerta',
+    tipo: 'sesion_en_turno',
     mensaje,
     guardia_id: userId,
     metadata: {
