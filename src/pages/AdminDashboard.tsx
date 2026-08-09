@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
+import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
 import { useBrandLogo } from '@/lib/branding';
 
 interface GuardiaServicio {
@@ -271,6 +272,7 @@ const AdminDashboard = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4 space-y-4">
+        <UnreadMessagesBanner />
         <div className="bg-card rounded-xl p-4 shadow-card grid grid-cols-2 gap-3">
           {metrics.map(m => (
             <div key={m.label} className="flex items-center gap-3">
