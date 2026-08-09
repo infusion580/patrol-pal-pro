@@ -108,9 +108,21 @@ const ResetPassword = () => {
   if (!isRecovery) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-background px-4">
-        <div className="text-center space-y-3">
-          <p className="text-muted-foreground">Verificando enlace de recuperación...</p>
-          <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+        <div className="text-center space-y-4 max-w-sm">
+          {linkError ? (
+            <>
+              <p className="text-base font-semibold text-foreground">Enlace no válido</p>
+              <p className="text-sm text-muted-foreground">{linkError}</p>
+              <Button className="h-12 w-full" onClick={() => navigate('/forgot-password')}>
+                Solicitar nuevo enlace
+              </Button>
+            </>
+          ) : (
+            <>
+              <p className="text-muted-foreground">Verificando enlace de recuperación...</p>
+              <div className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto" />
+            </>
+          )}
         </div>
       </div>
     );
