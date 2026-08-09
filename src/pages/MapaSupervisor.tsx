@@ -3,6 +3,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 const statusLabels: Record<string, string> = {
   activo: 'En Ronda',
@@ -35,16 +36,9 @@ const MapaSupervisor = () => {
     return () => clearInterval(t);
   }, []);
 
-  // Realtime: refresh when rondines change
-  useEffect(() => {
-    const channel = supabase
-      .channel('rondines-map-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'rondines' }, () => {
-        loadGuards();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  // Realtime: refresh when rondines change (canal compartido)
+  useRealtimeTable('rondines', () => loadGuards());
+
 
   const loadGuards = async () => {
     const today = new Date().toISOString().split('T')[0];

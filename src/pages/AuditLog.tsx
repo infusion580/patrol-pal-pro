@@ -3,7 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, RefreshCw, Search, AlertTriangle } from 'lucide-react';
+import { ShieldCheck, RefreshCw, Search, AlertTriangle, DatabaseBackup, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { es } from 'date-fns/locale';
 import AppHeader from '@/components/AppHeader';
@@ -53,6 +54,30 @@ const AuditLog = () => {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [tabla, setTabla] = useState<string>('');
+  const [backingUp, setBackingUp] = useState(false);
+
+  /** Manual trigger of the scheduled logical backup (also runs weekly by cron). */
+  const runBackup = async () => {
+    setBackingUp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('db-export-backup');
+      if (error) throw error;
+      const total = Object.values((data as any)?.manifest ?? {}).reduce(
+        (a: number, b) => a + Number(b),
+        0,
+      );
+      toast.success('Respaldo generado', {
+        description: `${total} registros guardados en ${(data as any)?.folder}`,
+      });
+      void load();
+    } catch (e) {
+      toast.error('No se pudo generar el respaldo', { description: (e as Error).message });
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+
 
   const load = async () => {
     setLoading(true);
@@ -97,7 +122,17 @@ const AuditLog = () => {
               Registro inmutable: no puede editarse ni borrarse.
             </p>
           </div>
-          <Button variant="outline" size="icon" onClick={() => void load()} aria-label="Recargar bitácora">
+          <Button
+            variant="outline"
+            onClick={() => void runBackup()}
+            disabled={backingUp}
+            className="min-h-11"
+            aria-label="Generar respaldo de la base de datos ahora"
+          >
+            {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <DatabaseBackup className="h-4 w-4" />}
+            <span className="ml-2 hidden sm:inline">Respaldo</span>
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => void load()} aria-label="Recargar bitácora" className="min-h-11 min-w-11">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </header>

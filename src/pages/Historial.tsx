@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import ReporteDetailDialog from '@/components/ReporteDetailDialog';
 import VisitaDetailDialog from '@/components/VisitaDetailDialog';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 type TabKey = 'estadisticas' | 'reportes' | 'visitas' | 'prestamos' | 'rondines' | 'alertas';
 
@@ -50,15 +51,10 @@ const Historial = () => {
     if (activeTab === 'estadisticas') setLoading(false);
   }, [activeTab, user]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('historial-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones' }, () => {
-        if (activeTab === 'alertas') loadTab('alertas');
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [activeTab]);
+  useRealtimeTable('notificaciones', () => {
+    if (activeTab === 'alertas') loadTab('alertas');
+  });
+
 
   const loadStats = async () => {
     if (!user) return;

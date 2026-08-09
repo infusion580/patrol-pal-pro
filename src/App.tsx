@@ -42,11 +42,13 @@ import OfflineQueueIndicator from "./components/OfflineQueueIndicator";
 import { initOfflineQueue } from "./lib/offline-queue";
 import { initPhotoQueue } from "./lib/offline-photo-queue";
 import { initErrorMonitor } from "./lib/error-monitor";
+import { initRealtimeManager } from "./lib/realtime";
 
 // Start replaying any pending offline writes / photo uploads on boot.
 initOfflineQueue();
 initPhotoQueue();
 initErrorMonitor();
+initRealtimeManager();
 
 /**
  * Global react-query defaults tuned for a long-lived operational app:

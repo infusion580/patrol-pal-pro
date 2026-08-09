@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { SignedImg } from '@/components/SignedImg';
 import { getSignedUrl } from '@/lib/storage-helpers';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 interface Notificacion {
   id: string;
@@ -38,15 +39,10 @@ const Notificaciones = () => {
 
   useEffect(() => { loadNotifs(); }, []);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('notificaciones-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones' }, () => {
-        loadNotifs();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  // Canal compartido: el gestor central evita reconexiones duplicadas
+  // cuando el celular sale de suspensión.
+  useRealtimeTable('notificaciones', () => loadNotifs());
+
 
   const loadNotifs = async () => {
     const { data } = await supabase
