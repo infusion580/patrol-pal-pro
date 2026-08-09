@@ -40,6 +40,19 @@ Soporte: `SoporteChat` se monta una sola vez en `src/App.tsx` y está disponible
 
 Diseño: tokens semánticos HSL en `src/index.css` (`--primary`, `--accent`, `--background`, `--card`), sobrescribibles en caliente por el BrandingProvider.
 
+### 2.1 Sesión activa: alcance y limitaciones
+
+La sesión se persiste en `localStorage` con refresco silencioso y solo termina con `logout()` o al ser desplazada por otra sesión del mismo usuario.
+
+- Sesión única por usuario (`profiles.active_session_id`, verificación cada 20 s): un nuevo inicio cierra el anterior.
+- El storage es por origen y por perfil de navegador: no se comparte entre navegadores ni con incógnito/privado.
+- Borrar datos del sitio elimina el refresh token y obliga a un nuevo inicio de sesión.
+- Safari/iOS (ITP) puede purgar el almacenamiento tras ~7 días sin uso; se mitiga instalando la PWA.
+- El cierre sincronizado entre pestañas usa `BroadcastChannel`, ausente en Safari/iOS < 15.4 (degradación silenciosa).
+- Sin conexión la sesión sigue válida y operan las colas offline; si el refresh token expira, se pide login al reconectar.
+- Cambio de contraseña, revocación o expulsión por el admin invalidan la sesión en todos los dispositivos.
+- La permanencia en segundo plano depende del sistema operativo y de la instalación como PWA.
+
 ## 3. Modelo de datos (esquema `public`)
 
 | Dominio | Tablas |
