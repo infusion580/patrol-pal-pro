@@ -303,7 +303,7 @@ const AdminDashboard = () => {
             { icon: SlidersHorizontal, label: 'Reporte Cliente', path: '/cliente-reporte-config' },
             { icon: ShieldCheck, label: 'Auditoría', path: '/auditoria' },
             { icon: Palette, label: 'Identidad', path: '/identidad' },
-            { icon: HelpCircle, label: 'Soporte', path: '/soporte-config' },
+            { icon: HelpCircle, label: 'Teléfonos de los botones del sitio', path: '/soporte-config' },
 
           ].map(a => (
             <button
