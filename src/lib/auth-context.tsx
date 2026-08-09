@@ -257,6 +257,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = useCallback(async () => {
+    // Avisar a admin/supervisores del cierre de sesión ANTES de invalidar el
+    // token (de lo contrario la escritura sería rechazada por RLS).
+    if (user) {
+      const nombre = `${user.nombre} ${user.apellido}`.trim() || user.email;
+      try {
+        const { notifySesionCierre } = await import('./notification-helpers');
+        await notifySesionCierre(user.id, nombre, user.role);
+      } catch { /* fire-and-forget */ }
+      import('./audit')
+        .then(({ logAudit }) => logAudit({ accion: 'logout', tabla: 'auth', registroId: user.id }))
+        .catch(() => {});
+    }
     try {
       await supabase.auth.signOut({ scope: 'local' });
     } catch {
@@ -267,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     broadcastLogout();
     toast.success('Sesión cerrada correctamente');
-  }, [broadcastLogout]);
+  }, [broadcastLogout, user]);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, loading }}>

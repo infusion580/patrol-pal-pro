@@ -63,6 +63,22 @@ export async function notifySesionInicio(userId: string, userNombre: string) {
   });
 }
 
+/**
+ * Registra el cierre de sesión de un usuario (visible para admin/supervisor
+ * en la central de notificaciones). Se dispara antes de cerrar la sesión,
+ * mientras el token sigue siendo válido para escribir en la base.
+ */
+export async function notifySesionCierre(userId: string, userNombre: string, rol?: string) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+  const mensaje = `🚪 CIERRE DE SESIÓN\nUsuario: ${userNombre}${rol ? `\nPerfil: ${rol}` : ''}\nFecha: ${fecha}\nHora: ${hora}`;
+  await createNotification({
+    tipo: 'sesion',
+    mensaje,
+    guardia_id: userId,
+    metadata: { usuario: userNombre, rol: rol || null, evento: 'logout', fecha: iso },
+  });
+}
+
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {
   const { fecha, hora, iso } = fechaHoraLarga();
   const mensaje = `🟢 INICIO DE TURNO\nEmpleado: ${guardiaNombre}\nServicio: ${servicioNombre || 'N/A'}\nFecha: ${fecha}\nHora: ${hora}`;
