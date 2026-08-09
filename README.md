@@ -40,4 +40,5 @@ npx vitest run
 - Operación offline: colas de escritura (localStorage) y de fotos (IndexedDB) con reintento automático.
 - Geocerca obligatoria y foto en vivo para evidencia de rondín.
 - Bitácora de auditoría inmutable, retención automática de fotos y respaldo semanal de la base de datos.
+- Chat de soporte flotante en toda la app: reporta fallas por WhatsApp (+52 442 635 6998, configurable por admin) con contexto de usuario, pantalla y dispositivo.
 - Logotipo y paleta de colores configurables por el administrador desde `/identidad`.
