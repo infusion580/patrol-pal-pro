@@ -1184,6 +1184,16 @@ export type Database = {
         }
         Returns: boolean
       }
+      log_audit_event: {
+        Args: {
+          _accion: string
+          _datos?: Json
+          _dispositivo?: Json
+          _registro_id?: string
+          _tabla: string
+        }
+        Returns: undefined
+      }
       promote_user: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]

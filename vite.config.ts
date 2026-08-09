@@ -53,6 +53,21 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ].filter(Boolean),
+  build: {
+    rollupOptions: {
+      output: {
+        // Keep heavy, rarely-changing libraries out of the entry chunk so the
+        // first load stays light on mobile networks (QA observation 6.1).
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-charts": ["recharts"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-export": ["jspdf", "jspdf-autotable", "xlsx"],
+        },
+      },
+    },
+    chunkSizeWarningLimit: 900,
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

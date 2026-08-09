@@ -30,19 +30,24 @@ export interface AuditEntry {
   datos?: Record<string, unknown> | null;
 }
 
+/**
+ * Appends an entry through the `log_audit_event` server function.
+ *
+ * The client has no INSERT privilege on `audit_log`; the SECURITY DEFINER
+ * function derives the actor from `auth.uid()`, so the identity of an entry
+ * can never be spoofed from the browser.
+ */
 export async function logAudit({ accion, tabla, registroId, datos }: AuditEntry): Promise<void> {
   try {
     const { data: auth } = await supabase.auth.getUser();
     if (!auth?.user) return; // only authenticated users can append
 
-    await supabase.from('audit_log' as any).insert({
-      actor_id: auth.user.id,
-      actor_email: auth.user.email ?? null,
-      accion,
-      tabla,
-      registro_id: registroId ?? null,
-      datos_despues: (datos ?? null) as any,
-      dispositivo: getDeviceInfo() as any,
+    await supabase.rpc('log_audit_event' as any, {
+      _accion: accion,
+      _tabla: tabla,
+      _registro_id: registroId ?? null,
+      _datos: (datos ?? null) as any,
+      _dispositivo: getDeviceInfo() as any,
     } as any);
   } catch {
     // Auditing is best-effort; swallow failures.
