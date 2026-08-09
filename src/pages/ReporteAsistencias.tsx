@@ -10,6 +10,9 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import * as XLSX from 'xlsx';
 import { tipoTurnoLabel, tipoTurnoHoras, TipoTurno } from '@/lib/asistencias-helpers';
+import { generateReportPdf } from '@/lib/pdf-report';
+import { useBranding } from '@/lib/branding';
+import { FileText } from 'lucide-react';
 
 interface Servicio { id: string; nombre: string; cliente: string; tipo_turno: TipoTurno; }
 interface Asistencia {
@@ -31,6 +34,7 @@ interface Profile { user_id: string; nombre: string; apellido: string; numero_em
 const ReporteAsistencias = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { logoUrl, colors } = useBranding();
   const { user } = useAuth();
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [servicioId, setServicioId] = useState<string>('');
@@ -247,6 +251,68 @@ const ReporteAsistencias = () => {
     toast({ title: '📥 Excel descargado', description: fileName });
   };
 
+  /** Exporta el mismo reporte a PDF con el logotipo y color de la empresa. */
+  const exportarPdf = async () => {
+    if (asistencias.length === 0) {
+      toast({ title: 'No hay datos para exportar', variant: 'destructive' });
+      return;
+    }
+    const servicio = servicios.find(s => s.id === servicioId);
+    const filas = [...asistencias]
+      .sort((a, b) => new Date(a.inicio).getTime() - new Date(b.inicio).getTime())
+      .map(a => {
+        const prof = profiles.get(a.guardia_id);
+        const dur = a.duracion_minutos != null ? `${Math.floor(a.duracion_minutos / 60)}h ${a.duracion_minutos % 60}m` : '—';
+        const extras = a.horas_extra != null ? Number(a.horas_extra) : 0;
+        return [
+          prof?.numero_empleado || '',
+          prof ? `${prof.nombre} ${prof.apellido}` : a.guardia_id.slice(0, 8),
+          tipoTurnoLabel(a.tipo_turno),
+          new Date(a.inicio).toLocaleString('es-MX'),
+          a.fin ? new Date(a.fin).toLocaleString('es-MX') : '—',
+          dur,
+          extras > 0 ? extras.toFixed(2) : '0',
+          a.status,
+          a.observaciones || '',
+        ];
+      });
+
+    const faltas = await calcularFaltas();
+
+    await generateReportPdf({
+      title: 'Reporte de Asistencias',
+      subtitle: servicio ? `${servicio.nombre} — ${servicio.cliente}` : 'Servicio',
+      primaryHsl: colors.primary_hsl,
+      logoUrl,
+      meta: [
+        { label: 'Servicio', value: servicio?.nombre || '—' },
+        { label: 'Cliente', value: servicio?.cliente || '—' },
+        { label: 'Periodo', value: `${fechaInicio} a ${fechaFin}` },
+        { label: 'Tipo de turno', value: servicio ? tipoTurnoLabel(servicio.tipo_turno) : '—' },
+        { label: 'Resumen', value: `${stats.total} asistencias · ${stats.completos} completas · ${stats.incompletos} incompletas · ${stats.activos} activas · ${faltas.length} faltas` },
+      ],
+      sections: [
+        {
+          title: '1. Asistencias registradas',
+          columns: ['Empleado #', 'Guardia', 'Turno', 'Entrada', 'Salida', 'Duración', 'H. extra', 'Estatus', 'Observaciones'],
+          rows: filas,
+        },
+        {
+          title: '2. Faltas detectadas',
+          columns: ['Empleado #', 'Guardia', 'Fecha', 'Turno esperado', 'Motivo', 'Justificada', 'Cuenta como falta'],
+          rows: faltas.map(f => [
+            f['Empleado #'], f['Guardia'], f['Fecha'], f['Tipo de turno esperado'],
+            f['Motivo'], f['Justificada'], f['Cuenta como falta'],
+          ]),
+          emptyText: 'Sin faltas detectadas en el periodo.',
+        },
+      ],
+      footerNote: 'Documento generado automáticamente por el sistema.',
+      fileName: `Asistencias_${servicio?.nombre.replace(/\s+/g, '_') || 'servicio'}_${fechaInicio}_a_${fechaFin}.pdf`,
+    });
+    toast({ title: '📄 PDF descargado' });
+  };
+
   const stats = {
     total: asistencias.length,
     completos: asistencias.filter(a => a.status === 'completo').length,
@@ -317,9 +383,14 @@ const ReporteAsistencias = () => {
               </div>
             </div>
 
-            <Button onClick={exportarExcel} className="w-full bg-success text-success-foreground hover:bg-success/90">
-              <FileSpreadsheet className="w-4 h-4 mr-2" /> Descargar Excel (.xlsx)
-            </Button>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <Button onClick={exportarPdf} className="w-full">
+                <FileText className="w-4 h-4 mr-2" /> Descargar PDF
+              </Button>
+              <Button onClick={exportarExcel} className="w-full bg-success text-success-foreground hover:bg-success/90">
+                <FileSpreadsheet className="w-4 h-4 mr-2" /> Excel (.xlsx)
+              </Button>
+            </div>
 
             <div className="bg-card rounded-xl shadow-card overflow-hidden">
               <div className="px-4 py-2 border-b border-border bg-accent/30">

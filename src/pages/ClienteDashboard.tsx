@@ -16,6 +16,8 @@ import {
   PieChart, Pie, Cell, Legend, LineChart, Line, CartesianGrid,
 } from 'recharts';
 import * as XLSX from 'xlsx';
+import { generateReportPdf } from '@/lib/pdf-report';
+import { useBranding } from '@/lib/branding';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
 import {
@@ -36,6 +38,7 @@ const COLORS = ['hsl(var(--primary))', 'hsl(var(--secondary))', 'hsl(var(--succe
 const ClienteDashboard = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { logoUrl, colors } = useBranding();
   const [loading, setLoading] = useState(true);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [guardias, setGuardias] = useState<Guardia[]>([]);
@@ -196,6 +199,64 @@ const ClienteDashboard = () => {
     });
   }, [servicios, filtered]);
 
+  /** Reporte ejecutivo en PDF con logotipo y colores de la empresa. */
+  const descargarReportePdf = async () => {
+    const nombreServicio = servicioFiltro === 'all'
+      ? 'Todos los servicios'
+      : servicios.find(s => s.id === servicioFiltro)?.nombre || '';
+
+    await generateReportPdf({
+      title: 'Reporte de Servicios de Seguridad',
+      subtitle: `${user?.nombre ?? ''} ${user?.apellido ?? ''}`.trim(),
+      primaryHsl: colors.primary_hsl,
+      logoUrl,
+      meta: [
+        { label: 'Periodo', value: `${format(fechaInicio, 'dd/MM/yyyy')} al ${format(fechaFin, 'dd/MM/yyyy')}` },
+        { label: 'Servicio', value: nombreServicio },
+        { label: 'Emitido', value: format(new Date(), "dd 'de' MMMM yyyy", { locale: es }) },
+      ],
+      sections: [
+        {
+          title: '1. Indicadores clave',
+          columns: ['Indicador', 'Valor'],
+          rows: [
+            ['Total de rondines', kpis.totalRondines],
+            ['Rondines completados', kpis.rondinesCompletados],
+            ['Cumplimiento de turnos', `${kpis.cumplimiento}%`],
+            ['Total de turnos', kpis.turnosTotales],
+            ['Reportes con incidencias', kpis.incidencias],
+            ['Guardias en mis servicios', kpis.guardiasActivos],
+          ],
+        },
+        {
+          title: '2. Semáforo por servicio',
+          columns: ['Servicio', 'Cliente', 'Dirección', 'Cumplimiento %', 'Turnos', 'Rondines', 'Estado'],
+          rows: semaforoServicios.map(s => [s.nombre, s.cliente, s.direccion, `${s.pct}%`, s.turnos, s.rondines, s.color.toUpperCase()]),
+        },
+        {
+          title: '3. Guardias más puntuales',
+          columns: ['#', 'Guardia', 'Empleado', 'Rondines completados'],
+          rows: guardiasPuntuales.map((g, i) => [i + 1, g.nombre, g.empleado, g.rondines]),
+        },
+        {
+          title: '4. Histórico de rondines',
+          columns: ['Fecha', 'Servicio', 'Guardia', 'Estado'],
+          rows: [...filtered.rondines]
+            .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+            .map(r => [
+              format(new Date(r.created_at), 'dd/MM/yyyy HH:mm'),
+              servicios.find(s => s.id === r.servicio_id)?.nombre || '',
+              (() => { const g = guardias.find(x => x.user_id === r.guardia_id); return g ? `${g.nombre} ${g.apellido}` : ''; })(),
+              r.status,
+            ]),
+        },
+      ],
+      footerNote: 'Documento confidencial generado automáticamente.',
+      fileName: `Reporte_${format(new Date(), 'yyyy-MM-dd')}.pdf`,
+    });
+    toast({ title: 'Reporte PDF descargado', description: 'Tu archivo está listo.' });
+  };
+
   const descargarReporte = () => {
     const wb = XLSX.utils.book_new();
 
@@ -323,10 +384,16 @@ const ClienteDashboard = () => {
           </div>
 
           {config.show_export_excel && (
-            <Button onClick={descargarReporte} className="h-9 mt-5 ml-auto">
-              <Download className="w-4 h-4 mr-2" />
-              Descargar reporte
-            </Button>
+            <div className="flex gap-2 mt-5 ml-auto">
+              <Button onClick={descargarReportePdf} className="h-9">
+                <FileText className="w-4 h-4 mr-2" />
+                PDF
+              </Button>
+              <Button onClick={descargarReporte} variant="outline" className="h-9">
+                <Download className="w-4 h-4 mr-2" />
+                Excel
+              </Button>
+            </div>
           )}
         </Card>
 
