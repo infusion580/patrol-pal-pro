@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'visita';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'visita' | 'relevo_pendiente';
 
 interface NotifParams {
   tipo: NotifType;
