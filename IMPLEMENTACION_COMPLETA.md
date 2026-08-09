@@ -156,3 +156,20 @@ Documento vivo con todo lo entregado en la fase "aplicación empresarial moderna
 - Número predeterminado: **+52 442 635 6998**. El administrador puede cambiarlo desde el mismo widget.
 - El mensaje incluye automáticamente nombre, número de empleado, rol, pantalla actual, dispositivo/navegador y fecha.
 - Sin backend: se abre `wa.me` en una pestaña nueva; funciona en móvil y escritorio.
+
+---
+
+## 14. Sesión activa: alcance y limitaciones
+
+Comportamiento: `persistSession: true` + `autoRefreshToken: true` sobre `localStorage`; `AuthProvider` suscribe `onAuthStateChange` antes de `getSession()` y la sesión termina solo con `logout()` o al ser desplazada por otra sesión.
+
+| Limitación | Efecto |
+|---|---|
+| Sesión única (`profiles.active_session_id`, poll 20 s) | Entrar en otro dispositivo/navegador cierra la sesión anterior |
+| Almacenamiento por origen y por perfil | No se comparte entre navegadores ni con incógnito/privado |
+| Borrado de datos del sitio | Elimina el refresh token: se requiere nuevo login |
+| Safari/iOS ITP | Puede purgar el storage tras ~7 días sin uso; mitigar instalando la PWA |
+| `BroadcastChannel` | Cierre cross-tab no disponible en Safari/iOS < 15.4 (degrada sin romper) |
+| Refresh token vencido sin conexión | La app opera con colas offline, pero pedirá login al reconectar |
+| Cambio de contraseña / revocación / expulsión admin | Invalida la sesión en todos los dispositivos |
+| Segundo plano | Depende del SO; la app no permanece activa por sí sola sin instalarse como PWA |
