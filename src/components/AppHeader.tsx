@@ -1,7 +1,7 @@
 import { ReactNode, CSSProperties } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
-import logoDefender from '@/assets/logo-defender.png';
+import { useBrandLogo } from '@/lib/branding';
 import headerCityFlags from '@/assets/header-city-flags.jpg';
 
 interface AppHeaderProps {
@@ -42,6 +42,7 @@ const AppHeader = ({
   hideLogo,
   rounded = true,
 }: AppHeaderProps) => {
+  const logoDefender = useBrandLogo();
   const navigate = useNavigate();
 
   const headerStyle = {

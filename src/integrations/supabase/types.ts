@@ -107,6 +107,39 @@ export type Database = {
         }
         Relationships: []
       }
+      branding: {
+        Row: {
+          accent_hsl: string
+          background_hsl: string
+          card_hsl: string
+          id: boolean
+          logo_url: string | null
+          primary_glow_hsl: string
+          primary_hsl: string
+          updated_at: string
+        }
+        Insert: {
+          accent_hsl?: string
+          background_hsl?: string
+          card_hsl?: string
+          id?: boolean
+          logo_url?: string | null
+          primary_glow_hsl?: string
+          primary_hsl?: string
+          updated_at?: string
+        }
+        Update: {
+          accent_hsl?: string
+          background_hsl?: string
+          card_hsl?: string
+          id?: boolean
+          logo_url?: string | null
+          primary_glow_hsl?: string
+          primary_hsl?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       chat_messages: {
         Row: {
           created_at: string

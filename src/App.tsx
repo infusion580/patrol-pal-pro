@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
+import { BrandingProvider } from "@/lib/branding";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
@@ -33,6 +34,7 @@ import PendientesPuesto from "./pages/PendientesPuesto";
 import RegistrationNips from "./pages/RegistrationNips";
 import ClienteReporteConfig from "./pages/ClienteReporteConfig";
 import AuditLog from "./pages/AuditLog";
+import Branding from "./pages/Branding";
 
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
@@ -79,6 +81,7 @@ const Auth = ({ children }: { children: JSX.Element }) => (
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
+      <BrandingProvider>
       <AuthProvider>
         <Toaster />
         <Sonner />
@@ -121,12 +124,14 @@ const App = () => (
             <Route path="/estadisticas" element={<ProtectedRoute roles={['admin']}><EstadisticasAdmin /></ProtectedRoute>} />
             <Route path="/nips" element={<ProtectedRoute roles={['admin']}><RegistrationNips /></ProtectedRoute>} />
             <Route path="/auditoria" element={<ProtectedRoute roles={['admin']}><AuditLog /></ProtectedRoute>} />
+            <Route path="/identidad" element={<ProtectedRoute roles={['admin']}><Branding /></ProtectedRoute>} />
             <Route path="/cliente-reporte-config" element={<ProtectedRoute roles={['admin']}><ClienteReporteConfig /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
       </AuthProvider>
+      </BrandingProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

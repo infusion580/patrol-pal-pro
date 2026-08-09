@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
-import logoDefender from '@/assets/logo-defender.png';
+import { useBrandLogo } from '@/lib/branding';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   activo: { label: 'En Ronda', color: 'text-success', bg: 'bg-success/10' },
@@ -12,6 +12,7 @@ const statusConfig: Record<string, { label: string; color: string; bg: string }>
 };
 
 const SupervisorDashboard = () => {
+  const logoDefender = useBrandLogo();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [guardiasCount, setGuardiasCount] = useState('0');
