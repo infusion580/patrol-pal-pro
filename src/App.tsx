@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -5,36 +6,50 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/lib/auth-context";
 import { BrandingProvider } from "@/lib/branding";
+
+/**
+ * Route-level code splitting: only Login and Dashboard-critical shells are part
+ * of the initial bundle; every other screen is fetched on demand. This keeps
+ * the first load small on slow mobile networks (QA observation 6.1).
+ */
 import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
 import Dashboard from "./pages/Dashboard";
-import Rondines from "./pages/Rondines";
-import ReporteTurno from "./pages/ReporteTurno";
-import Chat from "./pages/Chat";
-import DashboardOperativo from "./pages/DashboardOperativo";
-import ChatRH from "./pages/ChatRH";
-import Perfil from "./pages/Perfil";
-import MapaSupervisor from "./pages/MapaSupervisor";
-import Metricas from "./pages/Metricas";
-import ReportesSupervisor from "./pages/ReportesSupervisor";
-import Servicios from "./pages/Servicios";
 import NotFound from "./pages/NotFound";
-import GestionRH from "./pages/GestionRH";
-import Notificaciones from "./pages/Notificaciones";
-import Visitas from "./pages/Visitas";
-import Historial from "./pages/Historial";
-import EstadisticasAdmin from "./pages/EstadisticasAdmin";
-import GuardActivityPage from "./pages/GuardActivityPage";
-import MetasServicio from "./pages/MetasServicio";
-import CuadroHonor from "./pages/CuadroHonor";
-import ReporteAsistencias from "./pages/ReporteAsistencias";
-import PendientesPuesto from "./pages/PendientesPuesto";
-import RegistrationNips from "./pages/RegistrationNips";
-import ClienteReporteConfig from "./pages/ClienteReporteConfig";
-import AuditLog from "./pages/AuditLog";
-import Branding from "./pages/Branding";
+
+const Register = lazy(() => import("./pages/Register"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
+const Rondines = lazy(() => import("./pages/Rondines"));
+const ReporteTurno = lazy(() => import("./pages/ReporteTurno"));
+const Chat = lazy(() => import("./pages/Chat"));
+const DashboardOperativo = lazy(() => import("./pages/DashboardOperativo"));
+const ChatRH = lazy(() => import("./pages/ChatRH"));
+const Perfil = lazy(() => import("./pages/Perfil"));
+const MapaSupervisor = lazy(() => import("./pages/MapaSupervisor"));
+const Metricas = lazy(() => import("./pages/Metricas"));
+const ReportesSupervisor = lazy(() => import("./pages/ReportesSupervisor"));
+const Servicios = lazy(() => import("./pages/Servicios"));
+const GestionRH = lazy(() => import("./pages/GestionRH"));
+const Notificaciones = lazy(() => import("./pages/Notificaciones"));
+const Visitas = lazy(() => import("./pages/Visitas"));
+const Historial = lazy(() => import("./pages/Historial"));
+const EstadisticasAdmin = lazy(() => import("./pages/EstadisticasAdmin"));
+const GuardActivityPage = lazy(() => import("./pages/GuardActivityPage"));
+const MetasServicio = lazy(() => import("./pages/MetasServicio"));
+const CuadroHonor = lazy(() => import("./pages/CuadroHonor"));
+const ReporteAsistencias = lazy(() => import("./pages/ReporteAsistencias"));
+const PendientesPuesto = lazy(() => import("./pages/PendientesPuesto"));
+const RegistrationNips = lazy(() => import("./pages/RegistrationNips"));
+const ClienteReporteConfig = lazy(() => import("./pages/ClienteReporteConfig"));
+const AuditLog = lazy(() => import("./pages/AuditLog"));
+const Branding = lazy(() => import("./pages/Branding"));
+
+/** Lightweight placeholder while a route chunk downloads. */
+const RouteFallback = () => (
+  <div className="flex min-h-screen items-center justify-center bg-background">
+    <div className="h-10 w-10 animate-spin rounded-full border-4 border-muted border-t-primary" />
+  </div>
+);
 
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
