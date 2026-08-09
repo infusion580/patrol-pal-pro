@@ -503,4 +503,14 @@ main "$@"
 # APP_SCHEMAS=public
 # MIGRATE_AUTH=true
 # PGSSLMODE=require
+#
+# MIGRATE_STORAGE=true
+# SRC_S3_ENDPOINT=https://<proyecto>.storage.supabase.co/storage/v1/s3
+# SRC_S3_ACCESS_KEY=********
+# SRC_S3_SECRET_KEY=********
+# DST_S3_ENDPOINT=https://minio.midominio.com
+# DST_S3_ACCESS_KEY=********
+# DST_S3_SECRET_KEY=********
+# SRC_PUBLIC_STORAGE_URL=https://<proyecto>.supabase.co/storage/v1/object/public
+# DST_PUBLIC_STORAGE_URL=https://minio.midominio.com
 # =============================================================================
