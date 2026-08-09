@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import { HelpCircle, X, Send, Settings2, Copy, ExternalLink } from 'lucide-react';
+import { HelpCircle, X, Send, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -22,7 +21,6 @@ import {
   fetchSoporteWhatsapp,
   formatSoporteWhatsapp,
   getSoporteWhatsapp,
-  setSoporteWhatsapp,
 } from '@/lib/soporte-config';
 
 const CATEGORIAS = [
@@ -46,10 +44,7 @@ const CATEGORIAS = [
  */
 const SoporteChat = () => {
   const [open, setOpen] = useState(false);
-  const [editando, setEditando] = useState(false);
   const [numero, setNumero] = useState(getSoporteWhatsapp());
-  const [numeroDraft, setNumeroDraft] = useState('');
-  const [guardando, setGuardando] = useState(false);
   const [categoria, setCategoria] = useState(CATEGORIAS[0]);
   const [descripcion, setDescripcion] = useState('');
   const [fallback, setFallback] = useState<{ mensaje: string; enlace: string } | null>(null);
@@ -67,8 +62,6 @@ const SoporteChat = () => {
       activo = false;
     };
   }, [open]);
-
-  const esAdmin = user?.role === 'admin';
 
   const enviar = () => {
     const texto = descripcion.trim();
@@ -133,35 +126,6 @@ const SoporteChat = () => {
     }
   };
 
-  const guardarNumero = async () => {
-    setGuardando(true);
-    try {
-      const guardado = await setSoporteWhatsapp(numeroDraft);
-      if (guardado.length < 11) {
-        toast({
-          title: 'Número inválido',
-          description: 'Incluye LADA y 10 dígitos (ej. 4426356998).',
-          variant: 'destructive',
-        });
-        return;
-      }
-      setNumero(guardado);
-      setEditando(false);
-      toast({
-        title: 'Número de soporte actualizado',
-        description: formatSoporteWhatsapp(guardado),
-      });
-    } catch {
-      toast({
-        title: 'No se pudo guardar',
-        description: 'Solo el administrador puede cambiar el número de soporte.',
-        variant: 'destructive',
-      });
-    } finally {
-      setGuardando(false);
-    }
-  };
-
   return (
     <>
       {/* Botón flotante de ayuda */}
@@ -193,48 +157,9 @@ const SoporteChat = () => {
                 Se envía por WhatsApp a {formatSoporteWhatsapp(numero)}
               </p>
             </div>
-            {esAdmin && (
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label="Configurar número de soporte"
-                onClick={() => {
-                  setNumeroDraft(numero);
-                  setEditando((v) => !v);
-                }}
-              >
-                <Settings2 className="h-4 w-4" />
-              </Button>
-            )}
           </div>
 
-          {editando && esAdmin ? (
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label htmlFor="soporte-numero">Número de WhatsApp de soporte</Label>
-                <Input
-                  id="soporte-numero"
-                  inputMode="tel"
-                  maxLength={20}
-                  value={numeroDraft}
-                  onChange={(e) => setNumeroDraft(e.target.value)}
-                  placeholder="4426356998"
-                />
-                <p className="text-[11px] text-muted-foreground">
-                  Aplica para todos los usuarios de la app.
-                </p>
-              </div>
-              <div className="flex gap-2">
-                <Button className="flex-1" onClick={guardarNumero} disabled={guardando}>
-                  {guardando ? 'Guardando…' : 'Guardar'}
-                </Button>
-                <Button variant="outline" onClick={() => setEditando(false)}>
-                  Cancelar
-                </Button>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
+          <div className="space-y-3">
               <div className="space-y-1">
                 <Label htmlFor="soporte-categoria">Tipo de falla</Label>
                 <Select value={categoria} onValueChange={setCategoria}>
@@ -294,8 +219,7 @@ const SoporteChat = () => {
               <p className="text-[11px] leading-tight text-muted-foreground">
                 Se adjuntan automáticamente tu nombre, rol, pantalla y dispositivo.
               </p>
-            </div>
-          )}
+          </div>
         </div>
       )}
     </>
