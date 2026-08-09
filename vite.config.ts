@@ -37,6 +37,8 @@ export default defineConfig(({ mode }) => ({
         ],
       },
       workbox: {
+        // El bundle principal supera 2 MB; sube el límite de precache.
+        maximumFileSizeToCacheInBytes: 8 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         // Bundle Web Push handlers into the same SW that manages the
         // app-shell cache, so there is a single service worker per scope.
