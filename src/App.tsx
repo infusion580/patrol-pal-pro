@@ -40,6 +40,7 @@ import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ConnectionBanner from "./components/ConnectionBanner";
+import SoporteChat from "./components/SoporteChat";
 import OfflineQueueIndicator from "./components/OfflineQueueIndicator";
 import { initOfflineQueue } from "./lib/offline-queue";
 import { initPhotoQueue } from "./lib/offline-photo-queue";
@@ -90,6 +91,7 @@ const App = () => (
         <GlobalZoneMonitor />
         <BrowserRouter>
           <RondinAlarmMonitor />
+          <SoporteChat />
           <Routes>
             {/* Public */}
             <Route path="/" element={<Navigate to="/login" replace />} />

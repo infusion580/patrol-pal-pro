@@ -34,6 +34,9 @@ Aplicación web PWA para la operación de una empresa de seguridad privada: cont
 | Notificaciones | `src/lib/notification-helpers.ts`, `src/lib/push-notifications.ts` | Inserción en BD + push OS |
 | Ubicación | `src/lib/geo*.ts`, `src/hooks/use-global-zone-monitor.ts` | Geocerca y alertas de salida de zona |
 | Auditoría | `src/lib/error-monitor.ts`, `src/lib/device-info.ts` | Errores y contexto de dispositivo |
+| Soporte | `src/components/SoporteChat.tsx`, `src/lib/soporte-config.ts` | Botón flotante global de reporte de fallas vía WhatsApp |
+
+Soporte: `SoporteChat` se monta una sola vez en `src/App.tsx` y está disponible en todas las rutas autenticadas. El formulario arma un mensaje con nombre, número de empleado, rol, ruta actual, dispositivo y fecha (`construirMensajeFalla`) y abre `https://wa.me/<numero>?text=...`. El número destino se guarda en `localStorage` (`soporte_whatsapp`), con valor predeterminado `524426356998`; solo el rol admin puede cambiarlo desde el propio widget. No hay backend involucrado: el envío ocurre en el cliente, por lo que funciona incluso con la app recién cargada desde caché.
 
 Diseño: tokens semánticos HSL en `src/index.css` (`--primary`, `--accent`, `--background`, `--card`), sobrescribibles en caliente por el BrandingProvider.
 
