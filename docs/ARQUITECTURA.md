@@ -170,3 +170,25 @@ Diagrama fuente: `docs/arquitectura-flujo.mmd` (Mermaid). Incluye los cinco perf
 | Perfil Cliente | Dashboard de solo lectura con KPIs, gráficas, semáforo y exportes | Consulta filtrada por la configuración del admin (`cliente_reporte_config`); nunca accede a datos operativos internos |
 | Backend | Auth con NIP, Postgres con RLS por rol, Storage privado, Realtime, Edge Functions y pg_cron | Todo acceso pasa por RLS + `has_role`; los cambios relevantes quedan en `audit_log` (append-only) |
 
+
+## 12. Migración de base de datos a servidor propio (`scripts/migrate-defender.sh`)
+
+Script en bash que ejecuta la migración completa en un solo comando. Documentación extendida en `Defender-Manual-Tecnico-v5.pdf` (Anexo B).
+
+**Archivos**
+
+| Archivo | Función |
+|---|---|
+| `scripts/migrate-defender.sh` | Script principal (ejecutable, `set -Eeuo pipefail`) |
+| `scripts/migrate.env.example` | Plantilla de configuración; copiar a `scripts/migrate.env` (no versionar) |
+| `migracion-AAAAMMDD-HHMMSS/` | Carpeta por corrida con dumps, `checksums.sha256` y log |
+
+**Modos**: `--all` (por defecto), `--dump-only`, `--restore-only --dump-dir DIR`, `--dry-run`, `--keep-going`, `--env-file FILE`.
+
+**Exportación** (6 archivos): roles globales, extensiones, esquema (tipos/tablas/funciones/triggers), GRANTs + políticas RLS, datos, y `auth.users`/`auth.identities` con hashes bcrypt. Se registran conteos de filas del origen y checksums SHA-256.
+
+**Restauración**: verifica checksums → crea esquemas base → extensiones y roles (tolerante) → esquema (estricto) → datos con `session_replication_role = 'replica'` → GRANTs y RLS → `setval` de todas las secuencias → `origin` + `ANALYZE`.
+
+**Validaciones automáticas (10)**: existencia de tablas, RLS activo en todo `public`, ninguna tabla con RLS sin políticas, `search_path` en funciones `SECURITY DEFINER`, GRANTs para `authenticated`, triggers restaurados, enum `app_role`, `session_replication_role = origin`, llaves foráneas validadas y comparación de conteos origen/destino. El script sale con error si alguna falla (salvo `--keep-going`).
+
+**Fuera de alcance (manual)**: objetos de Storage, Edge Functions, secretos y tareas `pg_cron`.
