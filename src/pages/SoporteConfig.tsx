@@ -90,7 +90,7 @@ const SoporteConfig = () => {
             <HelpCircle className="w-5 h-5 text-primary" aria-hidden="true" />
           </div>
           <div>
-            <h1 className="text-lg font-bold text-foreground">Soporte y reporte de fallas</h1>
+            <h1 className="text-lg font-bold text-foreground">Teléfonos de los botones del sitio</h1>
             <p className="text-xs text-muted-foreground">
               Canal de reportes de falla y números de llamada directa de emergencia.
             </p>
