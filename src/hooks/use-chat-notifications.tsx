@@ -26,6 +26,8 @@ export function useChatNotifications() {
       .from('chat_messages')
       .select('*', { count: 'exact', head: true })
       .eq('receiver_id', user.id)
+      // Ignora mensajes a uno mismo: no tienen hilo y nunca se marcarían leídos.
+      .neq('sender_id', user.id)
       .eq('read', false);
     setUnreadTotal(count || 0);
   }, [user]);
