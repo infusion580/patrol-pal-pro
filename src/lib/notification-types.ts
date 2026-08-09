@@ -15,6 +15,7 @@ import {
   LogIn,
   LogOut,
   MapPin,
+  MapPinOff,
   Shield,
   UserX,
   type LucideIcon,
@@ -72,6 +73,10 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
   zona: {
     label: 'Salida de Zona', icon: MapPin, color: 'text-emergency', bgColor: 'bg-emergency/10',
     categoria: 'emergencia', severidad: 'critica',
+  },
+  sin_ubicacion: {
+    label: 'Guardia sin ubicación', icon: MapPinOff, color: 'text-emergency', bgColor: 'bg-emergency/10',
+    categoria: 'emergencia', severidad: 'alta',
   },
   incidencia: {
     label: 'Incidencia', icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10',

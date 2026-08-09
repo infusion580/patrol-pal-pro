@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente';
 
 interface NotifParams {
   tipo: NotifType;
@@ -206,6 +206,26 @@ export async function notifyZonaExit(
     tipo: 'zona',
     mensaje,
     guardia_id: guardiaId,
+  });
+}
+
+/**
+ * Alerta cuando no se puede obtener la ubicación del guardia (GPS apagado,
+ * permiso denegado o señal perdida) al intentar usar el módulo de emergencias.
+ */
+export async function notifySinUbicacion(
+  guardiaId: string,
+  guardiaNombre: string,
+  motivo: string,
+  contexto = 'Módulo de emergencias',
+) {
+  const { fecha, hora } = fechaHoraLarga();
+  const mensaje = `📍 GUARDIA NO UBICABLE\nGuardia: ${guardiaNombre}\nMotivo: ${motivo}\nContexto: ${contexto}\nFecha: ${fecha}\nHora: ${hora}`;
+  await createNotification({
+    tipo: 'sin_ubicacion',
+    mensaje,
+    guardia_id: guardiaId,
+    metadata: { motivo, contexto },
   });
 }
 
