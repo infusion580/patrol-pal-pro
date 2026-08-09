@@ -16,6 +16,7 @@ import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { HelpCircle, Phone, Save, ExternalLink } from 'lucide-react';
 import AppHeader from '@/components/AppHeader';
+import NumerosEmergenciaEditor from '@/components/admin/NumerosEmergenciaEditor';
 import BottomNav from '@/components/BottomNav';
 import {
   fetchSoporteWhatsapp,
@@ -91,7 +92,7 @@ const SoporteConfig = () => {
           <div>
             <h1 className="text-lg font-bold text-foreground">Soporte y reporte de fallas</h1>
             <p className="text-xs text-muted-foreground">
-              Número de WhatsApp donde se reciben los reportes de todos los usuarios.
+              Canal de reportes de falla y números de llamada directa de emergencia.
             </p>
           </div>
         </header>
@@ -152,6 +153,8 @@ const SoporteConfig = () => {
           </div>
         </Card>
 
+        <NumerosEmergenciaEditor />
+
         <Card className="p-4 space-y-2">
           <h2 className="text-sm font-bold text-foreground">Cómo funciona</h2>
           <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
@@ -161,6 +164,10 @@ const SoporteConfig = () => {
               rol, pantalla, dispositivo y fecha ya incluidos.
             </li>
             <li>Solo el administrador puede cambiar este número; aplica para todos al instante.</li>
+            <li>
+              Los números de llamada directa del panel de emergencia también se editan aquí y se
+              actualizan para todos los usuarios.
+            </li>
           </ul>
         </Card>
       </main>

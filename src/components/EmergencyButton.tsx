@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { AlertTriangle, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
@@ -40,11 +40,30 @@ const EmergencyButton = () => {
     setTimeout(() => setActivated(false), 5000);
   };
 
-  const emergencyNumbers = [
-  { label: '911', desc: 'Emergencias', number: '911' },
-  { label: 'Policía', desc: 'Policía Local', number: '911' },
-  { label: 'P. Civil', desc: 'Protección Civil', number: '911' }];
+  // Los números de llamada directa se administran desde el módulo Soporte del
+  // panel de admin (tabla `numeros_emergencia`), así pueden variar por estado.
+  const [emergencyNumbers, setEmergencyNumbers] = useState<
+    { label: string; desc: string; number: string }[]
+  >([]);
 
+  useEffect(() => {
+    if (!showPanel) return;
+    let activo = true;
+    supabase
+      .from('numeros_emergencia')
+      .select('label, descripcion, numero')
+      .eq('activo', true)
+      .order('orden', { ascending: true })
+      .then(({ data }) => {
+        if (!activo) return;
+        setEmergencyNumbers(
+          (data || []).map((n: any) => ({ label: n.label, desc: n.descripcion, number: n.numero })),
+        );
+      });
+    return () => {
+      activo = false;
+    };
+  }, [showPanel]);
 
   return (
     <>
