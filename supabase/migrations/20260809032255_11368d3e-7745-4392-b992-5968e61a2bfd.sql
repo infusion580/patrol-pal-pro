@@ -1,0 +1,1 @@
+ALTER TABLE public.branding ADD COLUMN IF NOT EXISTS soporte_whatsapp text NOT NULL DEFAULT '524426356998';
