@@ -6,9 +6,10 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import logoDefender from '@/assets/logo-defender.png';
+import { useBrandLogo } from '@/lib/branding';
 
 const ResetPassword = () => {
+  const logoDefender = useBrandLogo();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);

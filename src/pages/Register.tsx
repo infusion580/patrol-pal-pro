@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Eye, EyeOff, KeyRound } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import logoDefender from '@/assets/logo-defender.png';
+import { useBrandLogo } from '@/lib/branding';
 
 const ROLE_LABEL: Record<UserRole, string> = {
   guardia: 'Guardia',
@@ -17,6 +17,7 @@ const ROLE_LABEL: Record<UserRole, string> = {
 };
 
 const Register = () => {
+  const logoDefender = useBrandLogo();
   const [form, setForm] = useState({
     nombre: '',
     apellido: '',

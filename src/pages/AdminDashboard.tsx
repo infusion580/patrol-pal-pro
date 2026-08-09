@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
-import logoDefender from '@/assets/logo-defender.png';
+import { useBrandLogo } from '@/lib/branding';
 
 interface GuardiaServicio {
   servicio_id: string;
@@ -27,6 +27,7 @@ interface UserItem {
 }
 
 const AdminDashboard = () => {
+  const logoDefender = useBrandLogo();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();

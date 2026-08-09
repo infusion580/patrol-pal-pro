@@ -2,9 +2,10 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { Home, MapPin, FileText, MessageCircle, User, Settings, History, BarChart3 } from 'lucide-react';
 import { useChatNotifications } from '@/hooks/use-chat-notifications';
-import logoDefender from '@/assets/logo-defender.png';
+import { useBrandLogo } from '@/lib/branding';
 
 const BottomNav = () => {
+  const logoDefender = useBrandLogo();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
