@@ -30,6 +30,14 @@ export function useChatNotifications() {
     refreshUnread();
   }, [user, refreshUnread, location.pathname]);
 
+  // Refresco inmediato cuando el chat marca mensajes como leídos
+  useEffect(() => {
+    const onRead = () => refreshUnread();
+    window.addEventListener(CHAT_READ_EVENT, onRead);
+    return () => window.removeEventListener(CHAT_READ_EVENT, onRead);
+  }, [refreshUnread]);
+
+
   useEffect(() => {
     if (!user) return;
     const channel = supabase
