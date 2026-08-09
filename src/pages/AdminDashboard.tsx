@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -300,6 +300,7 @@ const AdminDashboard = () => {
             { icon: KeyRound, label: 'NIPs', path: '/nips' },
             { icon: SlidersHorizontal, label: 'Reporte Cliente', path: '/cliente-reporte-config' },
             { icon: ShieldCheck, label: 'Auditoría', path: '/auditoria' },
+            { icon: Palette, label: 'Identidad', path: '/identidad' },
 
           ].map(a => (
             <button
