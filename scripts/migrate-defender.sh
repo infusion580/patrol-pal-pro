@@ -474,11 +474,12 @@ main() {
   $DRY_RUN && warn "Modo dry-run: no se escribirá nada en las bases de datos"
 
   preflight
-  [[ "$MODE" == "all" || "$MODE" == "dump"    ]] && dump_all
-  [[ "$MODE" == "all" || "$MODE" == "restore" ]] && { restore_all; validate; }
+  [[ "$MODE" == "all" || "$MODE" == "dump"    ]] && { dump_all; storage_dump; }
+  [[ "$MODE" == "all" || "$MODE" == "restore" ]] && { restore_all; storage_restore; validate; }
 
   step "Migración finalizada correctamente"
-  info "Siguientes pasos manuales: Storage (buckets/objetos), Edge Functions, secretos y cron jobs."
+  info "Siguientes pasos manuales: Edge Functions, secretos y cron jobs."
+
   ok "Log completo en $LOG_FILE"
 }
 
