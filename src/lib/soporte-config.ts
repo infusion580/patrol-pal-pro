@@ -3,8 +3,14 @@
  *
  * El reporte de fallas no se guarda en base de datos: se abre WhatsApp con un
  * mensaje pre-formateado dirigido al número de soporte configurado.
- * El número es personalizable (solo admin) y se persiste en localStorage.
+ *
+ * El número vive en la tabla `branding` (columna `soporte_whatsapp`), por lo que
+ * el administrador lo puede actualizar y el cambio aplica para todos los usuarios.
+ * Se mantiene una copia en localStorage para poder pintar la UI al instante y
+ * para que siga funcionando sin conexión.
  */
+
+import { supabase } from '@/integrations/supabase/client';
 
 const STORAGE_KEY = 'defender-soporte-whatsapp';
 
@@ -18,7 +24,7 @@ export function normalizarNumero(raw: string): string {
   return digits;
 }
 
-/** Número de WhatsApp de soporte actualmente configurado. */
+/** Número cacheado localmente (lectura síncrona para el primer render). */
 export function getSoporteWhatsapp(): string {
   try {
     const saved = localStorage.getItem(STORAGE_KEY);
@@ -29,9 +35,42 @@ export function getSoporteWhatsapp(): string {
   return DEFAULT_SOPORTE_WHATSAPP;
 }
 
-/** Guarda un nuevo número de soporte. Devuelve el número normalizado. */
-export function setSoporteWhatsapp(raw: string): string {
+/** Lee el número vigente desde la base y refresca la caché local. */
+export async function fetchSoporteWhatsapp(): Promise<string> {
+  try {
+    const { data } = await supabase
+      .from('branding')
+      .select('soporte_whatsapp')
+      .maybeSingle();
+    const num = normalizarNumero(data?.soporte_whatsapp || '');
+    if (num.length >= 11) {
+      try {
+        localStorage.setItem(STORAGE_KEY, num);
+      } catch {
+        /* ignore */
+      }
+      return num;
+    }
+  } catch {
+    /* sin conexión: se usa la caché */
+  }
+  return getSoporteWhatsapp();
+}
+
+/**
+ * Guarda un nuevo número de soporte en la base (solo admin por RLS).
+ * Devuelve el número normalizado.
+ */
+export async function setSoporteWhatsapp(raw: string): Promise<string> {
   const num = normalizarNumero(raw);
+  if (num.length < 11) return num;
+
+  const { error } = await supabase
+    .from('branding')
+    .update({ soporte_whatsapp: num })
+    .eq('id', true);
+  if (error) throw error;
+
   try {
     localStorage.setItem(STORAGE_KEY, num);
   } catch {
@@ -76,7 +115,29 @@ export function construirMensajeFalla(
   ].join('\n');
 }
 
-/** Genera el enlace wa.me listo para abrir. */
+/** True si el dispositivo es móvil (ahí conviene abrir la app nativa). */
+function esMovil(): boolean {
+  if (typeof navigator === 'undefined') return false;
+  return /android|iphone|ipad|ipod|mobile/i.test(navigator.userAgent);
+}
+
+/**
+ * Enlace de WhatsApp.
+ *
+ * `wa.me` redirige a `api.whatsapp.com`, dominio que muchas redes corporativas
+ * y algunos navegadores bloquean ("api.whatsapp.com rechazó la conexión").
+ * Por eso en escritorio se usa directamente `web.whatsapp.com`, que no pasa por
+ * ese redireccionamiento, y en móvil el esquema `wa.me` que abre la app.
+ */
 export function construirEnlaceWhatsapp(numero: string, mensaje: string): string {
-  return `https://wa.me/${normalizarNumero(numero)}?text=${encodeURIComponent(mensaje)}`;
+  const n = normalizarNumero(numero);
+  const texto = encodeURIComponent(mensaje);
+  if (esMovil()) return `https://wa.me/${n}?text=${texto}`;
+  return `https://web.whatsapp.com/send?phone=${n}&text=${texto}&type=phone_number&app_absent=0`;
+}
+
+/** Enlace alterno (app instalada en escritorio / esquema nativo). */
+export function construirEnlaceWhatsappAlterno(numero: string, mensaje: string): string {
+  const n = normalizarNumero(numero);
+  return `whatsapp://send?phone=${n}&text=${encodeURIComponent(mensaje)}`;
 }

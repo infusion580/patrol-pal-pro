@@ -116,6 +116,7 @@ export type Database = {
           logo_url: string | null
           primary_glow_hsl: string
           primary_hsl: string
+          soporte_whatsapp: string
           updated_at: string
         }
         Insert: {
@@ -126,6 +127,7 @@ export type Database = {
           logo_url?: string | null
           primary_glow_hsl?: string
           primary_hsl?: string
+          soporte_whatsapp?: string
           updated_at?: string
         }
         Update: {
@@ -136,6 +138,7 @@ export type Database = {
           logo_url?: string | null
           primary_glow_hsl?: string
           primary_hsl?: string
+          soporte_whatsapp?: string
           updated_at?: string
         }
         Relationships: []
