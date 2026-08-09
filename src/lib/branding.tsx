@@ -169,6 +169,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
       if (signed) url = signed;
     }
     setLogoUrl(url);
+    document.documentElement.style.setProperty('--brand-logo', `url("${url}")`);
     setLogoPath(path);
 
     try {
@@ -180,6 +181,7 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     applyBrandingColors(colors);
+    document.documentElement.style.setProperty('--brand-logo', `url("${logoUrl}")`);
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
