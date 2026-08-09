@@ -87,11 +87,61 @@ Documento vivo con todo lo entregado en la fase "aplicación empresarial moderna
 
 ---
 
-## 7. Alcance intencional / próximos pasos sugeridos
+## 7. Control de turnos, asistencias y faltas
 
-- **Realtime robusto (canales globales + reconexión inteligente):** hoy cada página gestiona sus propios canales; funciona, pero unificarlos en un provider global reduciría reconexiones duplicadas tras suspender/reanudar el dispositivo.
-- **Compresión de fotos antes de encolar:** las evidencias móviles pueden llegar a 4–6 MB. Un `canvas` resize a 1600px máx bajaría 60–70% el uso de IndexedDB en dispositivos con red intermitente prolongada.
-- **Cifrado at-rest de la cola IndexedDB** para dispositivos compartidos, si operaciones lo requiere.
+- Configuración por servicio: `tipo_turno` (12 h, 24 h, de corrido) y duración base.
+- `src/components/ShiftControl.tsx` registra inicio/fin de jornada, calcula fin esperado y **horas extra en vivo** (cada bloque adicional cuenta como turno extra hasta el cierre).
+- Tabla `asistencias` (registro automático al iniciar turno) y `faltas` (no inicio de turno o turno marcado incompleto).
+- `src/pages/ReporteAsistencias.tsx`: KPIs, filtros por servicio/rango y exportación a Excel (.xlsx).
+- Ausencias justificadas (vacaciones/incapacidad en `registros_rh`) se excluyen del conteo de faltas.
+- Edge function `auto-close-shifts` (cron) cierra turnos olvidados.
+
+---
+
+## 8. Operación en campo
+
+- **Rondines** (`src/pages/Rondines.tsx`): geocerca obligatoria (`getCurrentPositionRobust`), foto tomada **en vivo** (`capture="environment"` + validación de `lastModified` ≤ 2 min), reporte escrito por rondín y bloqueo de cierre hasta completar todos los checkpoints.
+- **Alarmas de rondín** por servicio (intervalo + tolerancia) con `RondinAlarmMonitor.tsx`.
+- **Geocerca global**: `use-global-zone-monitor.ts` alerta al salir de la zona desde cualquier pantalla.
+- **Visitas**: captura de INE, placas, motivo, a quién visita y área; notificación consolidada de entrada/salida con duración.
+- **Pendientes del puesto**: tareas por servicio, evidencia fotográfica opcional, 15 puntos por tarea hacia metas y Cuadro de Honor.
+- **Relevo pendiente**: `check-relevo-pendiente` (cron cada minuto) avisa a supervisores 5 min antes del fin de turno si no hay guardia entrante.
+
+---
+
+## 9. Seguridad y cumplimiento
+
+- Roles en tabla aparte (`user_roles`) + `has_role()` SECURITY DEFINER; registro solo con NIP emitido por admin (`registration_nips`, RPC `validate_registration_nip`).
+- Sesión única por usuario (`profiles.active_session_id` + monitor de 20 s).
+- Buckets privados (`evidencias`, `visitas`, `pendientes`, `avatars`, `backups`, `branding`) con políticas por propietario y lectura vía URL firmada (`SignedImg.tsx`).
+- `audit_log` inmutable (append-only) con triggers en tablas críticas y visor admin en `/auditoria`; incluye dispositivo/navegador (`device-info.ts`) e inicios de sesión.
+- Retención automática: `purge-retention` (cron diario) borra fotos de INE > 90 días y evidencia de rondín > 365 días.
+- Respaldos: `db-export-backup` (cron semanal) exporta las tablas al bucket privado `backups`, retención 90 días.
+
+---
+
+## 10. Portal del Cliente
+
+- Rol `cliente` con acceso de solo lectura a sus servicios (`cliente_servicios`).
+- `ClienteDashboard.tsx`: KPIs, gráficas, semáforo de cumplimiento y descarga de reporte en Excel.
+- `ClienteReporteConfig.tsx` (admin): define qué datos se muestran al cliente.
+
+---
+
+## 11. Identidad de marca configurable
+
+- Tabla singleton `branding` (logo + paleta HSL), lectura pública y escritura solo admin.
+- `src/lib/branding.tsx`: provider que aplica variables CSS (`--primary`, `--accent`, `--background`, `--card`, `--brand-logo`) y cachea en localStorage.
+- `/identidad` (admin): subida de logotipo (comprimido a 600 px, URL firmada por 1 año), paletas predefinidas y selectores de color con vista previa en vivo.
+
+---
+
+## 12. Calidad
+
+- Suite de pruebas (Vitest) sobre reglas críticas: horas extra, faltas, geocerca, ausencias justificadas.
+- `src/lib/error-monitor.ts` registra excepciones del cliente en `audit_log`.
+- Realtime centralizado en `src/lib/realtime.ts` (canales compartidos, sin reconexiones duplicadas).
+- Accesibilidad: `aria-label` consistente, `h-dvh` para viewport móvil, objetivos táctiles grandes.
 
 ---
 
