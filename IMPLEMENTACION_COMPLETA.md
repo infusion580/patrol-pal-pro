@@ -87,12 +87,3 @@ Documento vivo con todo lo entregado en la fase "aplicación empresarial moderna
 
 ---
 
-## 7. Alcance intencional / próximos pasos sugeridos
-
-- **Realtime robusto (canales globales + reconexión inteligente):** hoy cada página gestiona sus propios canales; funciona, pero unificarlos en un provider global reduciría reconexiones duplicadas tras suspender/reanudar el dispositivo.
-- **Compresión de fotos antes de encolar:** las evidencias móviles pueden llegar a 4–6 MB. Un `canvas` resize a 1600px máx bajaría 60–70% el uso de IndexedDB en dispositivos con red intermitente prolongada.
-- **Cifrado at-rest de la cola IndexedDB** para dispositivos compartidos, si operaciones lo requiere.
-
----
-
-**Estado:** compila limpio, sin errores de tipos. Todos los flujos existentes preservados.
