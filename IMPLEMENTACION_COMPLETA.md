@@ -146,3 +146,13 @@ Documento vivo con todo lo entregado en la fase "aplicación empresarial moderna
 ---
 
 **Estado:** compila limpio, sin errores de tipos. Todos los flujos existentes preservados.
+
+---
+
+## 13. Soporte: reporte de fallas por WhatsApp
+
+- `src/components/SoporteChat.tsx`: botón flotante (salvavidas) presente en toda la app; formulario con tipo de falla y descripción.
+- `src/lib/soporte-config.ts`: `getSoporteWhatsapp` / `setSoporteWhatsapp` (persistencia en localStorage, normalización E.164 sin `+`) y `construirMensajeFalla`.
+- Número predeterminado: **+52 442 635 6998**. El administrador puede cambiarlo desde el mismo widget.
+- El mensaje incluye automáticamente nombre, número de empleado, rol, pantalla actual, dispositivo/navegador y fecha.
+- Sin backend: se abre `wa.me` en una pestaña nueva; funciona en móvil y escritorio.
