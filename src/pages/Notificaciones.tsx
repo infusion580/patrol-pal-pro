@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, AlertTriangle, CheckCircle2, MapPin, Clock, Shield, Filter, FileText, LogIn, DoorOpen } from 'lucide-react';
+import { ArrowLeft, Bell, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -7,6 +7,14 @@ import BottomNav from '@/components/BottomNav';
 import { SignedImg } from '@/components/SignedImg';
 import { getSignedUrl } from '@/lib/storage-helpers';
 import { useRealtimeTable } from '@/hooks/use-realtime';
+import {
+  getNotifMeta,
+  CATEGORIA_LABEL,
+  SEVERIDAD_LABEL,
+  SEVERIDAD_STYLE,
+  type NotifCategoria,
+} from '@/lib/notification-types';
+import { isAlertSoundEnabled, setAlertSoundEnabled, playAlertSound } from '@/lib/alert-sound';
 
 interface Notificacion {
   id: string;
@@ -18,18 +26,8 @@ interface Notificacion {
   foto_url?: string | null;
 }
 
-const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: string; label: string }> = {
-  zona: { icon: MapPin, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Salida de Zona' },
-  turno_inicio: { icon: CheckCircle2, color: 'text-success', bgColor: 'bg-success/10', label: 'Inicio de Turno' },
-  turno_fin: { icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', label: 'Fin de Turno' },
-  rondin: { icon: MapPin, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Rondín' },
-  incidencia: { icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Incidencia' },
-  emergencia: { icon: Shield, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Emergencia' },
-  reporte: { icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Reporte' },
-  sesion: { icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Inicio de Sesión' },
-  visita: { icon: DoorOpen, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Visita' },
-  relevo_pendiente: { icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', label: 'Relevo Pendiente' },
-};
+const CATEGORIAS: NotifCategoria[] = ['emergencia', 'turnos', 'operacion', 'accesos', 'sistema'];
+
 
 const Notificaciones = () => {
   const navigate = useNavigate();
