@@ -43,6 +43,7 @@ const RegistrationNips = lazy(() => import("./pages/RegistrationNips"));
 const ClienteReporteConfig = lazy(() => import("./pages/ClienteReporteConfig"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
 const Branding = lazy(() => import("./pages/Branding"));
+const SoporteConfig = lazy(() => import("./pages/SoporteConfig"));
 
 /** Lightweight placeholder while a route chunk downloads. */
 const RouteFallback = () => (
@@ -143,6 +144,7 @@ const App = () => (
             <Route path="/nips" element={<ProtectedRoute roles={['admin']}><RegistrationNips /></ProtectedRoute>} />
             <Route path="/auditoria" element={<ProtectedRoute roles={['admin']}><AuditLog /></ProtectedRoute>} />
             <Route path="/identidad" element={<ProtectedRoute roles={['admin']}><Branding /></ProtectedRoute>} />
+            <Route path="/soporte-config" element={<ProtectedRoute roles={['admin']}><SoporteConfig /></ProtectedRoute>} />
             <Route path="/cliente-reporte-config" element={<ProtectedRoute roles={['admin']}><ClienteReporteConfig /></ProtectedRoute>} />
 
             <Route path="*" element={<NotFound />} />
