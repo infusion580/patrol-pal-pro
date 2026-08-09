@@ -114,7 +114,7 @@ const SoporteChat = () => {
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={open ? 'Cerrar soporte' : 'Reportar una falla'}
-        className="fixed bottom-24 left-4 z-50 flex h-14 w-14 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring md:bottom-6"
+        className="fixed left-3 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:left-4 sm:h-14 sm:w-14 md:bottom-6" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)' }}
       >
         {open ? <X className="h-6 w-6" /> : <LifeBuoy className="h-6 w-6" />}
       </button>
@@ -123,7 +123,7 @@ const SoporteChat = () => {
         <div
           role="dialog"
           aria-label="Reportar una falla"
-          className="fixed bottom-44 left-4 z-50 w-[min(22rem,calc(100vw-2rem))] rounded-xl border border-border bg-card p-4 shadow-xl md:bottom-24"
+          className="fixed left-3 right-3 z-50 max-h-[70dvh] overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-xl sm:left-4 sm:right-auto sm:w-[22rem] md:bottom-24" style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 9.5rem)' }}
         >
           <div className="mb-3 flex items-start justify-between gap-2">
             <div>
