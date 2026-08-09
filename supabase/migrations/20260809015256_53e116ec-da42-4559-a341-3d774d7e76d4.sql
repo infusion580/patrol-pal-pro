@@ -1,0 +1,1 @@
+UPDATE public.chat_messages SET read = true WHERE sender_id = receiver_id AND read = false;
