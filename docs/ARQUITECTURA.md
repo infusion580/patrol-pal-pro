@@ -125,3 +125,33 @@ El cron `check-relevo-pendiente` emite notificaciones `relevo_pendiente` 5 minut
 ### Catálogo de notificaciones
 
 `turno_inicio`, `turno_fin`, `rondin`, `zona`, `incidencia`, `emergencia`, `reporte`, `sesion`, `visita`, `relevo_pendiente`. Todas se consultan en `src/pages/Notificaciones.tsx` con filtro por tipo.
+
+## 8. Rendimiento — división de código
+
+Todas las rutas se cargan bajo demanda (`React.lazy` + `Suspense` en `src/App.tsx`), incluidos los cuatro tableros por rol resueltos en `src/pages/Dashboard.tsx`. Las dependencias pesadas se separan en `vite.config.ts` → `build.rollupOptions.output.manualChunks`:
+
+| Chunk | Contenido | Descarga |
+|---|---|---|
+| `vendor-react` | react, react-dom, react-router-dom | Arranque |
+| `vendor-supabase` | `@supabase/supabase-js` | Arranque |
+| `vendor-charts` | recharts | Al abrir pantallas con gráficas |
+| `vendor-export` | jspdf, jspdf-autotable, xlsx | Al exportar PDF/Excel |
+
+Resultado: chunk de entrada de 1,917 KB (577 KB gzip) → **240 KB (79 KB gzip)**.
+
+> Convención: toda pantalla nueva se registra con `lazy(() => import('./pages/MiPagina'))`; solo `Login` y `Dashboard` se importan de forma estática.
+
+## 9. Endurecimiento de seguridad (post-QA)
+
+- **Bitácora firmada por el servidor**: se revocó `INSERT` sobre `audit_log` para `authenticated`. Los eventos se registran con la función `public.log_audit_event(_accion, _tabla, _registro_id, _datos, _dispositivo)` (`SECURITY DEFINER`), que resuelve la identidad con `auth.uid()`. El envoltorio de cliente es `logAudit()` en `src/lib/audit.ts`; nunca insertar directo en la tabla. La bitácora sigue siendo append-only.
+- **Chat inmutable**: el `UPDATE` de `chat_messages` está limitado a nivel de columna al campo `read`; contenido, autor y fecha no pueden modificarse desde el cliente.
+
+## 10. Checklist de despliegue
+
+1. Compilación de producción sin errores.
+2. Chequeo de tipos (TypeScript) sin errores.
+3. Pruebas unitarias en verde.
+4. Escaneo de seguridad sin hallazgos críticos.
+5. Prueba de ingreso y navegación en navegador.
+
+Referencia: `Defender-Informe-QA-Despliegue.pdf` y `Defender-Manual-Tecnico-v4.pdf` (Anexo A).
