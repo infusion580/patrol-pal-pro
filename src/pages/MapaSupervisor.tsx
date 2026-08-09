@@ -3,6 +3,7 @@ import { useState, useEffect, lazy, Suspense } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 const statusLabels: Record<string, string> = {
   activo: 'En Ronda',
