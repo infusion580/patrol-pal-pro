@@ -26,7 +26,7 @@ Aplicación web PWA para la operación de una empresa de seguridad privada: cont
 
 | Capa | Ubicación | Responsabilidad |
 |---|---|---|
-| Rutas | `src/App.tsx` | Rutas públicas y privadas envueltas en `ProtectedRoute` con `roles` |
+| Rutas | `src/App.tsx` | Rutas públicas y privadas envueltas en `ProtectedRoute` con `roles`. Todas las pantallas se cargan con `React.lazy` dentro de un `Suspense` global |
 | Sesión | `src/lib/auth-context.tsx` | Bootstrap, refresh silencioso, logout cross-tab (BroadcastChannel), sesión única |
 | Marca | `src/lib/branding.tsx` | Variables CSS y logotipo dinámicos |
 | Realtime | `src/lib/realtime.ts` | Un canal por tabla, compartido entre pantallas |
