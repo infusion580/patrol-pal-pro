@@ -32,7 +32,13 @@ interface RegisterData {
   role: UserRole;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+/**
+ * El contexto se guarda en un singleton global: si HMR recarga este módulo,
+ * las copias duplicadas siguen compartiendo la MISMA instancia de contexto y
+ * los consumidores no pierden el provider ("useAuth must be used within...").
+ */
+const g = globalThis as unknown as { __authCtx?: React.Context<AuthContextType | undefined> };
+const AuthContext = g.__authCtx ?? (g.__authCtx = createContext<AuthContextType | undefined>(undefined));
 
 /** Cross-tab bus for auth events (logout in one tab -> propagate to others). */
 const AUTH_BUS = 'defender-auth-bus';
