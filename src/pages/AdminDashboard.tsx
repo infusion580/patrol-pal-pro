@@ -207,11 +207,12 @@ const AdminDashboard = () => {
   const guardiasCount = users.filter(u => u.role === 'guardia').length;
 
   const metrics = [
-    { icon: Users, label: 'Total Usuarios', value: String(users.length), color: 'text-primary' },
-    { icon: Shield, label: 'Guardias', value: String(guardiasCount), color: 'text-success' },
-    { icon: CheckCircle2, label: 'Rondines Hoy', value: totalRondines, color: 'text-secondary' },
-    { icon: AlertTriangle, label: 'Emergencias', value: totalEmergencias, color: 'text-emergency' },
+    { icon: Users, label: 'Total Usuarios', value: String(users.length), color: 'text-primary', bg: 'bg-primary/10' },
+    { icon: Shield, label: 'Guardias', value: String(guardiasCount), color: 'text-success', bg: 'bg-success/10' },
+    { icon: CheckCircle2, label: 'Rondines Hoy', value: totalRondines, color: 'text-secondary', bg: 'bg-secondary/10' },
+    { icon: AlertTriangle, label: 'Emergencias', value: totalEmergencias, color: 'text-emergency', bg: 'bg-emergency/10' },
   ];
+
 
   const roleColors: Record<string, { label: string; cls: string }> = {
     guardia: { label: 'Guardia', cls: 'bg-primary/10 text-primary' },
