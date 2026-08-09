@@ -175,7 +175,7 @@ const SoporteChat = () => {
         aria-label={open ? 'Cerrar ayuda' : 'Ayuda y reporte de fallas'}
         title="Ayuda y reporte de fallas"
         className="fixed left-3 z-50 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-transform hover:scale-105 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring sm:left-4 sm:h-14 sm:w-14"
-        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 5.5rem)' }}
+        style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 7.5rem)' }}
       >
         {open ? <X className="h-6 w-6" /> : <HelpCircle className="h-6 w-6" />}
       </button>
@@ -185,7 +185,7 @@ const SoporteChat = () => {
           role="dialog"
           aria-label="Ayuda y reporte de fallas"
           className="fixed left-3 right-3 z-50 max-h-[70dvh] overflow-y-auto rounded-xl border border-border bg-card p-4 shadow-xl sm:left-4 sm:right-auto sm:w-[22rem]"
-          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 9.5rem)' }}
+          style={{ bottom: 'calc(env(safe-area-inset-bottom, 0px) + 11.5rem)' }}
         >
           <div className="mb-3 flex items-start justify-between gap-2">
             <div>
