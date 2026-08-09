@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import ReporteDetailDialog from '@/components/ReporteDetailDialog';
 import VisitaDetailDialog from '@/components/VisitaDetailDialog';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 type TabKey = 'estadisticas' | 'reportes' | 'visitas' | 'prestamos' | 'rondines' | 'alertas';
 
