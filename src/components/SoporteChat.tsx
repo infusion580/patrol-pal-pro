@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { HelpCircle, X, Send, Copy, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -12,6 +13,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useAuth } from '@/lib/auth-context';
+import { supabase } from '@/integrations/supabase/client';
 import { getDeviceInfo } from '@/lib/device-info';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -45,6 +47,8 @@ const CATEGORIAS = [
 const SoporteChat = () => {
   const [open, setOpen] = useState(false);
   const [numero, setNumero] = useState(getSoporteWhatsapp());
+  const [nombre, setNombre] = useState('');
+  const [servicio, setServicio] = useState('');
   const [categoria, setCategoria] = useState(CATEGORIAS[0]);
   const [descripcion, setDescripcion] = useState('');
   const [fallback, setFallback] = useState<{ mensaje: string; enlace: string } | null>(null);
@@ -63,8 +67,43 @@ const SoporteChat = () => {
     };
   }, [open]);
 
+  // Prellena nombre y servicio del usuario; ambos siguen siendo editables por si
+  // el reporte lo levanta alguien más o desde otro puesto.
+  useEffect(() => {
+    if (!open || !user) return;
+    let activo = true;
+    setNombre((prev) => prev || `${user.nombre} ${user.apellido}`.trim());
+
+    (async () => {
+      const { data: perfil } = await supabase
+        .from('profiles')
+        .select('servicio_asignado_id')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      if (!perfil?.servicio_asignado_id) return;
+      const { data: srv } = await supabase
+        .from('servicios')
+        .select('nombre, cliente')
+        .eq('id', perfil.servicio_asignado_id)
+        .maybeSingle();
+      if (activo && srv) setServicio((prev) => prev || `${srv.nombre} (${srv.cliente})`);
+    })();
+
+    return () => {
+      activo = false;
+    };
+  }, [open, user]);
+
   const enviar = () => {
     const texto = descripcion.trim();
+    if (nombre.trim().length < 3) {
+      toast({
+        title: 'Escribe tu nombre',
+        description: 'Soporte necesita saber quién reporta la falla.',
+        variant: 'destructive',
+      });
+      return;
+    }
     if (texto.length < 10) {
       toast({
         title: 'Describe la falla',
@@ -83,9 +122,10 @@ const SoporteChat = () => {
     }
 
     const mensaje = construirMensajeFalla(categoria, texto, {
-      nombre: user ? `${user.nombre} ${user.apellido}` : undefined,
+      nombre: nombre.trim(),
       numeroEmpleado: user?.numeroEmpleado,
       rol: user?.role,
+      servicio: servicio.trim() || undefined,
       ruta: location.pathname,
       dispositivo: getDeviceInfo().label,
     });
@@ -161,6 +201,28 @@ const SoporteChat = () => {
 
           <div className="space-y-3">
               <div className="space-y-1">
+                <Label htmlFor="soporte-nombre">Tu nombre</Label>
+                <Input
+                  id="soporte-nombre"
+                  maxLength={80}
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  placeholder="Nombre y apellido"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="soporte-servicio">Servicio / puesto</Label>
+                <Input
+                  id="soporte-servicio"
+                  maxLength={80}
+                  value={servicio}
+                  onChange={(e) => setServicio(e.target.value)}
+                  placeholder="Ej. Plaza Norte"
+                />
+              </div>
+
+              <div className="space-y-1">
                 <Label htmlFor="soporte-categoria">Tipo de falla</Label>
                 <Select value={categoria} onValueChange={setCategoria}>
                   <SelectTrigger id="soporte-categoria">
@@ -217,7 +279,7 @@ const SoporteChat = () => {
               )}
 
               <p className="text-[11px] leading-tight text-muted-foreground">
-                Se adjuntan automáticamente tu nombre, rol, pantalla y dispositivo.
+                Se adjuntan automáticamente tu rol, servicio, pantalla y dispositivo.
               </p>
           </div>
         </div>

@@ -90,6 +90,7 @@ export interface ReporteFallaContexto {
   nombre?: string;
   numeroEmpleado?: string;
   rol?: string;
+  servicio?: string;
   ruta?: string;
   dispositivo?: string;
 }
@@ -109,6 +110,7 @@ export function construirMensajeFalla(
     '',
     `*Usuario:* ${ctx.nombre || 'No identificado'}${ctx.numeroEmpleado ? ` (#${ctx.numeroEmpleado})` : ''}`,
     `*Rol:* ${ctx.rol || 'n/a'}`,
+    `*Servicio:* ${ctx.servicio || 'n/a'}`,
     `*Pantalla:* ${ctx.ruta || 'n/a'}`,
     `*Dispositivo:* ${ctx.dispositivo || 'n/a'}`,
     `*Fecha:* ${fecha}`,
