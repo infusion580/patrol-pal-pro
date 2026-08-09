@@ -50,15 +50,10 @@ const Historial = () => {
     if (activeTab === 'estadisticas') setLoading(false);
   }, [activeTab, user]);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('historial-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones' }, () => {
-        if (activeTab === 'alertas') loadTab('alertas');
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, [activeTab]);
+  useRealtimeTable('notificaciones', () => {
+    if (activeTab === 'alertas') loadTab('alertas');
+  });
+
 
   const loadStats = async () => {
     if (!user) return;
