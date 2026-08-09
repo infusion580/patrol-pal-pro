@@ -54,6 +54,30 @@ const AuditLog = () => {
   const [loading, setLoading] = useState(true);
   const [query, setQuery] = useState('');
   const [tabla, setTabla] = useState<string>('');
+  const [backingUp, setBackingUp] = useState(false);
+
+  /** Manual trigger of the scheduled logical backup (also runs weekly by cron). */
+  const runBackup = async () => {
+    setBackingUp(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('db-export-backup');
+      if (error) throw error;
+      const total = Object.values((data as any)?.manifest ?? {}).reduce(
+        (a: number, b) => a + Number(b),
+        0,
+      );
+      toast.success('Respaldo generado', {
+        description: `${total} registros guardados en ${(data as any)?.folder}`,
+      });
+      void load();
+    } catch (e) {
+      toast.error('No se pudo generar el respaldo', { description: (e as Error).message });
+    } finally {
+      setBackingUp(false);
+    }
+  };
+
+
 
   const load = async () => {
     setLoading(true);
