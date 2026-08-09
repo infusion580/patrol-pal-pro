@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 interface GuardProfile {
   user_id: string;
