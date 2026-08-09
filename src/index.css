@@ -168,7 +168,7 @@
     transform: translateY(-50%);
     width: clamp(3.5rem, 14vw, 6rem);
     height: clamp(3.5rem, 14vw, 6rem);
-    background-image: url('/logo-defender.png');
+    background-image: var(--brand-logo, url('/logo-defender.png'));
     background-repeat: no-repeat;
     background-position: center;
     background-size: contain;
