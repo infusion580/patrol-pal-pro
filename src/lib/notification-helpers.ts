@@ -264,3 +264,30 @@ export async function notifyVisitaEntradaSalida(params: {
     },
   });
 }
+
+/**
+ * Notifica a supervisores que un guardia está por terminar su turno y aún no
+ * hay guardia entrante registrado. Se usa desde el cron de backend.
+ */
+export async function notifyRelevoPendiente(
+  guardiaId: string,
+  guardiaNombre: string,
+  servicioNombre?: string,
+  finEsperado?: string,
+) {
+  const hora = finEsperado
+    ? new Date(finEsperado).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })
+    : new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const mensaje =
+    `⏰ RELEVO NO CUBIERTO\n` +
+    `Empleado: ${guardiaNombre}\n` +
+    `Servicio: ${servicioNombre || 'N/A'}\n` +
+    `Fin esperado: ${hora}\n` +
+    `No se ha registrado guardia entrante.`;
+  await createNotification({
+    tipo: 'relevo_pendiente',
+    mensaje,
+    guardia_id: guardiaId,
+    metadata: { guardia: guardiaNombre, servicio: servicioNombre || null, fin_esperado: finEsperado || null },
+  });
+}
