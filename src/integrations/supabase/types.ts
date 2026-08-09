@@ -553,6 +553,42 @@ export type Database = {
         }
         Relationships: []
       }
+      numeros_emergencia: {
+        Row: {
+          activo: boolean
+          created_at: string
+          created_by: string | null
+          descripcion: string
+          id: string
+          label: string
+          numero: string
+          orden: number
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descripcion?: string
+          id?: string
+          label: string
+          numero: string
+          orden?: number
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          created_at?: string
+          created_by?: string | null
+          descripcion?: string
+          id?: string
+          label?: string
+          numero?: string
+          orden?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       pendientes_completados: {
         Row: {
           created_at: string
