@@ -113,16 +113,12 @@ const PendientesList = () => {
     setLoading(false);
   }, [user]);
 
-  useEffect(() => {
-    load();
-    if (!user) return;
-    const ch = supabase
-      .channel('pendientes-guard')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pendientes_puesto' }, () => load())
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'pendientes_completados' }, () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(ch); };
-  }, [user, load]);
+  useEffect(() => { load(); }, [load]);
+
+  // Canales compartidos (gestor central de realtime)
+  useRealtimeTable('pendientes_puesto', () => load(), { enabled: !!user });
+  useRealtimeTable('pendientes_completados', () => load(), { enabled: !!user });
+
 
   // Estado del diálogo de cumplimiento
   const [openItem, setOpenItem] = useState<Pendiente | null>(null);
