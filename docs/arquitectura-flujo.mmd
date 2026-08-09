@@ -1,0 +1,63 @@
+graph TD
+    subgraph GUARDIA["Modulo Guardia (PWA)"]
+        A1[Login / Sesion unica]
+        A2[ShiftControl: inicio y fin de turno]
+        A3[Rondines: QR + GPS + foto]
+        A4[Pendientes del puesto]
+        A5[Visitas y Reporte de turno]
+        A6[Geocerca global + Boton de panico]
+        A7[Colas offline: localStorage + IndexedDB]
+    end
+
+    subgraph COM["Modulo Comunicacion"]
+        B1[Chat 1 a 1 operativo]
+        B2[Chat RH confidencial por folio]
+        B3[Centro de notificaciones]
+        B4[Web Push VAPID / Service Worker]
+    end
+
+    subgraph SUP["Panel Supervisor / Admin"]
+        C1[Dashboard operativo en vivo]
+        C2[Mapa Leaflet en tiempo real]
+        C3[Validacion de reportes]
+        C4[Asistencias, faltas y relevos]
+        C5[Metricas, KPIs y exportes PDF/Excel]
+    end
+
+    subgraph BE["Backend - Lovable Cloud"]
+        D1[(Postgres + RLS)]
+        D2[Auth + roles via NIP]
+        D3[Storage privado: evidencias, visitas, avatars]
+        D4[Realtime: canales compartidos]
+        D5[Edge Functions + pg_cron]
+        D6[(audit_log append-only)]
+    end
+
+    A1 --> D2
+    A2 --> D1
+    A3 --> D1
+    A3 --> D3
+    A4 --> D1
+    A5 --> D1
+    A5 --> D3
+    A6 --> B3
+    A7 -.reintento al reconectar.-> D1
+    A7 -.fotos en cola.-> D3
+
+    D1 --> D4
+    D4 --> C1
+    D4 --> C2
+    D4 --> B1
+    D4 --> B3
+
+    B1 --> D1
+    B2 --> D1
+    B3 --> D5
+    D5 --> B4
+    B4 --> A1
+
+    C3 --> D1
+    C4 --> D1
+    C5 --> D1
+    D5 -.cron: cierre de turnos, relevos, retencion, respaldo.-> D1
+    D1 --> D6

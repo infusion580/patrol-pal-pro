@@ -155,3 +155,14 @@ Resultado: chunk de entrada de 1,917 KB (577 KB gzip) → **240 KB (79 KB gzip)*
 5. Prueba de ingreso y navegación en navegador.
 
 Referencia: `Defender-Informe-QA-Despliegue.pdf` y `Defender-Manual-Tecnico-v4.pdf` (Anexo A).
+
+## 11. Diagrama de arquitectura y flujo de datos
+
+Diagrama fuente: `docs/arquitectura-flujo.mmd` (Mermaid).
+
+| Bloque | Qué hace | Flujo de datos |
+|---|---|---|
+| Módulo Guardia | Turnos, rondines con foto y GPS, pendientes, visitas, reportes, pánico y geocerca | Escribe en Postgres y Storage; si no hay red, encola en localStorage/IndexedDB y reintenta al reconectar |
+| Comunicación | Chat 1 a 1, chat RH por folio, centro de notificaciones y Web Push | Los eventos operativos generan notificaciones; `send-push` (Edge Function) entrega la alerta al SO aun con la app cerrada |
+| Panel Supervisor/Admin | Tablero en vivo, mapa Leaflet, validación de reportes, asistencias/faltas/relevos, métricas y exportes | Lee por Realtime (canales compartidos por tabla) y consulta agregada para KPIs, PDF y Excel |
+| Backend | Auth con NIP, Postgres con RLS, Storage privado, Realtime, Edge Functions y pg_cron | Todo acceso pasa por RLS + `has_role`; los cambios relevantes quedan en `audit_log` (append-only) |
