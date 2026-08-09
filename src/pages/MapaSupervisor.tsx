@@ -35,16 +35,9 @@ const MapaSupervisor = () => {
     return () => clearInterval(t);
   }, []);
 
-  // Realtime: refresh when rondines change
-  useEffect(() => {
-    const channel = supabase
-      .channel('rondines-map-realtime')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'rondines' }, () => {
-        loadGuards();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  // Realtime: refresh when rondines change (canal compartido)
+  useRealtimeTable('rondines', () => loadGuards());
+
 
   const loadGuards = async () => {
     const today = new Date().toISOString().split('T')[0];
