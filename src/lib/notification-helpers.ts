@@ -312,6 +312,49 @@ export async function notifyVisitaEntradaSalida(params: {
 }
 
 /**
+ * Alerta al momento de registrar la ENTRADA de un visitante.
+ * La salida genera después su propia alerta con el resumen completo.
+ */
+export async function notifyVisitaEntrada(params: {
+  guardiaId: string;
+  guardiaNombre: string;
+  nombreVisitante: string;
+  personaAVisitar?: string | null;
+  areaDestino?: string | null;
+  motivo?: string | null;
+  fotoInePath?: string | null;
+  fotoPlacaPath?: string | null;
+}) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+  const mensaje =
+    `🚪 ENTRADA DE VISITA\n` +
+    `Visitante: ${params.nombreVisitante}\n` +
+    (params.personaAVisitar ? `Visita a: ${params.personaAVisitar}\n` : '') +
+    (params.areaDestino ? `Área: ${params.areaDestino}\n` : '') +
+    (params.motivo ? `Motivo: ${params.motivo}\n` : '') +
+    `Guardia: ${params.guardiaNombre}\n` +
+    `Fecha: ${fecha}\n` +
+    `Hora: ${hora}`;
+
+  await createNotification({
+    tipo: 'visita',
+    mensaje,
+    guardia_id: params.guardiaId,
+    foto_url: params.fotoInePath || params.fotoPlacaPath || null,
+    metadata: {
+      evento: 'entrada',
+      visitante: params.nombreVisitante,
+      persona_a_visitar: params.personaAVisitar || null,
+      area_destino: params.areaDestino || null,
+      motivo: params.motivo || null,
+      hora_entrada: iso,
+      foto_ine: params.fotoInePath || null,
+      foto_placa: params.fotoPlacaPath || null,
+    },
+  });
+}
+
+/**
  * Notifica a supervisores que un guardia está por terminar su turno y aún no
  * hay guardia entrante registrado. Se usa desde el cron de backend.
  */
