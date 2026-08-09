@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { useRealtimeTable } from '@/hooks/use-realtime';
+import RelevosNoCubiertos from '@/components/RelevosNoCubiertos';
+
 
 interface GuardProfile {
   user_id: string;
@@ -226,7 +228,11 @@ const GestionRH = () => {
           </div>
         )}
 
+        <RelevosNoCubiertos />
+
         <h2 className="text-sm font-semibold text-muted-foreground">Registros Recientes</h2>
+
+
 
         {registros.length === 0 && (
           <div className="bg-card rounded-xl p-8 shadow-card text-center">

@@ -117,3 +117,11 @@ Todos los buckets son **privados**; las imágenes se muestran con URL firmada (`
 2. Foto → compresión (`image-compress.ts`, máx. 1600 px) → subida; si falla, cola en IndexedDB.
 3. Reconexión → banner, invalidación de queries y re-sincronización automática.
 4. Notificaciones → in-app + Web Push aunque la app esté cerrada (PWA instalada).
+
+## Relevos no cubiertos (Gestión RH)
+
+El cron `check-relevo-pendiente` emite notificaciones `relevo_pendiente` 5 minutos antes del fin de turno cuando no hay guardia entrante, con `metadata.turno_id` para deduplicar entre supervisores. El componente `src/components/RelevosNoCubiertos.tsx` (integrado en `src/pages/GestionRH.tsx`) lista esos eventos por rango de fechas y los exporta a PDF con `generateReportPdf`.
+
+### Catálogo de notificaciones
+
+`turno_inicio`, `turno_fin`, `rondin`, `zona`, `incidencia`, `emergencia`, `reporte`, `sesion`, `visita`, `relevo_pendiente`. Todas se consultan en `src/pages/Notificaciones.tsx` con filtro por tipo.
