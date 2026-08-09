@@ -15,20 +15,72 @@ const ResetPassword = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [isRecovery, setIsRecovery] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    const hashParams = new URLSearchParams(window.location.hash.substring(1));
-    if (hashParams.get('type') === 'recovery') {
-      setIsRecovery(true);
-    }
-
-    supabase.auth.onAuthStateChange((event) => {
-      if (event === 'PASSWORD_RECOVERY') {
+    const { data: sub } = supabase.auth.onAuthStateChange((event) => {
+      if (event === 'PASSWORD_RECOVERY' || event === 'SIGNED_IN') {
         setIsRecovery(true);
+        setLinkError(null);
       }
     });
+
+    const resolveLink = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.replace(/^#/, ''));
+      const queryParams = new URLSearchParams(window.location.search);
+
+      // 1) Errores devueltos por el proveedor (enlace vencido o ya usado)
+      const errDesc = hashParams.get('error_description') || queryParams.get('error_description');
+      if (errDesc) {
+        setLinkError(decodeURIComponent(errDesc));
+        return;
+      }
+
+      // 2) Flujo implícito: tokens en el hash
+      const accessToken = hashParams.get('access_token');
+      const refreshToken = hashParams.get('refresh_token');
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (error) return setLinkError('El enlace de recuperación no es válido o ya expiró.');
+        setIsRecovery(true);
+        window.history.replaceState({}, '', '/reset-password');
+        return;
+      }
+
+      // 3) Flujo PKCE: ?code=
+      const code = queryParams.get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) return setLinkError('El enlace de recuperación no es válido o ya expiró.');
+        setIsRecovery(true);
+        window.history.replaceState({}, '', '/reset-password');
+        return;
+      }
+
+      // 4) Enlace con token_hash (verificación por OTP)
+      const tokenHash = queryParams.get('token_hash') || hashParams.get('token_hash');
+      if (tokenHash) {
+        const { error } = await supabase.auth.verifyOtp({ type: 'recovery', token_hash: tokenHash });
+        if (error) return setLinkError('El enlace de recuperación no es válido o ya expiró.');
+        setIsRecovery(true);
+        window.history.replaceState({}, '', '/reset-password');
+        return;
+      }
+
+      // 5) Sesión de recuperación ya activa
+      const { data } = await supabase.auth.getSession();
+      if (data.session) {
+        setIsRecovery(true);
+        return;
+      }
+
+      setLinkError('Abre el enlace que enviamos a tu correo para restablecer tu contraseña.');
+    };
+
+    resolveLink();
+    return () => sub.subscription.unsubscribe();
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
