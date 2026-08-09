@@ -54,6 +54,7 @@ const RouteFallback = () => (
 
 import GlobalZoneMonitor from "./components/GlobalZoneMonitor";
 import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
+import GlobalAlertSound from "./components/GlobalAlertSound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ConnectionBanner from "./components/ConnectionBanner";
 import SoporteChat from "./components/SoporteChat";
@@ -105,6 +106,7 @@ const App = () => (
         <ConnectionBanner />
         <OfflineQueueIndicator />
         <GlobalZoneMonitor />
+        <GlobalAlertSound />
         <BrowserRouter>
           <RondinAlarmMonitor />
           <SoporteChat />
