@@ -279,9 +279,10 @@ const AdminDashboard = () => {
         <div className="bg-card rounded-xl p-4 shadow-card grid grid-cols-2 gap-3">
           {metrics.map(m => (
             <div key={m.label} className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-lg bg-accent flex items-center justify-center">
-                <m.icon className={`w-4 h-4 ${m.color}`} />
+              <div className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ring-1 ring-border ${m.bg}`}>
+                <m.icon className={`w-4 h-4 ${m.color}`} strokeWidth={2.25} aria-hidden="true" />
               </div>
+
               <div>
                 <p className="text-lg font-bold text-foreground leading-tight">{m.value}</p>
                 <p className="text-[9px] text-muted-foreground leading-tight">{m.label}</p>
