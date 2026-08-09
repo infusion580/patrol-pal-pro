@@ -35,6 +35,8 @@ const Notificaciones = () => {
   const [notifs, setNotifs] = useState<Notificacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTipo, setFilterTipo] = useState<string>('all');
+  const [soundOn, setSoundOn] = useState<boolean>(() => isAlertSoundEnabled());
+
 
   useEffect(() => { loadNotifs(); }, []);
 
