@@ -1,9 +1,15 @@
+import { lazy, Suspense } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { Navigate } from 'react-router-dom';
-import GuardDashboard from './GuardDashboard';
-import SupervisorDashboard from './SupervisorDashboard';
-import AdminDashboard from './AdminDashboard';
-import ClienteDashboard from './ClienteDashboard';
+
+/**
+ * Each role dashboard is a separate chunk: a guard never downloads the admin
+ * charting/export code and vice versa (QA observation 6.1).
+ */
+const GuardDashboard = lazy(() => import('./GuardDashboard'));
+const SupervisorDashboard = lazy(() => import('./SupervisorDashboard'));
+const AdminDashboard = lazy(() => import('./AdminDashboard'));
+const ClienteDashboard = lazy(() => import('./ClienteDashboard'));
 
 const Dashboard = () => {
   const { user, isAuthenticated, loading } = useAuth();
