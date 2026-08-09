@@ -107,6 +107,7 @@ const App = () => (
         <BrowserRouter>
           <RondinAlarmMonitor />
           <SoporteChat />
+          <Suspense fallback={<RouteFallback />}>
           <Routes>
             {/* Public */}
             <Route path="/" element={<Navigate to="/login" replace />} />
