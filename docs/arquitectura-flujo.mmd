@@ -1,5 +1,5 @@
-graph TD
-    subgraph GUARDIA["Modulo Guardia (PWA)"]
+graph LR
+    subgraph GUARDIA["Perfil Guardia (PWA)"]
         A1[Login / Sesion unica]
         A2[ShiftControl: inicio y fin de turno]
         A3[Rondines: QR + GPS + foto]
@@ -16,16 +16,40 @@ graph TD
         B4[Web Push VAPID / Service Worker]
     end
 
-    subgraph SUP["Panel Supervisor / Admin"]
+    subgraph SUP["Perfil Supervisor"]
         C1[Dashboard operativo en vivo]
         C2[Mapa Leaflet en tiempo real]
-        C3[Validacion de reportes]
+        C3[Validacion de reportes con feedback]
         C4[Asistencias, faltas y relevos]
         C5[Metricas, KPIs y exportes PDF/Excel]
     end
 
+    subgraph ADM["Perfil Admin"]
+        E1[Alta de servicios y puntos de rondin]
+        E2[Generacion de NIPs de registro]
+        E3[Asignacion de servicio principal]
+        E4[Configuracion de alarmas de rondin]
+        E5[Branding: logo y paleta]
+        E6[Config de datos visibles al cliente]
+        E7[Bitacora de auditoria]
+    end
+
+    subgraph RH["Perfil RH"]
+        F1[Folios de chat confidencial]
+        F2[Turnos extra, prestamos y vacaciones]
+        F3[Estatus laboral y ausencias]
+        F4[Relevos no cubiertos + PDF]
+    end
+
+    subgraph CLI["Perfil Cliente"]
+        G1[Dashboard de solo lectura]
+        G2[KPIs, graficas y semaforo]
+        G3[Reporte filtrado por config admin]
+        G4[Export PDF / Excel con marca]
+    end
+
     subgraph BE["Backend - Lovable Cloud"]
-        D1[(Postgres + RLS)]
+        D1[(Postgres + RLS por rol)]
         D2[Auth + roles via NIP]
         D3[Storage privado: evidencias, visitas, avatars]
         D4[Realtime: canales compartidos]
@@ -52,6 +76,7 @@ graph TD
 
     B1 --> D1
     B2 --> D1
+    B2 --> F1
     B3 --> D5
     D5 --> B4
     B4 --> A1
@@ -59,5 +84,24 @@ graph TD
     C3 --> D1
     C4 --> D1
     C5 --> D1
+
+    E1 --> D1
+    E2 --> D2
+    E3 --> D1
+    E4 --> D5
+    E5 --> D1
+    E6 --> D1
+    D6 --> E7
+
+    F2 --> D1
+    F3 --> D1
+    F4 --> D1
+
+    D1 --> G1
+    G1 --> G2
+    E6 -.filtra alcance.-> G3
+    D1 --> G3
+    G3 --> G4
+
     D5 -.cron: cierre de turnos, relevos, retencion, respaldo.-> D1
     D1 --> D6
