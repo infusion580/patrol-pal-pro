@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 export type NotifSeveridad = 'critica' | 'alta' | 'media' | 'info';
-export type NotifCategoria = 'emergencia' | 'operacion' | 'turnos' | 'accesos' | 'sistema';
+export type NotifCategoria = 'emergencia' | 'operacion' | 'turnos' | 'visitas' | 'accesos' | 'sistema';
 
 export interface NotifMeta {
   label: string;
@@ -36,6 +36,7 @@ export const CATEGORIA_LABEL: Record<NotifCategoria, string> = {
   emergencia: 'Emergencias',
   operacion: 'Operación',
   turnos: 'Turnos',
+  visitas: 'Visitas',
   accesos: 'Accesos',
   sistema: 'Sistema',
 };
@@ -102,7 +103,7 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
   },
   visita: {
     label: 'Visita', icon: DoorOpen, color: 'text-primary', bgColor: 'bg-primary/10',
-    categoria: 'accesos', severidad: 'media',
+    categoria: 'visitas', severidad: 'media',
   },
   sesion: {
     label: 'Sesión', icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted',
