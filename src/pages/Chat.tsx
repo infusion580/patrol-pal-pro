@@ -3,6 +3,7 @@ import { ArrowLeft, Send, Users, User, Shield } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { notifyChatRead } from '@/hooks/use-chat-notifications';
 import { useAuth } from '@/lib/auth-context';
 import { toast } from 'sonner';
 import BottomNav from '@/components/BottomNav';
@@ -129,6 +130,8 @@ const Chat = () => {
       const unreadIds = data.filter(m => m.receiver_id === user.id && !m.read).map(m => m.id);
       if (unreadIds.length > 0) {
         await supabase.from('chat_messages').update({ read: true }).in('id', unreadIds);
+        notifyChatRead();
+        setContacts(prev => prev.map(c => (c.user_id === contactId ? { ...c, unread: 0 } : c)));
       }
     }
   }, [user]);

@@ -9,6 +9,7 @@ import ShiftControl from '@/components/ShiftControl';
 import DailyProgress from '@/components/DailyProgress';
 import PendientesList from '@/components/PendientesList';
 import AppHeader from '@/components/AppHeader';
+import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
 
 const GuardDashboard = () => {
   const { user } = useAuth();
@@ -92,6 +93,8 @@ const GuardDashboard = () => {
             </div>
           )}
         </div>
+
+        <UnreadMessagesBanner />
 
         <ShiftControl />
 
