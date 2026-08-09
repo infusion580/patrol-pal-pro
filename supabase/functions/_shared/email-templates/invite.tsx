@@ -8,11 +8,26 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
-  Link,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+import {
+  brandBar,
+  brandName,
+  brandTagline,
+  button,
+  container,
+  footer,
+  h1,
+  hr,
+  linkFallback,
+  main,
+  text,
+} from './styles.ts'
 
 interface InviteEmailProps {
   siteName: string
@@ -22,29 +37,41 @@ interface InviteEmailProps {
 
 export const InviteEmail = ({
   siteName,
-  siteUrl,
   confirmationUrl,
 }: InviteEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>You've been invited to join {siteName}</Preview>
+    <Preview>Te invitaron a unirte a {siteName}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>You've been invited</Heading>
+        <Section style={brandBar} />
+        <Text style={brandName}>Defender</Text>
+        <Text style={brandTagline}>Seguridad Privada</Text>
+
+        <Heading style={h1}>Te invitaron a {siteName}</Heading>
         <Text style={text}>
-          You've been invited to join{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          . Click the button below to accept the invitation and create your
-          account.
+          Tu empresa creó un acceso para ti en la plataforma de operación y
+          supervisión {siteName}. Acepta la invitación para definir tu
+          contraseña y comenzar.
         </Text>
+
         <Button style={button} href={confirmationUrl}>
-          Accept Invitation
+          Aceptar invitación
         </Button>
+
+        <Text style={linkFallback}>
+          Si el botón no funciona, copia y pega esta dirección en tu navegador:
+          <br />
+          {confirmationUrl}
+        </Text>
+
+        <Hr style={hr} />
         <Text style={footer}>
-          If you weren't expecting this invitation, you can safely ignore this
-          email.
+          Si no esperabas esta invitación, puedes ignorar este mensaje.
+        </Text>
+        <Text style={footer}>
+          Este es un correo automático de {siteName}. No respondas a este
+          mensaje.
         </Text>
       </Container>
     </Body>
@@ -52,28 +79,3 @@ export const InviteEmail = ({
 )
 
 export default InviteEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }

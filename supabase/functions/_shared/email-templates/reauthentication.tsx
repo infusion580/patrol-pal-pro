@@ -7,27 +7,59 @@ import {
   Container,
   Head,
   Heading,
+  Hr,
   Html,
   Preview,
+  Section,
   Text,
 } from 'npm:@react-email/components@0.0.22'
+
+import {
+  brandBar,
+  brandName,
+  brandTagline,
+  codeBox,
+  container,
+  footer,
+  h1,
+  hr,
+  main,
+  text,
+} from './styles.ts'
 
 interface ReauthenticationEmailProps {
   token: string
 }
 
-export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => (
-  <Html lang="en" dir="ltr">
+export const ReauthenticationEmail = ({
+  token,
+}: ReauthenticationEmailProps) => (
+  <Html lang="es" dir="ltr">
     <Head />
-    <Preview>Your verification code</Preview>
+    <Preview>Tu código de verificación: {token}</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm reauthentication</Heading>
-        <Text style={text}>Use the code below to confirm your identity:</Text>
-        <Text style={codeStyle}>{token}</Text>
+        <Section style={brandBar} />
+        <Text style={brandName}>Defender</Text>
+        <Text style={brandTagline}>Seguridad Privada</Text>
+
+        <Heading style={h1}>Código de verificación</Heading>
+        <Text style={text}>
+          Ingresa este código para confirmar la operación solicitada en tu
+          cuenta:
+        </Text>
+
+        <Section style={codeBox}>{token}</Section>
+
+        <Text style={text}>
+          El código caduca en pocos minutos. Nunca lo compartas con nadie, ni
+          siquiera con personal de soporte.
+        </Text>
+
+        <Hr style={hr} />
         <Text style={footer}>
-          This code will expire shortly. If you didn't request this, you can
-          safely ignore this email.
+          Si tú no solicitaste este código, ignora este mensaje y avisa a tu
+          administrador.
         </Text>
       </Container>
     </Body>
@@ -35,26 +67,3 @@ export const ReauthenticationEmail = ({ token }: ReauthenticationEmailProps) => 
 )
 
 export default ReauthenticationEmail
-
-const main = { backgroundColor: '#ffffff', fontFamily: 'Arial, sans-serif' }
-const container = { padding: '20px 25px' }
-const h1 = {
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 20px',
-}
-const text = {
-  fontSize: '14px',
-  color: '#55575d',
-  lineHeight: '1.5',
-  margin: '0 0 25px',
-}
-const codeStyle = {
-  fontFamily: 'Courier, monospace',
-  fontSize: '22px',
-  fontWeight: 'bold' as const,
-  color: '#000000',
-  margin: '0 0 30px',
-}
-const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
