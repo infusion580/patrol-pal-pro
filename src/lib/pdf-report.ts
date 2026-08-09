@@ -1,6 +1,16 @@
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
-import { hslToRgb } from '@/lib/branding';
+import { hslToHex } from '@/lib/branding';
+
+/** "0 82% 52%" -> [r, g, b] */
+function hslToRgb(hsl: string): [number, number, number] {
+  const hex = hslToHex(hsl).replace('#', '');
+  return [
+    parseInt(hex.slice(0, 2), 16),
+    parseInt(hex.slice(2, 4), 16),
+    parseInt(hex.slice(4, 6), 16),
+  ];
+}
 
 /**
  * Generador de reportes PDF con la identidad de marca configurada por el admin
