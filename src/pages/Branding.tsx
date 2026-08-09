@@ -18,7 +18,7 @@ import {
 
 /** Paletas listas para aplicar con un clic. */
 const PRESETS: { name: string; colors: BrandingColors }[] = [
-  { name: 'Defender (rojo)', colors: DEFAULT_COLORS },
+  { name: 'Defender', colors: DEFAULT_COLORS },
   {
     name: 'Azul corporativo',
     colors: { primary_hsl: '214 90% 52%', primary_glow_hsl: '210 95% 64%', accent_hsl: '214 90% 52%', background_hsl: '220 24% 8%', card_hsl: '220 20% 13%' },
