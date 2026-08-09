@@ -29,9 +29,8 @@ Deno.serve(async (req) => {
     const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
     const ahora = new Date();
     const margenMs = 5 * 60 * 1000; // 5 minutos de anticipación
-    const ventanaFin = new Date(ahora.getTime() + margenMs).toISOString();
 
-    // 1. Turnos activos con su servicio y guardia
+    // 1. Turnos activos con su servicio
     const { data: turnos, error: tErr } = await admin
       .from('turnos')
       .select(`
@@ -40,12 +39,30 @@ Deno.serve(async (req) => {
         status,
         guardia_id,
         servicio_id,
-        servicios!inner(id, nombre, tipo_turno),
-        profiles!inner(user_id, nombre, apellido, supervisor_asignado_id)
+        servicios!inner(id, nombre, tipo_turno)
       `)
       .eq('status', 'activo');
 
     if (tErr) throw tErr;
+
+    // 2. Perfiles de guardias y supervisores asignados
+    const guardiaIds = [...new Set((turnos || []).map((t: any) => t.guardia_id))];
+    const { data: perfiles, error: pErr } = await admin
+      .from('profiles')
+      .select('user_id, nombre, apellido, supervisor_asignado_id')
+      .in('user_id', guardiaIds);
+
+    if (pErr) throw pErr;
+    const perfilMap = new Map((perfiles || []).map((p: any) => [p.user_id, p]));
+
+    // 3. Supervisores y admins
+    const { data: roles, error: rolesErr } = await admin
+      .from('user_roles')
+      .select('user_id, role')
+      .in('role', ['supervisor', 'admin']);
+
+    if (rolesErr) throw rolesErr;
+    const supervisorIds = new Set((roles || []).map((r: any) => r.user_id));
 
     const relevosPendientes: any[] = [];
 
@@ -83,19 +100,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 2. Supervisoras/os a notificar: asignado al guardia + todos los supers/admins
-    const { data: roles, error: rolesErr } = await admin
-      .from('user_roles')
-      .select('user_id, role')
-      .in('role', ['supervisor', 'admin']);
-
-    if (rolesErr) throw rolesErr;
-    const supervisorIds = new Set((roles || []).map((r: any) => r.user_id));
-
     let totalAlertas = 0;
 
     for (const t of relevosPendientes) {
-      const guardiaNombre = `${t.profiles?.nombre ?? ''} ${t.profiles?.apellido ?? ''}`.trim() || 'Guardia';
+      const perfil = perfilMap.get(t.guardia_id);
+      const guardiaNombre = `${perfil?.nombre ?? ''} ${perfil?.apellido ?? ''}`.trim() || 'Guardia';
       const servicioNombre = t.servicios?.nombre ?? 'N/A';
       const finHora = new Date(t.fin_esperado).toLocaleTimeString('es-MX', {
         hour: '2-digit',
@@ -118,7 +127,7 @@ Deno.serve(async (req) => {
 
       // Destinatarios: supervisor asignado + todos los supers/admins
       const targets = new Set<string>();
-      if (t.profiles?.supervisor_asignado_id) targets.add(t.profiles.supervisor_asignado_id);
+      if (perfil?.supervisor_asignado_id) targets.add(perfil.supervisor_asignado_id);
       supervisorIds.forEach((id) => targets.add(id));
 
       const mensaje =
