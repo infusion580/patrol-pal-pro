@@ -79,6 +79,36 @@ export async function notifySesionCierre(userId: string, userNombre: string, rol
   });
 }
 
+/**
+ * Alerta prioritaria: el usuario cerró sesión mientras tenía un turno activo.
+ * Se registra como alerta para que admin/supervisor puedan dar seguimiento.
+ */
+export async function notifySesionCierreEnTurno(
+  userId: string,
+  userNombre: string,
+  servicioNombre?: string,
+  inicioTurno?: string,
+) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+  const desde = inicioTurno
+    ? new Date(inicioTurno).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
+    : 'N/A';
+  const mensaje = `⚠️ CIERRE DE SESIÓN CON TURNO ACTIVO\nEmpleado: ${userNombre}\nServicio: ${servicioNombre || 'N/A'}\nTurno iniciado: ${desde}\nFecha: ${fecha}\nHora: ${hora}`;
+  await createNotification({
+    tipo: 'alerta',
+    mensaje,
+    guardia_id: userId,
+    metadata: {
+      usuario: userNombre,
+      evento: 'logout_en_turno',
+      servicio: servicioNombre || null,
+      inicio_turno: inicioTurno || null,
+      fecha: iso,
+    },
+  });
+}
+
+
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {
   const { fecha, hora, iso } = fechaHoraLarga();
   const mensaje = `🟢 INICIO DE TURNO\nEmpleado: ${guardiaNombre}\nServicio: ${servicioNombre || 'N/A'}\nFecha: ${fecha}\nHora: ${hora}`;
