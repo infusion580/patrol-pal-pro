@@ -73,7 +73,7 @@ const Branding = () => {
   const handleLogo = async (file: File) => {
     setUploading(true);
     try {
-      const blob = await compressImage(file, { maxSize: 600, quality: 0.9 });
+      const blob = await compressImage(file, { maxSide: 600, quality: 0.9 });
       const ext = file.name.split('.').pop()?.toLowerCase() === 'png' ? 'png' : 'jpg';
       const path = `logo-${Date.now()}.${ext}`;
 
