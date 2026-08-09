@@ -76,9 +76,14 @@ const EmergencyButton = () => {
 
       {showPanel &&
       <div className="fixed inset-0 z-50 bg-foreground/50 flex items-end justify-center" onClick={() => setShowPanel(false)}>
-          <div className="bg-card w-full max-w-lg rounded-t-2xl p-6 animate-slide-up" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="bg-card w-full max-w-lg rounded-t-2xl p-6 pb-[calc(1.5rem+env(safe-area-inset-bottom))] animate-slide-up overflow-y-auto max-h-[85dvh] overscroll-contain"
+            onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-display font-bold text-foreground">🚨 Emergencia</h2>
+              <div>
+                <h2 className="text-xl font-display font-bold text-foreground">🚨 Emergencia</h2>
+                <p className="text-xs text-muted-foreground">Emite la alarma o llama a un número directo</p>
+              </div>
               <button onClick={() => setShowPanel(false)} className="text-muted-foreground">
                 <X className="w-6 h-6" />
               </button>
@@ -95,13 +100,14 @@ const EmergencyButton = () => {
               {activated ? '✅ Alerta Enviada — Ayuda en camino' : '🚨 ACTIVAR ALERTA DE EMERGENCIA'}
             </Button>
 
-            <p className="text-sm font-semibold text-muted-foreground mb-3">Llamada directa:</p>
-            <div className="grid grid-cols-3 gap-3 mb-4">
+            <p className="text-sm font-semibold text-muted-foreground mb-3">O llama directamente:</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-4">
               {emergencyNumbers.map((num) =>
-            <a key={num.label} href={`tel:${num.number}`} className="flex flex-col items-center gap-1 p-3 rounded-xl bg-accent hover:bg-accent/80 transition-colors">
+            <a key={num.label} href={`tel:${num.number}`} className="flex flex-col items-center justify-center text-center gap-1 p-3 min-h-[84px] rounded-xl bg-accent hover:bg-accent/80 transition-colors">
                   <Phone className="w-5 h-5 text-primary" />
-                  <span className="text-sm font-bold text-foreground">{num.label}</span>
-                  <span className="text-[10px] text-muted-foreground">{num.desc}</span>
+                  <span className="text-sm font-bold text-foreground leading-tight break-words">{num.label}</span>
+                  <span className="text-[10px] text-muted-foreground leading-tight break-words">{num.desc}</span>
+                  <span className="text-[10px] font-semibold text-primary">{num.number}</span>
                 </a>
             )}
             </div>
