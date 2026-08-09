@@ -279,7 +279,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
     broadcastLogout();
     toast.success('Sesión cerrada correctamente');
-  }, [broadcastLogout]);
+  }, [broadcastLogout, user]);
 
   return (
     <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated: !!user, loading }}>
