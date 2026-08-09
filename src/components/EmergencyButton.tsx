@@ -1,13 +1,17 @@
 import { useEffect, useState } from 'react';
-import { AlertTriangle, Phone, X } from 'lucide-react';
+import { AlertTriangle, MapPinOff, Phone, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { useToast } from '@/hooks/use-toast';
+import { notifySinUbicacion } from '@/lib/notification-helpers';
 
 const EmergencyButton = () => {
   const [showPanel, setShowPanel] = useState(false);
   const [activated, setActivated] = useState(false);
+  // Cuando el GPS falla el guardia no es ubicable: se avisa en pantalla y se
+  // levanta una alerta para supervisión.
+  const [sinUbicacion, setSinUbicacion] = useState<string | null>(null);
   const { user } = useAuth();
   const { toast } = useToast();
 
@@ -16,13 +20,23 @@ const EmergencyButton = () => {
 
     let lat: number | null = null;
     let lng: number | null = null;
+    let motivoSinUbicacion: string | null = null;
     try {
+      if (!navigator.geolocation) throw new Error('unsupported');
       const pos = await new Promise<GeolocationPosition>((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 5000 })
+      navigator.geolocation.getCurrentPosition(resolve, reject, { timeout: 8000, enableHighAccuracy: true })
       );
       lat = pos.coords.latitude;
       lng = pos.coords.longitude;
-    } catch {}
+      setSinUbicacion(null);
+    } catch (err: any) {
+      motivoSinUbicacion =
+        err?.code === 1 ? 'Permiso de ubicación denegado' :
+        err?.code === 3 ? 'Tiempo de espera agotado (sin señal GPS)' :
+        err?.message === 'unsupported' ? 'Dispositivo sin soporte de ubicación' :
+        'GPS desactivado o ubicación no disponible';
+      setSinUbicacion(motivoSinUbicacion);
+    }
 
     await supabase.from('emergencias').insert({
       guardia_id: user.id,
@@ -31,10 +45,22 @@ const EmergencyButton = () => {
       lng
     });
 
+    if (motivoSinUbicacion) {
+      const { data: perfil } = await supabase
+        .from('profiles')
+        .select('nombre, apellido')
+        .eq('user_id', user.id)
+        .maybeSingle();
+      const nombre = perfil ? `${perfil.nombre} ${perfil.apellido}`.trim() : 'Guardia';
+      await notifySinUbicacion(user.id, nombre, motivoSinUbicacion);
+    }
+
     setActivated(true);
     toast({
       title: '🚨 EMERGENCIA ACTIVADA',
-      description: 'Se ha notificado al supervisor y registrado tu ubicación.',
+      description: motivoSinUbicacion ?
+      `Alerta enviada SIN ubicación: ${motivoSinUbicacion}. Se notificó a supervisión.` :
+      'Se ha notificado al supervisor y registrado tu ubicación.',
       variant: 'destructive'
     });
     setTimeout(() => setActivated(false), 5000);
@@ -88,6 +114,16 @@ const EmergencyButton = () => {
                 <X className="w-6 h-6" />
               </button>
             </div>
+
+            {sinUbicacion &&
+          <div className="mb-4 flex items-start gap-3 rounded-xl border border-emergency/30 bg-emergency/10 p-3">
+                <MapPinOff className="w-5 h-5 text-emergency shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-emergency">No eres ubicable</p>
+                  <p className="text-xs text-muted-foreground">{sinUbicacion}. Activa el GPS y los permisos de ubicación; se avisó a supervisión.</p>
+                </div>
+              </div>
+          }
 
             <Button
             onClick={handleEmergency}
