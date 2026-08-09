@@ -262,8 +262,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) {
       const nombre = `${user.nombre} ${user.apellido}`.trim() || user.email;
       try {
-        const { notifySesionCierre } = await import('./notification-helpers');
+        const { notifySesionCierre, notifySesionCierreEnTurno } = await import('./notification-helpers');
         await notifySesionCierre(user.id, nombre, user.role);
+
+        // Si el usuario tiene un turno activo, se genera una alerta adicional.
+        const { data: turnoActivo } = await supabase
+          .from('asistencias')
+          .select('inicio, servicios:servicio_id (nombre)')
+          .eq('guardia_id', user.id)
+          .eq('status', 'activo')
+          .order('inicio', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (turnoActivo) {
+          const servicioNombre = (turnoActivo as any).servicios?.nombre as string | undefined;
+          await notifySesionCierreEnTurno(user.id, nombre, servicioNombre, turnoActivo.inicio);
+        }
       } catch { /* fire-and-forget */ }
       import('./audit')
         .then(({ logAudit }) => logAudit({ accion: 'logout', tabla: 'auth', registroId: user.id }))
