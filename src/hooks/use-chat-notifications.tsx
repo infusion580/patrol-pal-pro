@@ -4,6 +4,11 @@ import { useAuth } from '@/lib/auth-context';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { toast } from 'sonner';
 
+/** Evento global que dispara el chat al marcar mensajes como leídos. */
+export const CHAT_READ_EVENT = 'chat:read';
+export const notifyChatRead = () => window.dispatchEvent(new Event(CHAT_READ_EVENT));
+
+
 /**
  * Global hook: subscribes to incoming chat_messages for the current user,
  * shows a toast when a new message arrives (unless already on /chat with that contact),
