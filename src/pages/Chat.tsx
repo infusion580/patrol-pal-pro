@@ -80,6 +80,7 @@ const Chat = () => {
       .from('chat_messages')
       .select('sender_id')
       .eq('receiver_id', user.id)
+      .neq('sender_id', user.id)
       .eq('read', false);
 
     const unreadMap: Record<string, number> = {};
