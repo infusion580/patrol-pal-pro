@@ -18,7 +18,7 @@ import {
 
 /** Paletas listas para aplicar con un clic. */
 const PRESETS: { name: string; colors: BrandingColors }[] = [
-  { name: 'Defender', colors: DEFAULT_COLORS },
+  { name: 'Rojo', colors: DEFAULT_COLORS },
   {
     name: 'Azul corporativo',
     colors: { primary_hsl: '214 90% 52%', primary_glow_hsl: '210 95% 64%', accent_hsl: '214 90% 52%', background_hsl: '220 24% 8%', card_hsl: '220 20% 13%' },
@@ -34,6 +34,42 @@ const PRESETS: { name: string; colors: BrandingColors }[] = [
   {
     name: 'Claro institucional',
     colors: { primary_hsl: '222 72% 44%', primary_glow_hsl: '222 80% 58%', accent_hsl: '222 72% 44%', background_hsl: '210 30% 97%', card_hsl: '0 0% 100%' },
+  },
+  {
+    name: 'Morado táctico',
+    colors: { primary_hsl: '265 75% 58%', primary_glow_hsl: '272 85% 68%', accent_hsl: '265 75% 58%', background_hsl: '265 20% 8%', card_hsl: '265 16% 13%' },
+  },
+  {
+    name: 'Cian tecnológico',
+    colors: { primary_hsl: '188 88% 45%', primary_glow_hsl: '186 92% 58%', accent_hsl: '188 88% 45%', background_hsl: '196 30% 7%', card_hsl: '196 22% 12%' },
+  },
+  {
+    name: 'Naranja alerta',
+    colors: { primary_hsl: '22 92% 52%', primary_glow_hsl: '28 96% 60%', accent_hsl: '22 92% 52%', background_hsl: '20 16% 7%', card_hsl: '20 12% 12%' },
+  },
+  {
+    name: 'Grafito neutro',
+    colors: { primary_hsl: '215 14% 52%', primary_glow_hsl: '215 18% 64%', accent_hsl: '215 14% 52%', background_hsl: '220 12% 8%', card_hsl: '220 10% 13%' },
+  },
+  {
+    name: 'Verde militar',
+    colors: { primary_hsl: '88 38% 42%', primary_glow_hsl: '86 44% 52%', accent_hsl: '88 38% 42%', background_hsl: '96 14% 7%', card_hsl: '96 12% 12%' },
+  },
+  {
+    name: 'Vino elegante',
+    colors: { primary_hsl: '340 62% 46%', primary_glow_hsl: '344 72% 58%', accent_hsl: '340 62% 46%', background_hsl: '340 20% 8%', card_hsl: '340 16% 13%' },
+  },
+  {
+    name: 'Oro premium',
+    colors: { primary_hsl: '45 82% 50%', primary_glow_hsl: '48 92% 62%', accent_hsl: '45 82% 50%', background_hsl: '40 10% 7%', card_hsl: '40 8% 12%' },
+  },
+  {
+    name: 'Claro minimalista',
+    colors: { primary_hsl: '0 0% 15%', primary_glow_hsl: '0 0% 35%', accent_hsl: '0 0% 15%', background_hsl: '0 0% 98%', card_hsl: '0 0% 100%' },
+  },
+  {
+    name: 'Claro menta',
+    colors: { primary_hsl: '168 68% 36%', primary_glow_hsl: '166 72% 46%', accent_hsl: '168 68% 36%', background_hsl: '170 30% 97%', card_hsl: '0 0% 100%' },
   },
 ];
 
