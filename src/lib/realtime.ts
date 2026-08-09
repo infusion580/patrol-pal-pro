@@ -45,9 +45,8 @@ function openChannel(key: string, table: string, filter?: string) {
   const channel = supabase
     .channel(`rt:${key}`)
     .on(
-      // @ts-expect-error - supabase-js typing for the generic string event
       'postgres_changes',
-      { event: '*', schema: 'public', table, ...(filter ? { filter } : {}) },
+      { event: '*', schema: 'public', table, ...(filter ? { filter } : {}) } as never,
       (payload: unknown) => {
         entry.listeners.forEach((l) => {
           try {
