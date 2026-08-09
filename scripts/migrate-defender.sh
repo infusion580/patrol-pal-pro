@@ -75,6 +75,7 @@ Uso: migrate-defender.sh [opciones]
   --env-file FILE    Archivo de configuración (default scripts/migrate.env)
   --dry-run          Muestra lo que haría sin ejecutar cambios
   --keep-going       Continúa aunque una validación no crítica falle
+                     (Storage se migra en ambos modos; MIGRATE_STORAGE=false lo desactiva)
   -h, --help         Esta ayuda
 EOF
 }
@@ -108,6 +109,19 @@ done
 : "${APP_SCHEMAS:=public}"       # esquemas de aplicación a migrar
 : "${JOBS:=4}"
 
+# --- Storage (fotos, videos y adjuntos) --------------------------------------
+: "${MIGRATE_STORAGE:=true}"     # migrar objetos de Storage (S3 → MinIO)
+: "${STORAGE_BUCKETS:=}"         # lista separada por comas; vacío = todos los del origen
+: "${SRC_S3_ENDPOINT:=}"         # ej. https://<proyecto>.storage.supabase.co/storage/v1/s3
+: "${SRC_S3_REGION:=us-east-1}"
+: "${SRC_S3_ACCESS_KEY:=}"; : "${SRC_S3_SECRET_KEY:=}"
+: "${DST_S3_ENDPOINT:=}"         # ej. https://minio.midominio.com
+: "${DST_S3_REGION:=us-east-1}"
+: "${DST_S3_ACCESS_KEY:=}"; : "${DST_S3_SECRET_KEY:=}"
+: "${DST_PUBLIC_STORAGE_URL:=}"  # URL pública de MinIO para reescribir enlaces guardados
+: "${SRC_PUBLIC_STORAGE_URL:=}"  # URL pública anterior a reemplazar en la base de datos
+
+
 SRC_URI=""; DST_URI=""
 build_uri() { # build_uri user pass host port db
   printf 'postgresql://%s:%s@%s:%s/%s?sslmode=%s' \
@@ -125,6 +139,13 @@ preflight() {
   local pgv; pgv="$(pg_dump --version | grep -oE '[0-9]+' | head -1)"
   [[ "$pgv" -ge 15 ]] || warn "pg_dump v$pgv detectado; se recomienda 15 o superior"
   ok "Herramientas disponibles (pg_dump v$pgv)"
+
+  if [[ "$MIGRATE_STORAGE" == "true" ]]; then
+    command -v aws >/dev/null 2>&1 \
+      || die "Falta 'aws' (AWS CLI v2) requerido para migrar Storage; instálalo o usa MIGRATE_STORAGE=false"
+    ok "AWS CLI disponible para la migración de Storage (S3 → MinIO)"
+  fi
+
 
   if [[ "$MODE" != "restore" ]]; then
     [[ -n "$SRC_HOST" ]] || die "SRC_HOST no configurado (revisa $ENV_FILE)"
@@ -184,6 +205,131 @@ dump_all() {
     ok "Dumps generados en $DUMP_DIR ($(du -sh "$DUMP_DIR" | cut -f1))"
   fi
 }
+
+# -----------------------------------------------------------------------------
+# 4b. Storage: fotos, videos y adjuntos (S3 origen → MinIO destino)
+# -----------------------------------------------------------------------------
+STORAGE_DIR="$DUMP_DIR/storage"
+
+s3_src() { AWS_ACCESS_KEY_ID="$SRC_S3_ACCESS_KEY" AWS_SECRET_ACCESS_KEY="$SRC_S3_SECRET_KEY" \
+  AWS_DEFAULT_REGION="$SRC_S3_REGION" aws --endpoint-url "$SRC_S3_ENDPOINT" "$@"; }
+s3_dst() { AWS_ACCESS_KEY_ID="$DST_S3_ACCESS_KEY" AWS_SECRET_ACCESS_KEY="$DST_S3_SECRET_KEY" \
+  AWS_DEFAULT_REGION="$DST_S3_REGION" aws --endpoint-url "$DST_S3_ENDPOINT" "$@"; }
+
+storage_buckets() { # imprime la lista de buckets a migrar (uno por línea)
+  if [[ -n "$STORAGE_BUCKETS" ]]; then
+    tr ',' '\n' <<<"$STORAGE_BUCKETS" | sed '/^$/d'
+  elif [[ -n "$SRC_URI" ]]; then
+    psql "$SRC_URI" -Atqc "select id from storage.buckets order by id" 2>/dev/null
+  elif [[ -d "$STORAGE_DIR" ]]; then
+    find "$STORAGE_DIR" -mindepth 1 -maxdepth 1 -type d -printf '%f\n'
+  fi
+}
+
+storage_dump() {
+  [[ "$MIGRATE_STORAGE" == "true" ]] || { info "Storage omitido (MIGRATE_STORAGE=false)"; return 0; }
+  step "Exportación de Storage (fotos, videos y adjuntos)"
+  [[ -n "$SRC_S3_ENDPOINT" ]] || die "SRC_S3_ENDPOINT no configurado (revisa $ENV_FILE)"
+  run mkdir -p "$STORAGE_DIR"
+
+  info "1/3 · Metadatos de Storage (buckets y objetos)"
+  run bash -c "pg_dump '$SRC_URI' --data-only --no-owner --disable-triggers \
+    --table=storage.buckets --table=storage.objects > '$DUMP_DIR/07-storage-metadatos.sql'"
+
+  info "2/3 · Descargando objetos de cada bucket"
+  local total=0
+  while read -r b; do
+    [[ -z "$b" ]] && continue
+    info "  · bucket '$b'"
+    run mkdir -p "$STORAGE_DIR/$b"
+    if $DRY_RUN; then
+      info "  [dry-run] aws s3 sync s3://$b $STORAGE_DIR/$b"
+    else
+      s3_src s3 sync "s3://$b" "$STORAGE_DIR/$b" --no-progress >>"$LOG_FILE" 2>&1 \
+        || warn "  No se pudo sincronizar completamente el bucket '$b' (ver log)"
+      local n; n="$(find "$STORAGE_DIR/$b" -type f | wc -l)"
+      total=$((total + n)); ok "  $n archivos descargados de '$b'"
+    fi
+  done < <(storage_buckets)
+
+  info "3/3 · Registrando inventario de referencia"
+  if ! $DRY_RUN; then
+    psql "$SRC_URI" -Atqc "select bucket_id||'='||count(*) from storage.objects group by bucket_id order by 1" \
+      > "$DUMP_DIR/conteos-storage-origen.txt" 2>/dev/null || true
+    ok "Storage exportado: $total archivos ($(du -sh "$STORAGE_DIR" 2>/dev/null | cut -f1))"
+  fi
+}
+
+storage_restore() {
+  [[ "$MIGRATE_STORAGE" == "true" ]] || return 0
+  step "Restauración de Storage en MinIO"
+  [[ -n "$DST_S3_ENDPOINT" ]] || die "DST_S3_ENDPOINT no configurado (revisa $ENV_FILE)"
+  [[ -d "$STORAGE_DIR" ]] || { warn "No hay objetos descargados en $STORAGE_DIR, se omite"; return 0; }
+
+  info "1/4 · Creando buckets en MinIO y subiendo objetos"
+  local total=0
+  while read -r b; do
+    [[ -z "$b" ]] && continue
+    [[ -d "$STORAGE_DIR/$b" ]] || continue
+    if $DRY_RUN; then
+      info "  [dry-run] mb + sync s3://$b"
+    else
+      s3_dst s3 mb "s3://$b" >>"$LOG_FILE" 2>&1 || info "  bucket '$b' ya existe"
+      s3_dst s3 sync "$STORAGE_DIR/$b" "s3://$b" --no-progress >>"$LOG_FILE" 2>&1 \
+        || die "Falló la subida del bucket '$b' (ver log)"
+      local n; n="$(find "$STORAGE_DIR/$b" -type f | wc -l)"
+      total=$((total + n)); ok "  $n archivos subidos a '$b'"
+    fi
+  done < <(storage_buckets)
+
+  info "2/4 · Restaurando metadatos (storage.buckets / storage.objects)"
+  if ! $DRY_RUN && [[ -s "$DUMP_DIR/07-storage-metadatos.sql" ]]; then
+    { echo "SET session_replication_role = 'replica';"; cat "$DUMP_DIR/07-storage-metadatos.sql"; } \
+      > "$DUMP_DIR/.tmp-storage.sql"
+  fi
+  apply_file "$DUMP_DIR/.tmp-storage.sql" "metadatos de Storage" true
+  run rm -f "$DUMP_DIR/.tmp-storage.sql"
+
+  info "3/4 · Reescribiendo URLs públicas guardadas en la base de datos"
+  if ! $DRY_RUN && [[ -n "$SRC_PUBLIC_STORAGE_URL" && -n "$DST_PUBLIC_STORAGE_URL" ]]; then
+    psql "$DST_URI" -Atq -c "
+      select format('UPDATE %I.%I SET %I = replace(%I, %L, %L) WHERE %I LIKE %L;',
+                    c.table_schema, c.table_name, c.column_name, c.column_name,
+                    '$SRC_PUBLIC_STORAGE_URL', '$DST_PUBLIC_STORAGE_URL',
+                    c.column_name, '%$SRC_PUBLIC_STORAGE_URL%')
+      from information_schema.columns c
+      join information_schema.tables t
+        on t.table_schema = c.table_schema and t.table_name = c.table_name and t.table_type='BASE TABLE'
+      where c.table_schema = any(string_to_array('$APP_SCHEMAS',','))
+        and c.data_type in ('text','character varying');" \
+      | psql "$DST_URI" -q >>"$LOG_FILE" 2>&1 \
+      && ok "URLs de Storage reescritas a $DST_PUBLIC_STORAGE_URL" \
+      || warn "No se pudieron reescribir todas las URLs (ver log)"
+  else
+    info "  Omitido (define SRC_PUBLIC_STORAGE_URL y DST_PUBLIC_STORAGE_URL para activarlo)"
+  fi
+
+  info "4/4 · Verificando objetos en destino"
+  if ! $DRY_RUN; then
+    local fails=0
+    while read -r b; do
+      [[ -z "$b" ]] && continue
+      [[ -d "$STORAGE_DIR/$b" ]] || continue
+      local local_n dst_n
+      local_n="$(find "$STORAGE_DIR/$b" -type f | wc -l)"
+      dst_n="$(s3_dst s3 ls "s3://$b" --recursive 2>/dev/null | grep -c . || true)"
+      if (( dst_n >= local_n )); then
+        ok "  ✔ $b: $dst_n objetos en MinIO (origen $local_n)"
+      else
+        err "  ✘ $b: $dst_n objetos en MinIO, se esperaban $local_n"; fails=$((fails+1))
+      fi
+    done < <(storage_buckets)
+    if (( fails == 0 )); then ok "Storage migrado y verificado ($total archivos)";
+    else err "$fails buckets incompletos"; $KEEP_GOING || die "Migración de Storage incompleta"; fi
+  fi
+}
+
+
 
 # -----------------------------------------------------------------------------
 # 5. Restauración
@@ -329,11 +475,12 @@ main() {
   $DRY_RUN && warn "Modo dry-run: no se escribirá nada en las bases de datos"
 
   preflight
-  [[ "$MODE" == "all" || "$MODE" == "dump"    ]] && dump_all
-  [[ "$MODE" == "all" || "$MODE" == "restore" ]] && { restore_all; validate; }
+  [[ "$MODE" == "all" || "$MODE" == "dump"    ]] && { dump_all; storage_dump; }
+  [[ "$MODE" == "all" || "$MODE" == "restore" ]] && { restore_all; storage_restore; validate; }
 
   step "Migración finalizada correctamente"
-  info "Siguientes pasos manuales: Storage (buckets/objetos), Edge Functions, secretos y cron jobs."
+  info "Siguientes pasos manuales: Edge Functions, secretos y cron jobs."
+
   ok "Log completo en $LOG_FILE"
 }
 
@@ -357,4 +504,14 @@ main "$@"
 # APP_SCHEMAS=public
 # MIGRATE_AUTH=true
 # PGSSLMODE=require
+#
+# MIGRATE_STORAGE=true
+# SRC_S3_ENDPOINT=https://<proyecto>.storage.supabase.co/storage/v1/s3
+# SRC_S3_ACCESS_KEY=********
+# SRC_S3_SECRET_KEY=********
+# DST_S3_ENDPOINT=https://minio.midominio.com
+# DST_S3_ACCESS_KEY=********
+# DST_S3_SECRET_KEY=********
+# SRC_PUBLIC_STORAGE_URL=https://<proyecto>.supabase.co/storage/v1/object/public
+# DST_PUBLIC_STORAGE_URL=https://minio.midominio.com
 # =============================================================================
