@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, Bell, AlertTriangle, CheckCircle2, MapPin, Clock, Shield, Filter, FileText, LogIn, DoorOpen } from 'lucide-react';
+import { ArrowLeft, Bell, Volume2, VolumeX } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -7,6 +7,14 @@ import BottomNav from '@/components/BottomNav';
 import { SignedImg } from '@/components/SignedImg';
 import { getSignedUrl } from '@/lib/storage-helpers';
 import { useRealtimeTable } from '@/hooks/use-realtime';
+import {
+  getNotifMeta,
+  CATEGORIA_LABEL,
+  SEVERIDAD_LABEL,
+  SEVERIDAD_STYLE,
+  type NotifCategoria,
+} from '@/lib/notification-types';
+import { isAlertSoundEnabled, setAlertSoundEnabled, playAlertSound } from '@/lib/alert-sound';
 
 interface Notificacion {
   id: string;
@@ -18,18 +26,8 @@ interface Notificacion {
   foto_url?: string | null;
 }
 
-const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: string; label: string }> = {
-  zona: { icon: MapPin, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Salida de Zona' },
-  turno_inicio: { icon: CheckCircle2, color: 'text-success', bgColor: 'bg-success/10', label: 'Inicio de Turno' },
-  turno_fin: { icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', label: 'Fin de Turno' },
-  rondin: { icon: MapPin, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Rondín' },
-  incidencia: { icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Incidencia' },
-  emergencia: { icon: Shield, color: 'text-emergency', bgColor: 'bg-emergency/10', label: 'Emergencia' },
-  reporte: { icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Reporte' },
-  sesion: { icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Inicio de Sesión' },
-  visita: { icon: DoorOpen, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Visita' },
-  relevo_pendiente: { icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', label: 'Relevo Pendiente' },
-};
+const CATEGORIAS: NotifCategoria[] = ['emergencia', 'turnos', 'operacion', 'accesos', 'sistema'];
+
 
 const Notificaciones = () => {
   const navigate = useNavigate();
@@ -37,6 +35,8 @@ const Notificaciones = () => {
   const [notifs, setNotifs] = useState<Notificacion[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterTipo, setFilterTipo] = useState<string>('all');
+  const [soundOn, setSoundOn] = useState<boolean>(() => isAlertSoundEnabled());
+
 
   useEffect(() => { loadNotifs(); }, []);
 
@@ -75,8 +75,19 @@ const Notificaciones = () => {
     setNotifs(prev => prev.map(n => n.id === id ? { ...n, leida: true } : n));
   };
 
-  const filtered = filterTipo === 'all' ? notifs : notifs.filter(n => n.tipo === filterTipo);
-  const tipos = ['all', ...new Set(notifs.map(n => n.tipo))];
+  const filtered = filterTipo === 'all'
+    ? notifs
+    : notifs.filter(n => getNotifMeta(n.tipo).categoria === filterTipo);
+
+  // Sólo se muestran las categorías presentes en el historial cargado.
+  const categorias = CATEGORIAS.filter(c => notifs.some(n => getNotifMeta(n.tipo).categoria === c));
+
+  const toggleSound = () => {
+    const next = !soundOn;
+    setAlertSoundEnabled(next);
+    setSoundOn(next);
+    if (next) playAlertSound('media');
+  };
 
   if (loading) {
     return (
@@ -93,15 +104,27 @@ const Notificaciones = () => {
           <button onClick={() => navigate('/dashboard')} className="flex items-center gap-1 text-sm opacity-80 mb-2">
             <ArrowLeft className="w-4 h-4" /> Regresar
           </button>
-          <h1 className="text-xl font-display font-bold">Notificaciones</h1>
-          <p className="text-sm opacity-70 mt-1">{notifs.filter(n => !n.leida).length} sin leer</p>
+          <div className="flex items-center justify-between gap-3">
+            <div>
+              <h1 className="text-xl font-display font-bold">Notificaciones</h1>
+              <p className="text-sm opacity-70 mt-1">{notifs.filter(n => !n.leida).length} sin leer</p>
+            </div>
+            <button
+              onClick={toggleSound}
+              aria-label={soundOn ? 'Desactivar sonido de alertas' : 'Activar sonido de alertas'}
+              className="flex items-center gap-1.5 rounded-full bg-primary-foreground/15 px-3 py-2 text-xs font-semibold"
+            >
+              {soundOn ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
+              {soundOn ? 'Sonido' : 'Silencio'}
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4 space-y-3">
-        {/* Filters */}
+        {/* Filtros por categoría */}
         <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-1 px-1">
-          {tipos.map(t => (
+          {['all', ...categorias].map(t => (
             <button
               key={t}
               onClick={() => setFilterTipo(t)}
@@ -109,7 +132,7 @@ const Notificaciones = () => {
                 filterTipo === t ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
               }`}
             >
-              {t === 'all' ? 'Todas' : tipoConfig[t]?.label || t}
+              {t === 'all' ? 'Todas' : CATEGORIA_LABEL[t as NotifCategoria]}
             </button>
           ))}
         </div>
@@ -122,7 +145,7 @@ const Notificaciones = () => {
         )}
 
         {filtered.map(n => {
-          const cfg = tipoConfig[n.tipo] || tipoConfig.zona;
+          const cfg = getNotifMeta(n.tipo);
           const Icon = cfg.icon;
           return (
             <div
@@ -134,11 +157,18 @@ const Notificaciones = () => {
                 <Icon className={`w-4 h-4 ${cfg.color}`} />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-1.5 mb-0.5">
+                <div className="flex flex-wrap items-center gap-1.5 mb-0.5">
                   <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${cfg.bgColor} ${cfg.color}`}>
                     {cfg.label}
                   </span>
+                  <span className={`text-[9px] font-bold uppercase px-1.5 py-0.5 rounded ${SEVERIDAD_STYLE[cfg.severidad]}`}>
+                    {SEVERIDAD_LABEL[cfg.severidad]}
+                  </span>
+                  <span className="text-[9px] uppercase text-muted-foreground">
+                    {CATEGORIA_LABEL[cfg.categoria]}
+                  </span>
                 </div>
+
                 <p className="text-sm text-foreground whitespace-pre-line">{n.mensaje}</p>
                 {n.foto_url && (
                   <button
