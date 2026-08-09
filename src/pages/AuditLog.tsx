@@ -97,7 +97,17 @@ const AuditLog = () => {
               Registro inmutable: no puede editarse ni borrarse.
             </p>
           </div>
-          <Button variant="outline" size="icon" onClick={() => void load()} aria-label="Recargar bitácora">
+          <Button
+            variant="outline"
+            onClick={() => void runBackup()}
+            disabled={backingUp}
+            className="min-h-11"
+            aria-label="Generar respaldo de la base de datos ahora"
+          >
+            {backingUp ? <Loader2 className="h-4 w-4 animate-spin" /> : <DatabaseBackup className="h-4 w-4" />}
+            <span className="ml-2 hidden sm:inline">Respaldo</span>
+          </Button>
+          <Button variant="outline" size="icon" onClick={() => void load()} aria-label="Recargar bitácora" className="min-h-11 min-w-11">
             <RefreshCw className={`h-4 w-4 ${loading ? 'animate-spin' : ''}`} />
           </Button>
         </header>
