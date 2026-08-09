@@ -108,6 +108,19 @@ done
 : "${APP_SCHEMAS:=public}"       # esquemas de aplicación a migrar
 : "${JOBS:=4}"
 
+# --- Storage (fotos, videos y adjuntos) --------------------------------------
+: "${MIGRATE_STORAGE:=true}"     # migrar objetos de Storage (S3 → MinIO)
+: "${STORAGE_BUCKETS:=}"         # lista separada por comas; vacío = todos los del origen
+: "${SRC_S3_ENDPOINT:=}"         # ej. https://<proyecto>.storage.supabase.co/storage/v1/s3
+: "${SRC_S3_REGION:=us-east-1}"
+: "${SRC_S3_ACCESS_KEY:=}"; : "${SRC_S3_SECRET_KEY:=}"
+: "${DST_S3_ENDPOINT:=}"         # ej. https://minio.midominio.com
+: "${DST_S3_REGION:=us-east-1}"
+: "${DST_S3_ACCESS_KEY:=}"; : "${DST_S3_SECRET_KEY:=}"
+: "${DST_PUBLIC_STORAGE_URL:=}"  # URL pública de MinIO para reescribir enlaces guardados
+: "${SRC_PUBLIC_STORAGE_URL:=}"  # URL pública anterior a reemplazar en la base de datos
+
+
 SRC_URI=""; DST_URI=""
 build_uri() { # build_uri user pass host port db
   printf 'postgresql://%s:%s@%s:%s/%s?sslmode=%s' \
