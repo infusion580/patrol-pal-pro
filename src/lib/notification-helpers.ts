@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'visita';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'visita' | 'relevo_pendiente';
 
 interface NotifParams {
   tipo: NotifType;
@@ -262,5 +262,32 @@ export async function notifyVisitaEntradaSalida(params: {
       foto_placa: params.fotoPlacaPath || null,
       foto_salida: params.fotoSalidaPath || null,
     },
+  });
+}
+
+/**
+ * Notifica a supervisores que un guardia está por terminar su turno y aún no
+ * hay guardia entrante registrado. Se usa desde el cron de backend.
+ */
+export async function notifyRelevoPendiente(
+  guardiaId: string,
+  guardiaNombre: string,
+  servicioNombre?: string,
+  finEsperado?: string,
+) {
+  const hora = finEsperado
+    ? new Date(finEsperado).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })
+    : new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
+  const mensaje =
+    `⏰ RELEVO NO CUBIERTO\n` +
+    `Empleado: ${guardiaNombre}\n` +
+    `Servicio: ${servicioNombre || 'N/A'}\n` +
+    `Fin esperado: ${hora}\n` +
+    `No se ha registrado guardia entrante.`;
+  await createNotification({
+    tipo: 'relevo_pendiente',
+    mensaje,
+    guardia_id: guardiaId,
+    metadata: { guardia: guardiaNombre, servicio: servicioNombre || null, fin_esperado: finEsperado || null },
   });
 }

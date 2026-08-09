@@ -28,6 +28,7 @@ const tipoConfig: Record<string, { icon: typeof Bell; color: string; bgColor: st
   reporte: { icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Reporte' },
   sesion: { icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted', label: 'Inicio de Sesión' },
   visita: { icon: DoorOpen, color: 'text-primary', bgColor: 'bg-primary/10', label: 'Visita' },
+  relevo_pendiente: { icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10', label: 'Relevo Pendiente' },
 };
 
 const Notificaciones = () => {
