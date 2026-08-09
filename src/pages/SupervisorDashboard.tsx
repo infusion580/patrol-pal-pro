@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy, ClipboardList } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
+import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
 import { useBrandLogo } from '@/lib/branding';
 
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
@@ -104,6 +105,7 @@ const SupervisorDashboard = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
+        <UnreadMessagesBanner />
         <div className="bg-card rounded-xl p-4 shadow-card mb-6 grid grid-cols-2 gap-4">
           {metrics.map(m => (
             <div key={m.label} className="flex items-center gap-3">
