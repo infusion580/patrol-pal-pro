@@ -127,11 +127,28 @@ const Chat = () => {
         created_at: m.created_at,
       })));
 
-      const unreadIds = data.filter(m => m.receiver_id === user.id && !m.read).map(m => m.id);
+      // Marcar como leídos SOLO los mensajes de este hilo que ya se cargaron en pantalla.
+      const unreadIds = data
+        .filter(m => m.sender_id === contactId && m.receiver_id === user.id && !m.read)
+        .map(m => m.id);
+
       if (unreadIds.length > 0) {
-        await supabase.from('chat_messages').update({ read: true }).in('id', unreadIds);
-        notifyChatRead();
+        const { error: readError } = await supabase
+          .from('chat_messages')
+          .update({ read: true })
+          .in('id', unreadIds)
+          .eq('sender_id', contactId)   // doble candado: nunca toca otros hilos
+          .eq('receiver_id', user.id)
+          .eq('read', false);
+
+        if (readError) {
+          console.error('markAsRead error:', readError);
+          return;
+        }
+
+        setMessages(prev => prev.map(m => (unreadIds.includes(m.id) ? { ...m, read: true } : m)));
         setContacts(prev => prev.map(c => (c.user_id === contactId ? { ...c, unread: 0 } : c)));
+        notifyChatRead();
       }
     }
   }, [user]);
