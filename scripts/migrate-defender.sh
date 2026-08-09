@@ -75,6 +75,7 @@ Uso: migrate-defender.sh [opciones]
   --env-file FILE    Archivo de configuración (default scripts/migrate.env)
   --dry-run          Muestra lo que haría sin ejecutar cambios
   --keep-going       Continúa aunque una validación no crítica falle
+                     (Storage se migra en ambos modos; MIGRATE_STORAGE=false lo desactiva)
   -h, --help         Esta ayuda
 EOF
 }
