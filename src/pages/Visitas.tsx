@@ -131,6 +131,29 @@ const Visitas = () => {
 
       if (error) throw error;
 
+      // Alerta de entrada para supervisión (la salida emite la suya después)
+      try {
+        const { notifyVisitaEntrada } = await import('@/lib/notification-helpers');
+        const { data: prof } = await supabase
+          .from('profiles')
+          .select('nombre, apellido')
+          .eq('user_id', user.id)
+          .maybeSingle();
+        const guardiaNombre = prof ? `${prof.nombre ?? ''} ${prof.apellido ?? ''}`.trim() || 'Guardia' : 'Guardia';
+        await notifyVisitaEntrada({
+          guardiaId: user.id,
+          guardiaNombre,
+          nombreVisitante: nombre.trim(),
+          personaAVisitar: personaAVisitar.trim(),
+          areaDestino: areaDestino.trim(),
+          motivo: motivo.trim(),
+          fotoInePath: inePath,
+          fotoPlacaPath: placaPath,
+        });
+      } catch (e) {
+        console.error('notifyVisitaEntrada failed', e);
+      }
+
       toast({ title: '✅ Visita registrada', description: `${nombre} ingresó correctamente.` });
       resetForm();
       loadVisitas();
