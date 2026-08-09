@@ -38,15 +38,10 @@ const Notificaciones = () => {
 
   useEffect(() => { loadNotifs(); }, []);
 
-  useEffect(() => {
-    const channel = supabase
-      .channel('notificaciones-realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'notificaciones' }, () => {
-        loadNotifs();
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  // Canal compartido: el gestor central evita reconexiones duplicadas
+  // cuando el celular sale de suspensión.
+  useRealtimeTable('notificaciones', () => loadNotifs());
+
 
   const loadNotifs = async () => {
     const { data } = await supabase
