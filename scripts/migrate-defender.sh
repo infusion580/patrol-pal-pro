@@ -139,6 +139,13 @@ preflight() {
   [[ "$pgv" -ge 15 ]] || warn "pg_dump v$pgv detectado; se recomienda 15 o superior"
   ok "Herramientas disponibles (pg_dump v$pgv)"
 
+  if [[ "$MIGRATE_STORAGE" == "true" ]]; then
+    command -v aws >/dev/null 2>&1 \
+      || die "Falta 'aws' (AWS CLI v2) requerido para migrar Storage; instálalo o usa MIGRATE_STORAGE=false"
+    ok "AWS CLI disponible para la migración de Storage (S3 → MinIO)"
+  fi
+
+
   if [[ "$MODE" != "restore" ]]; then
     [[ -n "$SRC_HOST" ]] || die "SRC_HOST no configurado (revisa $ENV_FILE)"
     SRC_URI="$(build_uri "$SRC_USER" "$SRC_PASSWORD" "$SRC_HOST" "$SRC_PORT" "$SRC_DB")"
