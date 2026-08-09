@@ -10,6 +10,7 @@ import DailyProgress from '@/components/DailyProgress';
 import PendientesList from '@/components/PendientesList';
 import AppHeader from '@/components/AppHeader';
 import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
+import UnreadAlertsBanner from '@/components/UnreadAlertsBanner';
 
 const GuardDashboard = () => {
   const { user } = useAuth();
@@ -95,6 +96,8 @@ const GuardDashboard = () => {
         </div>
 
         <UnreadMessagesBanner />
+
+        <UnreadAlertsBanner />
 
         <ShiftControl />
 
