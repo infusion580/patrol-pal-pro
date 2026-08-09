@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'visita' | 'relevo_pendiente';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente';
 
 interface NotifParams {
   tipo: NotifType;
@@ -78,6 +78,36 @@ export async function notifySesionCierre(userId: string, userNombre: string, rol
     metadata: { usuario: userNombre, rol: rol || null, evento: 'logout', fecha: iso },
   });
 }
+
+/**
+ * Alerta prioritaria: el usuario cerró sesión mientras tenía un turno activo.
+ * Se registra como alerta para que admin/supervisor puedan dar seguimiento.
+ */
+export async function notifySesionCierreEnTurno(
+  userId: string,
+  userNombre: string,
+  servicioNombre?: string,
+  inicioTurno?: string,
+) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+  const desde = inicioTurno
+    ? new Date(inicioTurno).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
+    : 'N/A';
+  const mensaje = `⚠️ CIERRE DE SESIÓN CON TURNO ACTIVO\nEmpleado: ${userNombre}\nServicio: ${servicioNombre || 'N/A'}\nTurno iniciado: ${desde}\nFecha: ${fecha}\nHora: ${hora}`;
+  await createNotification({
+    tipo: 'sesion_en_turno',
+    mensaje,
+    guardia_id: userId,
+    metadata: {
+      usuario: userNombre,
+      evento: 'logout_en_turno',
+      servicio: servicioNombre || null,
+      inicio_turno: inicioTurno || null,
+      fecha: iso,
+    },
+  });
+}
+
 
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {
   const { fecha, hora, iso } = fechaHoraLarga();
