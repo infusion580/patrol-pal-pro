@@ -35,8 +35,14 @@ Aplicación web PWA para la operación de una empresa de seguridad privada: cont
 | Ubicación | `src/lib/geo*.ts`, `src/hooks/use-global-zone-monitor.ts` | Geocerca y alertas de salida de zona |
 | Auditoría | `src/lib/error-monitor.ts`, `src/lib/device-info.ts` | Errores y contexto de dispositivo |
 | Soporte | `src/components/SoporteChat.tsx`, `src/lib/soporte-config.ts` | Botón flotante global de reporte de fallas vía WhatsApp |
+| Reportes PDF | `src/lib/pdf-report.ts` | Generación de PDF (jsPDF + autoTable) con logotipo y colores de marca |
+| Chat | `src/pages/Chat.tsx`, `src/hooks/use-chat-notifications.tsx` | Hilos 1 a 1; el contador ignora auto-mensajes y solo marca leído el hilo abierto |
 
 Soporte: `SoporteChat` se monta una sola vez en `src/App.tsx` y está disponible en todas las rutas autenticadas. El formulario arma un mensaje con nombre, número de empleado, rol, ruta actual, dispositivo y fecha (`construirMensajeFalla`) y abre `https://wa.me/<numero>?text=...`. El número destino se guarda en `localStorage` (`soporte_whatsapp`), con valor predeterminado `524426356998`; solo el rol admin puede cambiarlo desde el propio widget. No hay backend involucrado: el envío ocurre en el cliente, por lo que funciona incluso con la app recién cargada desde caché.
+
+Soporte (UI): el botón flotante vive abajo a la izquierda (`bottom-24 left-4`, respetando safe-area) para no chocar con el menú inferior.
+
+Marca: `src/pages/Branding.tsx` expone 13 paletas predefinidas en el arreglo `PRESETS` (Rojo, Azul corporativo, Verde operativo, Ámbar nocturno, Claro institucional, Morado táctico, Cian tecnológico, Naranja alerta, Grafito neutro, Verde militar, Vino elegante, Oro premium, Claro menta) además de edición manual en HSL; los valores se guardan en la tabla `branding`.
 
 Diseño: tokens semánticos HSL en `src/index.css` (`--primary`, `--accent`, `--background`, `--card`), sobrescribibles en caliente por el BrandingProvider.
 

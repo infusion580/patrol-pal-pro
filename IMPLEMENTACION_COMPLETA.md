@@ -173,3 +173,14 @@ Comportamiento: `persistSession: true` + `autoRefreshToken: true` sobre `localSt
 | Refresh token vencido sin conexión | La app opera con colas offline, pero pedirá login al reconectar |
 | Cambio de contraseña / revocación / expulsión admin | Invalida la sesión en todos los dispositivos |
 | Segundo plano | Depende del SO; la app no permanece activa por sí sola sin instalarse como PWA |
+
+
+---
+
+## 15. Identidad, exportación en PDF y chat (última iteración)
+
+- **Paletas de marca:** `src/pages/Branding.tsx` incluye 13 paletas listas para aplicar con un clic (Rojo, Azul corporativo, Verde operativo, Ámbar nocturno, Claro institucional, Morado táctico, Cian tecnológico, Naranja alerta, Grafito neutro, Verde militar, Vino elegante, Oro premium, Claro menta) y edición manual HSL. Persisten en la tabla `branding` y las aplica `BrandingProvider`.
+- **Exportación en PDF:** `src/lib/pdf-report.ts` centraliza la generación con jsPDF + autoTable, usando el logotipo y el color principal configurados. Disponible en `ReporteAsistencias.tsx` y en el portal del cliente (`ClienteDashboard.tsx`), junto a la exportación en Excel.
+- **Botón de soporte:** `SoporteChat` se reubicó a `bottom-24 left-4` con safe-area para no taparse con el menú inferior en pantallas pequeñas.
+- **Mensajes no leídos:** el contador excluye los mensajes enviados a uno mismo y, al abrir un hilo, solo se marcan como leídos los mensajes recibidos de ese contacto (`.eq('sender_id', contactId)`), sincronizando el globo del menú mediante `CHAT_READ_EVENT`.
+- **Build/PWA:** `vite.config.ts` eleva `maximumFileSizeToCacheInBytes` a 8 MB para que Workbox precachée el bundle actual.
