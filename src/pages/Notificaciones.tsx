@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
 import { SignedImg } from '@/components/SignedImg';
 import { getSignedUrl } from '@/lib/storage-helpers';
+import { useRealtimeTable } from '@/hooks/use-realtime';
 
 interface Notificacion {
   id: string;
