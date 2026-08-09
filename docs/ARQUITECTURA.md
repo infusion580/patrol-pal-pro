@@ -156,13 +156,17 @@ Resultado: chunk de entrada de 1,917 KB (577 KB gzip) → **240 KB (79 KB gzip)*
 
 Referencia: `Defender-Informe-QA-Despliegue.pdf` y `Defender-Manual-Tecnico-v4.pdf` (Anexo A).
 
-## 11. Diagrama de arquitectura y flujo de datos
+## 11. Diagrama de arquitectura y flujo de datos (por perfil)
 
-Diagrama fuente: `docs/arquitectura-flujo.mmd` (Mermaid).
+Diagrama fuente: `docs/arquitectura-flujo.mmd` (Mermaid). Incluye los cinco perfiles de la plataforma.
 
 | Bloque | Qué hace | Flujo de datos |
 |---|---|---|
-| Módulo Guardia | Turnos, rondines con foto y GPS, pendientes, visitas, reportes, pánico y geocerca | Escribe en Postgres y Storage; si no hay red, encola en localStorage/IndexedDB y reintenta al reconectar |
+| Perfil Guardia (PWA) | Turnos, rondines con foto y GPS, pendientes del puesto, visitas, reportes, pánico y geocerca global | Escribe en Postgres y Storage; si no hay red, encola en localStorage/IndexedDB y reintenta al reconectar |
 | Comunicación | Chat 1 a 1, chat RH por folio, centro de notificaciones y Web Push | Los eventos operativos generan notificaciones; `send-push` (Edge Function) entrega la alerta al SO aun con la app cerrada |
-| Panel Supervisor/Admin | Tablero en vivo, mapa Leaflet, validación de reportes, asistencias/faltas/relevos, métricas y exportes | Lee por Realtime (canales compartidos por tabla) y consulta agregada para KPIs, PDF y Excel |
-| Backend | Auth con NIP, Postgres con RLS, Storage privado, Realtime, Edge Functions y pg_cron | Todo acceso pasa por RLS + `has_role`; los cambios relevantes quedan en `audit_log` (append-only) |
+| Perfil Supervisor | Tablero en vivo, mapa Leaflet, validación de reportes con feedback, asistencias/faltas/relevos, métricas y exportes | Lee por Realtime (canales compartidos por tabla) y consulta agregada para KPIs, PDF y Excel |
+| Perfil Admin | Alta de servicios y puntos, NIPs de registro, servicio principal por guardia, alarmas de rondín, branding y configuración de datos visibles al cliente | Define la configuración que consumen el resto de perfiles; las alarmas se ejecutan vía Edge Functions/pg_cron y la bitácora se lee desde `audit_log` |
+| Perfil RH | Folios de chat confidencial, turnos extra, préstamos, vacaciones, estatus laboral y relevos no cubiertos | Lee y escribe tablas de RH bajo RLS; genera PDF de relevos no cubiertos con filtros de fecha |
+| Perfil Cliente | Dashboard de solo lectura con KPIs, gráficas, semáforo y exportes | Consulta filtrada por la configuración del admin (`cliente_reporte_config`); nunca accede a datos operativos internos |
+| Backend | Auth con NIP, Postgres con RLS por rol, Storage privado, Realtime, Edge Functions y pg_cron | Todo acceso pasa por RLS + `has_role`; los cambios relevantes quedan en `audit_log` (append-only) |
+
