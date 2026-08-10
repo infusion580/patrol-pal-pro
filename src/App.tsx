@@ -44,6 +44,8 @@ const ClienteReporteConfig = lazy(() => import("./pages/ClienteReporteConfig"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
 const Branding = lazy(() => import("./pages/Branding"));
 const SoporteConfig = lazy(() => import("./pages/SoporteConfig"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
+
 
 /** Lightweight placeholder while a route chunk downloads. */
 const RouteFallback = () => (
@@ -118,6 +120,8 @@ const App = () => (
             <Route path="/registro" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
 
             {/* Authenticated — any role */}
             <Route path="/dashboard" element={<Auth><Dashboard /></Auth>} />

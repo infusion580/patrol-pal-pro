@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Eye, EyeOff } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { useBrandLogo } from '@/lib/branding';
+
+/** Solo se aceptan rutas relativas del mismo origen como destino post-login. */
+const safeNext = (value: string | null) =>
+  value && value.startsWith('/') && !value.startsWith('//') ? value : null;
 
 const Login = () => {
   const logoDefender = useBrandLogo();
@@ -16,14 +20,16 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const { login, isAuthenticated, loading: authLoading } = useAuth();
   const navigate = useNavigate();
+  const [params] = useSearchParams();
   const { toast } = useToast();
 
   // Navigate once auth is confirmed — avoids race condition
   useEffect(() => {
     if (!authLoading && isAuthenticated) {
-      navigate('/dashboard', { replace: true });
+      navigate(safeNext(params.get('next')) ?? '/dashboard', { replace: true });
     }
-  }, [isAuthenticated, authLoading, navigate]);
+  }, [isAuthenticated, authLoading, navigate, params]);
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
