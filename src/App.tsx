@@ -44,6 +44,8 @@ const ClienteReporteConfig = lazy(() => import("./pages/ClienteReporteConfig"));
 const AuditLog = lazy(() => import("./pages/AuditLog"));
 const Branding = lazy(() => import("./pages/Branding"));
 const SoporteConfig = lazy(() => import("./pages/SoporteConfig"));
+const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
+
 
 /** Lightweight placeholder while a route chunk downloads. */
 const RouteFallback = () => (
