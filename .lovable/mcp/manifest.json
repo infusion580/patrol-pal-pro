@@ -1,0 +1,249 @@
+{
+  "version": 1,
+  "sdk_version": "0.26.2",
+  "path": "/mcp",
+  "auth": {
+    "type": "oauth",
+    "issuer": "https://gjhfxdlzpvakxfkkrsjd.supabase.co/auth/v1",
+    "accepted_audiences": [
+      "authenticated"
+    ]
+  },
+  "mcp": {
+    "server": {
+      "name": "guardian-connect",
+      "version": "0.1.0",
+      "title": "Guardian Connect"
+    },
+    "tools": [
+      {
+        "name": "list_servicios",
+        "title": "Listar servicios",
+        "description": "Lista los servicios (puestos) visibles para el usuario autenticado.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 50,
+              "description": "Máximo de servicios a devolver."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_asistencias",
+        "title": "Listar asistencias",
+        "description": "Lista los registros de asistencia (turnos) en un rango de fechas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "desde": {
+              "type": "string",
+              "description": "Fecha inicial ISO, ej. 2026-08-01."
+            },
+            "hasta": {
+              "type": "string",
+              "description": "Fecha final ISO (opcional)."
+            },
+            "servicio_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filtrar por servicio."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          "required": [
+            "desde"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_alertas",
+        "title": "Listar alertas",
+        "description": "Lista las notificaciones/alertas operativas más recientes (emergencias, rondines, turnos, visitas).",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "solo_no_leidas": {
+              "type": "boolean",
+              "default": false,
+              "description": "Devolver únicamente alertas sin leer."
+            },
+            "tipo": {
+              "type": "string",
+              "description": "Filtrar por tipo de alerta, ej. emergencia."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 30
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_visitas",
+        "title": "Listar visitas",
+        "description": "Lista el control de visitas (entradas y salidas) registradas.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "desde": {
+              "type": "string",
+              "description": "Fecha inicial ISO (opcional)."
+            },
+            "servicio_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "solo_dentro": {
+              "type": "boolean",
+              "default": false,
+              "description": "Solo visitantes que aún no registran salida."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_reportes_turno",
+        "title": "Listar reportes de turno",
+        "description": "Lista los reportes de turno con su estado de revisión del supervisor.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "status": {
+              "type": "string",
+              "enum": [
+                "pendiente",
+                "aprobado",
+                "rechazado"
+              ],
+              "description": "Filtrar por estado de revisión."
+            },
+            "limit": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 25
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "crear_pendiente_puesto",
+        "title": "Crear pendiente de puesto",
+        "description": "Crea una tarea pendiente para el guardia de un servicio (ej. revisar puerta 5 cada hora).",
+        "annotations": {
+          "readOnlyHint": false,
+          "destructiveHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "servicio_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Servicio al que aplica la tarea."
+            },
+            "titulo": {
+              "type": "string",
+              "minLength": 1
+            },
+            "descripcion": {
+              "type": "string",
+              "minLength": 1
+            },
+            "frecuencia": {
+              "type": "string",
+              "enum": [
+                "unica",
+                "por_turno",
+                "por_horas"
+              ],
+              "default": "por_turno"
+            },
+            "horas_intervalo": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 24,
+              "description": "Requerido si la frecuencia es por_horas."
+            },
+            "prioridad": {
+              "type": "string",
+              "enum": [
+                "baja",
+                "media",
+                "alta"
+              ],
+              "default": "media"
+            }
+          },
+          "required": [
+            "servicio_id",
+            "titulo",
+            "descripcion"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      }
+    ]
+  }
+}
