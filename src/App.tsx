@@ -120,6 +120,8 @@ const App = () => (
             <Route path="/registro" element={<Register />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
+
 
             {/* Authenticated — any role */}
             <Route path="/dashboard" element={<Auth><Dashboard /></Auth>} />
