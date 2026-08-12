@@ -20,6 +20,7 @@ import { generateReportPdf } from '@/lib/pdf-report';
 import { useBranding } from '@/lib/branding';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
+import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTab';
 import {
   defaultClienteReportConfig,
   loadClienteReportConfig,
