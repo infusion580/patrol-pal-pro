@@ -77,9 +77,10 @@ export async function listarReconocimientos(soloPublicados = false): Promise<Rec
 
 export async function crearReconocimiento(input: ReconocimientoInput) {
   const { data: userData } = await supabase.auth.getUser();
+  const cumplimiento = await obtenerCumplimiento(input.guardia_id);
   const { error } = await supabase.from('reconocimientos').insert({
     ...input,
-    bono: normalizarBono(input.posicion, input.bono),
+    bono: normalizarBono(input.posicion, input.bono, cumplimiento),
     created_by: userData.user?.id ?? null,
   });
   if (error) throw error;
@@ -87,8 +88,9 @@ export async function crearReconocimiento(input: ReconocimientoInput) {
 
 export async function actualizarReconocimiento(id: string, input: Partial<ReconocimientoInput>) {
   const patch: Record<string, unknown> = { ...input };
-  if (input.posicion !== undefined) {
-    patch.bono = normalizarBono(input.posicion, (input.bono ?? 0) as number);
+  if (input.posicion !== undefined && input.guardia_id) {
+    const cumplimiento = await obtenerCumplimiento(input.guardia_id);
+    patch.bono = normalizarBono(input.posicion, (input.bono ?? 0) as number, cumplimiento);
   }
   const { error } = await supabase.from('reconocimientos').update(patch).eq('id', id);
   if (error) throw error;
