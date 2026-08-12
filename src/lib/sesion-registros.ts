@@ -1,6 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { compressImage } from '@/lib/image-compress';
 import { getDeviceInfo } from '@/lib/device-info';
+import { notifySesionValidacion } from '@/lib/notification-helpers';
 
 /**
  * Registro de sesión con validación fotográfica
