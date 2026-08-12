@@ -639,6 +639,15 @@ const ClienteDashboard = () => {
               </Card>
             </TabsContent>
           )}
+              <TabsContent value="reporte" className="mt-3">
+                {user && (
+                  <ReportePersonalizadoTab
+                    clienteId={user.id}
+                    clienteNombre={`${user.nombre ?? ''} ${user.apellido ?? ''}`.trim()}
+                    mode="cliente"
+                  />
+                )}
+              </TabsContent>
             </Tabs>
           );
         })()}
