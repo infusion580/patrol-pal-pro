@@ -298,7 +298,12 @@ const Rondines = () => {
       toast({ title: 'Foto requerida', description: 'Debes adjuntar una foto de evidencia del punto.', variant: 'destructive' });
       return;
     }
+    if (scanEstado === 'con_novedad' && scanObservacion.trim().length < 10) {
+      toast({ title: 'Observación requerida', description: 'Describe la novedad con al menos 10 caracteres.', variant: 'destructive' });
+      return;
+    }
     setScanning(true);
+
 
     // GPS check
     let lat: number | null = null, lng: number | null = null;
