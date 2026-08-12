@@ -153,11 +153,28 @@ const ShiftControl = () => {
       } as any).eq('id', activeAsistenciaId);
     }
 
+    // Nota para el próximo relevo (fecha/hora y turno quedan registrados)
+    const notaGuardada = await crearNotaRelevo({
+      servicioId: activeTurno.servicio_id || null,
+      turnoId: activeTurno.id,
+      autorId: user.id,
+      autorNombre: `${user.nombre} ${user.apellido}`.trim(),
+      pendientes: notaPendientes,
+      instrucciones: notaInstrucciones,
+      importante: notaImportante,
+    });
+
     setActiveTurno(null);
     setActiveAsistenciaId(null);
     setShowHandoff(false);
     setComentario('');
     setGuardiaEntrante('');
+    setNotaPendientes('');
+    setNotaInstrucciones('');
+    setNotaImportante(false);
+    if (notaGuardada) {
+      toast({ title: '📝 Nota enviada al próximo relevo' });
+    }
     toast({
       title: completado ? (horasExtra > 0 ? '✅ Turno completo + horas extra' : '✅ Turno completo') : '⚠️ Turno incompleto',
       description: completado
