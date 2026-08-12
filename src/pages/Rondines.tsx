@@ -239,7 +239,7 @@ const Rondines = () => {
     setCheckedIn(false);
     setRondinId(null);
     setReporte('');
-    setPoints(prev => prev.map(p => ({ ...p, scanned: false, time: null, foto_url: null })));
+    setPoints(prev => prev.map(p => ({ ...p, scanned: false, time: null, foto_url: null, observacion: '', estado: 'sin_novedad' as EstadoPunto, scan_lat: null, scan_lng: null })));
     toast({ title: '✅ Rondín completado', description: 'Reporte guardado correctamente.' });
   };
 
@@ -502,7 +502,7 @@ const Rondines = () => {
                     )}
                   </div>
                   {point.scanned && (
-                    <div className="mt-2 pl-13">
+                    <div className="mt-2 pl-[52px]">
                       <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${point.estado === 'con_novedad' ? 'bg-emergency/10 text-emergency' : 'bg-success/10 text-success'}`}>
                         {point.estado === 'con_novedad' ? 'CON NOVEDAD' : 'SIN NOVEDAD'}
                       </span>
