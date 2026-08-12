@@ -1406,6 +1406,151 @@ export type Database = {
         }
         Relationships: []
       }
+      validacion_puesto_config: {
+        Row: {
+          activo: boolean
+          checkpoint_id: string | null
+          created_at: string
+          created_by: string | null
+          dias: number[]
+          guardia_ids: string[]
+          horarios: string[]
+          id: string
+          nombre: string
+          radio_metros: number
+          servicio_id: string
+          tolerancia_minutos: number
+          updated_at: string
+        }
+        Insert: {
+          activo?: boolean
+          checkpoint_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          dias?: number[]
+          guardia_ids?: string[]
+          horarios?: string[]
+          id?: string
+          nombre?: string
+          radio_metros?: number
+          servicio_id: string
+          tolerancia_minutos?: number
+          updated_at?: string
+        }
+        Update: {
+          activo?: boolean
+          checkpoint_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          dias?: number[]
+          guardia_ids?: string[]
+          horarios?: string[]
+          id?: string
+          nombre?: string
+          radio_metros?: number
+          servicio_id?: string
+          tolerancia_minutos?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validacion_puesto_config_checkpoint_id_fkey"
+            columns: ["checkpoint_id"]
+            isOneToOne: false
+            referencedRelation: "checkpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validacion_puesto_config_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      validaciones_puesto: {
+        Row: {
+          checkpoint_id: string | null
+          config_id: string | null
+          created_at: string
+          dentro_area: boolean
+          dispositivo: Json | null
+          distancia_metros: number | null
+          foto_url: string | null
+          guardia_id: string
+          id: string
+          lat: number | null
+          lng: number | null
+          precision_metros: number | null
+          programado_at: string
+          respondido_at: string
+          resultado: string
+          servicio_id: string | null
+          ubicacion_error: string | null
+        }
+        Insert: {
+          checkpoint_id?: string | null
+          config_id?: string | null
+          created_at?: string
+          dentro_area?: boolean
+          dispositivo?: Json | null
+          distancia_metros?: number | null
+          foto_url?: string | null
+          guardia_id: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          precision_metros?: number | null
+          programado_at: string
+          respondido_at?: string
+          resultado?: string
+          servicio_id?: string | null
+          ubicacion_error?: string | null
+        }
+        Update: {
+          checkpoint_id?: string | null
+          config_id?: string | null
+          created_at?: string
+          dentro_area?: boolean
+          dispositivo?: Json | null
+          distancia_metros?: number | null
+          foto_url?: string | null
+          guardia_id?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          precision_metros?: number | null
+          programado_at?: string
+          respondido_at?: string
+          resultado?: string
+          servicio_id?: string | null
+          ubicacion_error?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "validaciones_puesto_checkpoint_id_fkey"
+            columns: ["checkpoint_id"]
+            isOneToOne: false
+            referencedRelation: "checkpoints"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validaciones_puesto_config_id_fkey"
+            columns: ["config_id"]
+            isOneToOne: false
+            referencedRelation: "validacion_puesto_config"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "validaciones_puesto_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       visitas: {
         Row: {
           area_destino: string
