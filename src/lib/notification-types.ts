@@ -19,6 +19,7 @@ import {
   MapPinOff,
   Shield,
   ShieldCheck,
+  Trophy,
   UserX,
   type LucideIcon,
 } from 'lucide-react';
