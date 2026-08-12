@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente' | 'novedad' | 'novedad_importante';
 
 interface NotifParams {
   tipo: NotifType;
@@ -398,5 +398,62 @@ export async function notifyRelevoPendiente(
     mensaje,
     guardia_id: guardiaId,
     metadata: { guardia: guardiaNombre, servicio: servicioNombre || null, fin_esperado: finEsperado || null },
+  });
+}
+
+/**
+ * Alerta por una novedad registrada en el reporte de turno.
+ * Las novedades marcadas como IMPORTANTE llegan al supervisor asignado
+ * del guardia y quedan visibles para administración con fecha y hora.
+ */
+export async function notifyNovedad(params: {
+  guardiaId: string;
+  guardiaNombre: string;
+  descripcion: string;
+  importante: boolean;
+  servicioNombre?: string | null;
+  ubicacion?: string | null;
+  lat?: number | null;
+  lng?: number | null;
+  fotoPath?: string | null;
+}) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+
+  // Supervisor asignado al guardia (si existe) para dirigir la alerta.
+  let supervisorId: string | null = null;
+  try {
+    const { data } = await supabase
+      .from('profiles')
+      .select('supervisor_asignado_id')
+      .eq('user_id', params.guardiaId)
+      .maybeSingle();
+    supervisorId = (data as any)?.supervisor_asignado_id || null;
+  } catch { /* sin supervisor asignado */ }
+
+  const mensaje =
+    (params.importante ? '⚠️ NOVEDAD IMPORTANTE\n' : '📝 NOVEDAD DE TURNO\n') +
+    `Guardia: ${params.guardiaNombre}\n` +
+    (params.servicioNombre ? `Servicio: ${params.servicioNombre}\n` : '') +
+    `Fecha: ${fecha}\n` +
+    `Hora: ${hora}\n` +
+    (params.ubicacion ? `Ubicación: ${params.ubicacion}\n` : '') +
+    (params.lat && params.lng ? `Coordenadas: ${params.lat.toFixed(5)}, ${params.lng.toFixed(5)}\n` : '') +
+    `Novedad: ${params.descripcion}`;
+
+  await createNotification({
+    tipo: params.importante ? 'novedad_importante' : 'novedad',
+    mensaje,
+    guardia_id: params.guardiaId,
+    supervisor_id: supervisorId,
+    foto_url: params.fotoPath || null,
+    metadata: {
+      guardia: params.guardiaNombre,
+      servicio: params.servicioNombre || null,
+      importancia: params.importante ? 'importante' : 'normal',
+      ubicacion: params.ubicacion || null,
+      lat: params.lat ?? null,
+      lng: params.lng ?? null,
+      fecha: iso,
+    },
   });
 }

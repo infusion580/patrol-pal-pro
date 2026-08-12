@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import BottomNav from '@/components/BottomNav';
+import NovedadesTurno from '@/components/NovedadesTurno';
 import EmergencyButton from '@/components/EmergencyButton';
 
 const ReporteTurno = () => {
@@ -172,6 +173,8 @@ const ReporteTurno = () => {
             <Textarea placeholder="Observaciones adicionales..." value={form.observaciones} onChange={(e) => update('observaciones', e.target.value)} rows={3} className="text-sm" />
           </div>
         </div>
+
+        <NovedadesTurno />
 
         <div className="bg-card rounded-xl p-4 shadow-card">
           <Label className="mb-3 block">Adjuntar Evidencias</Label>

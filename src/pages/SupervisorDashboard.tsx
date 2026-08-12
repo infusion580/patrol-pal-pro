@@ -127,6 +127,7 @@ const SupervisorDashboard = () => {
           {[
             { icon: MapPin, label: 'Mapa', path: '/mapa' },
             { icon: FileText, label: 'Reportes', path: '/reportes-supervisor' },
+            { icon: ClipboardList, label: 'Novedades', path: '/novedades' },
             { icon: BarChart3, label: 'Métricas', path: '/metricas' },
             { icon: Settings, label: 'Servicios', path: '/servicios' },
             { icon: Bell, label: 'Alertas', path: '/notificaciones' },

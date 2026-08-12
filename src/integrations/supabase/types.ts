@@ -640,6 +640,62 @@ export type Database = {
         }
         Relationships: []
       }
+      novedades: {
+        Row: {
+          alerta_enviada_at: string | null
+          created_at: string
+          descripcion: string
+          foto_url: string | null
+          guardia_id: string
+          id: string
+          importancia: string
+          lat: number | null
+          lng: number | null
+          servicio_id: string | null
+          turno_id: string | null
+          ubicacion_texto: string | null
+          updated_at: string
+        }
+        Insert: {
+          alerta_enviada_at?: string | null
+          created_at?: string
+          descripcion: string
+          foto_url?: string | null
+          guardia_id: string
+          id?: string
+          importancia?: string
+          lat?: number | null
+          lng?: number | null
+          servicio_id?: string | null
+          turno_id?: string | null
+          ubicacion_texto?: string | null
+          updated_at?: string
+        }
+        Update: {
+          alerta_enviada_at?: string | null
+          created_at?: string
+          descripcion?: string
+          foto_url?: string | null
+          guardia_id?: string
+          id?: string
+          importancia?: string
+          lat?: number | null
+          lng?: number | null
+          servicio_id?: string | null
+          turno_id?: string | null
+          ubicacion_texto?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "novedades_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       numeros_emergencia: {
         Row: {
           activo: boolean
