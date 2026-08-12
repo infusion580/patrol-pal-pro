@@ -2,8 +2,11 @@
  * Administración del Cuadro de Honor
  * ----------------------------------
  * Admin y supervisor pueden registrar reconocimientos (guardia, posición,
- * periodo, motivo y bono), publicarlos —lo que notifica a todos los guardias—
- * y eliminarlos. Solo la posición #1 recibe bono económico.
+ * periodo y motivo), publicarlos —lo que notifica a todos los guardias y
+ * genera un anuncio en Comunicados— y eliminarlos.
+ *
+ * El bono NO lo decide una persona: el sistema lo otorga únicamente al guardia
+ * en la posición #1 que además tenga el 100% de sus metas cumplidas.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
