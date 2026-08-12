@@ -67,7 +67,8 @@ const Servicios = () => {
         tipo_turno: ((s as any).tipo_turno || '12h') as TipoTurno,
         rondin_intervalo_minutos: (s as any).rondin_intervalo_minutos ?? null,
         rondin_tolerancia_minutos: (s as any).rondin_tolerancia_minutos ?? 10,
-        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
+        permitir_rondin_incompleto: (s as any).permitir_rondin_incompleto ?? false,
+        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50, obligatorio: (c as any).obligatorio ?? true })),
       });
     }
     setServicios(serviciosWithCps);
