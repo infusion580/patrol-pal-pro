@@ -16,6 +16,7 @@ interface Checkpoint {
   lat: number | null;
   lng: number | null;
   radius_metros: number;
+  obligatorio: boolean;
 }
 
 type TipoTurno = '12h' | '24h' | 'corrido';
@@ -28,6 +29,7 @@ interface Servicio {
   tipo_turno: TipoTurno;
   rondin_intervalo_minutos: number | null;
   rondin_tolerancia_minutos: number;
+  permitir_rondin_incompleto: boolean;
   checkpoints: Checkpoint[];
 }
 
