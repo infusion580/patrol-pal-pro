@@ -1,8 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy, ClipboardList, ShieldCheck, Award,
-} from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy, ClipboardList, ShieldCheck, Award, Megaphone,} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
@@ -137,6 +136,7 @@ const SupervisorDashboard = () => {
             { icon: Target, label: 'Metas', path: '/metas' },
             { icon: Trophy, label: 'Cuadro Honor', path: '/cuadro-honor' },
             { icon: Award, label: 'Reconocimientos', path: '/reconocimientos' },
+            { icon: Megaphone, label: 'Comunicados', path: '/comunicados' },
             { icon: ClipboardList, label: 'Asistencias', path: '/reporte-asistencias' },
             { icon: ClipboardList, label: 'Pendientes', path: '/pendientes' },
           ].map(a => (
