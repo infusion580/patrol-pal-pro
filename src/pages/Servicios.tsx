@@ -143,6 +143,19 @@ const Servicios = () => {
     fetchServicios();
   };
 
+  const toggleCheckpointObligatorio = async (checkpointId: string, obligatorio: boolean) => {
+    const { error } = await supabase.from('checkpoints').update({ obligatorio } as any).eq('id', checkpointId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo actualizar el punto.', variant: 'destructive' }); return; }
+    fetchServicios();
+  };
+
+  const togglePermitirIncompleto = async (servicioId: string, permitir: boolean) => {
+    const { error } = await supabase.from('servicios').update({ permitir_rondin_incompleto: permitir } as any).eq('id', servicioId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo guardar la configuración.', variant: 'destructive' }); return; }
+    toast({ title: permitir ? 'Se permite cerrar rondines incompletos' : 'Puntos obligatorios requeridos' });
+    fetchServicios();
+  };
+
   if (loading) {
     return (
       <div className="min-h-dvh flex items-center justify-center bg-background">
