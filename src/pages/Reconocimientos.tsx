@@ -217,10 +217,26 @@ const Reconocimientos = () => {
             />
           </div>
 
-          <div>
-            <label className="text-xs text-muted-foreground">Bono económico</label>
-            {posicion === 1 ? (
-              <>
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Cumplimiento de metas (automático)</label>
+              <span
+                className={`text-sm font-bold ${
+                  (cumplimiento ?? 0) >= 100 ? 'text-success' : 'text-muted-foreground'
+                }`}
+              >
+                {!guardiaId ? '—' : cargandoCumpl ? '…' : `${cumplimiento ?? 0}%`}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground mt-1">
+              El bono lo determina el sistema: se otorga únicamente al lugar #1 con el 100% de sus metas
+              cumplidas (rondines y reportes de los últimos 30 días). No puede asignarse manualmente.
+            </p>
+
+            {elegible ? (
+              <div className="mt-3">
+                <label className="text-xs text-muted-foreground">Monto del bono autorizado</label>
                 <div className="flex gap-2 mt-1">
                   {BONOS_SUGERIDOS.map((m) => (
                     <button
@@ -245,13 +261,16 @@ const Reconocimientos = () => {
                   placeholder="Otro monto autorizado"
                   className="w-full mt-2 h-11 rounded-lg border border-border bg-background px-3 text-sm"
                 />
-              </>
+              </div>
             ) : (
-              <p className="text-xs text-muted-foreground mt-1">
-                Solo el primer lugar recibe bono, por haber cumplido sus metas.
+              <p className="text-xs text-warning mt-2 font-medium">
+                {posicion !== 1
+                  ? 'Sin bono: solo el primer lugar es elegible.'
+                  : 'Sin bono: este guardia aún no tiene sus metas al 100%.'}
               </p>
             )}
           </div>
+
 
           <button
             onClick={handleCrear}
