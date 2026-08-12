@@ -82,6 +82,7 @@ export const RETENTION_TARGETS: RetentionTarget[] = [
 
   // Validación fotográfica de inicio/cierre de sesión
   { table: 'sesion_registros', dateColumn: 'created_at', photos: [{ bucket: 'evidencias', column: 'foto_url' }] },
+  { table: 'validaciones_puesto', dateColumn: 'created_at', photos: [{ bucket: 'evidencias', column: 'foto_url' }] },
 
   // Mensajería operativa
   { table: 'chat_messages', dateColumn: 'created_at' },
