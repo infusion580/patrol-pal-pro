@@ -108,6 +108,47 @@ export async function notifySesionCierreEnTurno(
   });
 }
 
+/**
+ * Alerta con la evidencia de la validación fotográfica de sesión
+ * (ingreso o cierre): incluye la foto tomada en vivo y las coordenadas,
+ * para que supervisor/administrador la revisen desde Alertas sin entrar
+ * al módulo de Registros de sesión.
+ */
+export async function notifySesionValidacion(params: {
+  userId: string;
+  userNombre: string;
+  evento: 'login' | 'logout';
+  fotoPath: string | null;
+  lat: number | null;
+  lng: number | null;
+  precision: number | null;
+  ubicacionError: string | null;
+}) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+  const esIngreso = params.evento === 'login';
+  const ubic = params.lat != null && params.lng != null
+    ? `${params.lat.toFixed(5)}, ${params.lng.toFixed(5)}${params.precision != null ? ` (±${params.precision} m)` : ''}`
+    : params.ubicacionError || 'Sin ubicación';
+  const mensaje = `${esIngreso ? '📸 VALIDACIÓN DE INGRESO' : '📸 VALIDACIÓN DE CIERRE'}\nEmpleado: ${params.userNombre}\nFecha: ${fecha}\nHora: ${hora}\nUbicación: ${ubic}\nFotografía: ${params.fotoPath ? 'adjunta' : 'no disponible'}`;
+  await createNotification({
+    tipo: 'sesion',
+    mensaje,
+    guardia_id: params.userId,
+    foto_url: params.fotoPath,
+    metadata: {
+      usuario: params.userNombre,
+      evento: `${params.evento}_validacion`,
+      lat: params.lat,
+      lng: params.lng,
+      precision_metros: params.precision,
+      ubicacion_error: params.ubicacionError,
+      fecha: iso,
+    },
+  });
+}
+
+
+
 
 export async function notifyTurnoInicio(guardiaId: string, guardiaNombre: string, servicioNombre?: string) {
   const { fecha, hora, iso } = fechaHoraLarga();

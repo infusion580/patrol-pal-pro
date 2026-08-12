@@ -86,6 +86,10 @@ export const RETENTION_TARGETS: RetentionTarget[] = [
 
   // Mensajería operativa
   { table: 'chat_messages', dateColumn: 'created_at' },
+
+  // Acuses de lectura de comunicados (el comunicado en sí es informativo
+  // y lo administra el área correspondiente, no se purga automáticamente).
+  { table: 'comunicado_lecturas', dateColumn: 'created_at' },
 ];
 
 /** Fecha de corte ISO para un objetivo de retención. */
