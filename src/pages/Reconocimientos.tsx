@@ -16,8 +16,10 @@ import {
   Reconocimiento,
   crearReconocimiento,
   eliminarReconocimiento,
+  esElegibleBono,
   formatMoneda,
   listarReconocimientos,
+  obtenerCumplimiento,
   periodoActual,
   publicarReconocimiento,
 } from '@/lib/reconocimientos';
