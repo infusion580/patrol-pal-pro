@@ -37,7 +37,9 @@ export function SignedImg({ bucket, path, fallback, ...imgProps }: SignedImgProp
     </div>
   );
 
+  if (!path) return <>{fallback ?? null}</>;
   if (!url || failed) return <>{vacio}</>;
+
 
   return <img src={url} onError={() => setFailed(true)} {...imgProps} />;
 }
