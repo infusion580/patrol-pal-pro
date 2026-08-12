@@ -153,13 +153,14 @@ const Rondines = () => {
   const handleCheckIn = async () => {
     if (!user || !selectedServicio) return;
     if (checkedIn && rondinId) {
-      // Bloquear checkout hasta escanear TODOS los puntos
-      const faltantes = points.filter(p => !p.scanned);
-      if (points.length === 0 || faltantes.length > 0) {
+      // Bloquear checkout si faltan puntos OBLIGATORIOS,
+      // salvo que el administrador permita cerrar rondines incompletos.
+      const faltantes = points.filter(p => !p.scanned && p.obligatorio);
+      if (!permitirIncompleto && (points.length === 0 || faltantes.length > 0)) {
         toast({
           title: 'Rondín incompleto',
           description: faltantes.length > 0
-            ? `Faltan ${faltantes.length} punto(s): ${faltantes.map(p => p.name).join(', ')}`
+            ? `Faltan ${faltantes.length} punto(s) obligatorio(s): ${faltantes.map(p => p.name).join(', ')}`
             : 'No hay puntos configurados para este servicio.',
           variant: 'destructive',
         });
