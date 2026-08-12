@@ -137,6 +137,10 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
     label: 'Cierre de Sesión', icon: LogOut, color: 'text-muted-foreground', bgColor: 'bg-muted',
     categoria: 'accesos', severidad: 'info',
   },
+  reconocimiento: {
+    label: 'Cuadro de Honor', icon: Trophy, color: 'text-warning', bgColor: 'bg-warning/10',
+    categoria: 'sistema', severidad: 'info',
+  },
 };
 
 export function getNotifMeta(tipo?: string | null): NotifMeta {
