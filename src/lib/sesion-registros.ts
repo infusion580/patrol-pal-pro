@@ -157,11 +157,20 @@ export async function listSesionRegistros(filtros: SesionFiltros = {}): Promise<
 /* ------------------------------------------------------------------ */
 
 const PENDING_KEY = 'defender-sesion-foto-pendiente';
+/** Evento interno: avisa a la UI que hay una captura de ingreso pendiente. */
+export const CAPTURA_LOGIN_EVENT = 'defender:captura-login-pendiente';
 
 /** Marca que, tras autenticarse, falta la captura fotográfica de ingreso. */
 export function marcarCapturaLoginPendiente(userId: string) {
   try {
     localStorage.setItem(PENDING_KEY, userId);
+  } catch {
+    /* ignore */
+  }
+  // La marca puede escribirse después de que la pantalla ya se montó (el login
+  // y la carga del perfil corren en paralelo), por eso se notifica por evento.
+  try {
+    window.dispatchEvent(new CustomEvent(CAPTURA_LOGIN_EVENT, { detail: userId }));
   } catch {
     /* ignore */
   }
