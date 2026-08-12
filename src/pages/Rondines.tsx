@@ -14,6 +14,8 @@ import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/
 import { SignedImg } from '@/components/SignedImg';
 import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
 
+type EstadoPunto = 'sin_novedad' | 'con_novedad';
+
 interface CheckpointItem {
   id: string;
   name: string;
@@ -22,7 +24,12 @@ interface CheckpointItem {
   lat: number | null;
   lng: number | null;
   radius: number;
+  obligatorio: boolean;
   foto_url?: string | null;
+  observacion?: string;
+  estado?: EstadoPunto;
+  scan_lat?: number | null;
+  scan_lng?: number | null;
 }
 
 function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
