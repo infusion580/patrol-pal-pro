@@ -210,6 +210,7 @@ export type Database = {
           lat: number | null
           lng: number | null
           nombre: string
+          obligatorio: boolean
           radius_metros: number
           servicio_id: string
           ubicacion: string
@@ -220,6 +221,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           nombre: string
+          obligatorio?: boolean
           radius_metros?: number
           servicio_id: string
           ubicacion?: string
@@ -230,6 +232,7 @@ export type Database = {
           lat?: number | null
           lng?: number | null
           nombre?: string
+          obligatorio?: boolean
           radius_metros?: number
           servicio_id?: string
           ubicacion?: string
@@ -1141,28 +1144,34 @@ export type Database = {
       rondin_scans: {
         Row: {
           checkpoint_id: string
+          estado: string
           foto_url: string | null
           id: string
           lat: number | null
           lng: number | null
+          observacion: string
           rondin_id: string
           scanned_at: string
         }
         Insert: {
           checkpoint_id: string
+          estado?: string
           foto_url?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
+          observacion?: string
           rondin_id: string
           scanned_at?: string
         }
         Update: {
           checkpoint_id?: string
+          estado?: string
           foto_url?: string | null
           id?: string
           lat?: number | null
           lng?: number | null
+          observacion?: string
           rondin_id?: string
           scanned_at?: string
         }
@@ -1238,6 +1247,7 @@ export type Database = {
           direccion: string
           id: string
           nombre: string
+          permitir_rondin_incompleto: boolean
           rondin_intervalo_minutos: number | null
           rondin_tolerancia_minutos: number
           tipo_turno: string
@@ -1250,6 +1260,7 @@ export type Database = {
           direccion?: string
           id?: string
           nombre: string
+          permitir_rondin_incompleto?: boolean
           rondin_intervalo_minutos?: number | null
           rondin_tolerancia_minutos?: number
           tipo_turno?: string
@@ -1262,6 +1273,7 @@ export type Database = {
           direccion?: string
           id?: string
           nombre?: string
+          permitir_rondin_incompleto?: boolean
           rondin_intervalo_minutos?: number | null
           rondin_tolerancia_minutos?: number
           tipo_turno?: string
