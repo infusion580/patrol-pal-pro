@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, LogIn, LogOut, UserCheck, AlertTriangle } from 'lucide-react';
+import { Clock, LogIn, LogOut, UserCheck, AlertTriangle, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { notifyTurnoInicio, notifyTurnoFin } from '@/lib/notification-helpers';
 import { TipoTurno, tipoTurnoLabel, tipoTurnoHoras, generarAsistenciasCorridoFaltantes } from '@/lib/asistencias-helpers';
 import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
+import { crearNotaRelevo } from '@/lib/notas-relevo';
 
 interface Turno {
   id: string;
