@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Medal, Crown, Star } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Crown, Star, Gift } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { INSIGNIA_META } from '@/lib/goals-helpers';
+import { Reconocimiento, formatMoneda, listarReconocimientos } from '@/lib/reconocimientos';
 import BottomNav from '@/components/BottomNav';
 
 type Tab = 'hoy' | 'semana' | 'mes';
