@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/lib/auth-context';
-import { Home, MapPin, FileText, MessageCircle, User, Settings, History, BarChart3 } from 'lucide-react';
+import { Home, MapPin, FileText, MessageCircle, User, Settings, History, BarChart3, Megaphone } from 'lucide-react';
 import { useChatNotifications } from '@/hooks/use-chat-notifications';
 import { useBrandLogo } from '@/lib/branding';
 
@@ -14,6 +14,7 @@ const BottomNav = () => {
   const guardItems = [
     { path: '/dashboard', icon: Home, label: 'Inicio' },
     { path: '/rondines', icon: MapPin, label: 'Rondines' },
+    { path: '/comunicados', icon: Megaphone, label: 'Avisos' },
     { path: '/historial', icon: History, label: 'Historial' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
@@ -22,6 +23,7 @@ const BottomNav = () => {
   const supervisorItems = [
     { path: '/dashboard', icon: Home, label: 'Panel' },
     { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
+    { path: '/comunicados', icon: Megaphone, label: 'Avisos' },
     { path: '/reportes', icon: FileText, label: 'Reportes' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
@@ -30,10 +32,12 @@ const BottomNav = () => {
   const adminItems = [
     { path: '/dashboard', icon: Home, label: 'Panel' },
     { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
+    { path: '/comunicados', icon: Megaphone, label: 'Avisos' },
     { path: '/servicios', icon: Settings, label: 'Servicios' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];
+
 
   const clienteItems = [
     { path: '/dashboard', icon: Home, label: 'Inicio' },
