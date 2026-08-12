@@ -27,14 +27,18 @@ export function SignedImg({ bucket, path, fallback, ...imgProps }: SignedImgProp
   }, [bucket, path]);
 
   // Las fotografías se eliminan a los 30 días por la política de retención:
-  // en ese caso se muestra un aviso en lugar de una imagen rota.
+  // en ese caso se muestra un marcador del mismo tamaño, nunca una imagen rota.
   const vacio = fallback ?? (
-    <div className="w-full rounded-lg border border-dashed border-border bg-muted/40 px-3 py-4 text-center text-xs text-muted-foreground">
-      Evidencia no disponible (eliminada por la política de retención de 30 días)
+    <div
+      className={`${imgProps.className ?? ''} flex items-center justify-center border border-dashed border-border bg-muted/40 p-1 text-[10px] leading-tight text-center text-muted-foreground`}
+      title="Evidencia no disponible (retención de 30 días)"
+    >
+      Sin foto
     </div>
   );
 
   if (!url || failed) return <>{vacio}</>;
+
   return <img src={url} onError={() => setFailed(true)} {...imgProps} />;
 }
 
