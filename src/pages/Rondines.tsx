@@ -199,18 +199,22 @@ const Rondines = () => {
       toast({ title: '📍 GPS requerido', description: e?.message || 'Activa la ubicación para iniciar el rondín.', variant: 'destructive' });
       return;
     }
-    const { data } = await supabase.from('rondines').insert({
+    const { data, error } = await supabase.from('rondines').insert({
       guardia_id: user.id,
       servicio_id: selectedServicio,
       checkin_at: new Date().toISOString(),
       checkin_lat: lat, checkin_lng: lng,
     }).select().single();
-    if (data) {
-      setRondinId(data.id);
-      setCheckedIn(true);
-      const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
-      notifyRondinCheckIn(user.id, `${user.nombre} ${user.apellido}`, svcName);
+    if (error || !data) {
+      // Sin este aviso el botón parecía "no hacer nada" cuando fallaba el guardado.
+      toast({ title: 'No se pudo iniciar el rondín', description: error?.message || 'Intenta de nuevo.', variant: 'destructive' });
+      return;
     }
+    setRondinId(data.id);
+    setCheckedIn(true);
+    const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
+    notifyRondinCheckIn(user.id, `${user.nombre} ${user.apellido}`, svcName);
+
   };
 
   const submitCheckout = async () => {
