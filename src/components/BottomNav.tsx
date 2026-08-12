@@ -76,7 +76,7 @@ const BottomNav = () => {
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-b" />
               )}
               <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-              <span className="text-[10px] font-semibold uppercase tracking-wider">{item.label}</span>
+              <span className="text-[9px] font-semibold uppercase tracking-wide truncate max-w-full">{item.label}</span>
               {isChat && unreadTotal > 0 && (
                 <span className="absolute top-1.5 right-2 min-w-4 h-4 px-1 rounded-full bg-emergency text-emergency-foreground text-[9px] font-bold flex items-center justify-center">
                   {unreadTotal > 9 ? '9+' : unreadTotal}
