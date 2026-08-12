@@ -46,10 +46,31 @@ const Reconocimientos = () => {
   const [periodo, setPeriodo] = useState(periodoActual());
   const [motivo, setMotivo] = useState('');
   const [bono, setBono] = useState<string>('1000');
+  const [cumplimiento, setCumplimiento] = useState<number | null>(null);
+  const [cargandoCumpl, setCargandoCumpl] = useState(false);
 
   useEffect(() => {
     load();
   }, []);
+
+  // El cumplimiento de metas lo calcula el sistema, no se captura a mano.
+  useEffect(() => {
+    if (!guardiaId) {
+      setCumplimiento(null);
+      return;
+    }
+    let activo = true;
+    setCargandoCumpl(true);
+    obtenerCumplimiento(guardiaId)
+      .then((v) => activo && setCumplimiento(v))
+      .catch(() => activo && setCumplimiento(0))
+      .finally(() => activo && setCargandoCumpl(false));
+    return () => {
+      activo = false;
+    };
+  }, [guardiaId]);
+
+  const elegible = esElegibleBono(posicion, cumplimiento ?? 0);
 
   const load = async () => {
     setLoading(true);
