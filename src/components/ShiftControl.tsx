@@ -32,6 +32,9 @@ const ShiftControl = () => {
   const [showHandoff, setShowHandoff] = useState(false);
   const [guardiaEntrante, setGuardiaEntrante] = useState('');
   const [comentario, setComentario] = useState('');
+  const [notaPendientes, setNotaPendientes] = useState('');
+  const [notaInstrucciones, setNotaInstrucciones] = useState('');
+  const [notaImportante, setNotaImportante] = useState(false);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [selectedServicio, setSelectedServicio] = useState<string>('');
 
