@@ -143,7 +143,7 @@ const App = () => (
             <Route path="/historial" element={<Auth><Historial /></Auth>} />
             <Route path="/actividad-guardia" element={<Auth><GuardActivityPage /></Auth>} />
             <Route path="/cuadro-honor" element={<Auth><CuadroHonor /></Auth>} />
-            <Route path="/pendientes" element={<Auth><PendientesPuesto /></Auth>} />
+            <Route path="/pendientes" element={<ProtectedRoute roles={['supervisor', 'admin']}><PendientesPuesto /></ProtectedRoute>} />
             <Route path="/visitas" element={<Auth><Visitas /></Auth>} />
 
             {/* Role-scoped */}
