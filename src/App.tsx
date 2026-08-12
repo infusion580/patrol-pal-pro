@@ -29,6 +29,7 @@ const MapaSupervisor = lazy(() => import("./pages/MapaSupervisor"));
 const Metricas = lazy(() => import("./pages/Metricas"));
 const ReportesSupervisor = lazy(() => import("./pages/ReportesSupervisor"));
 const NovedadesReportes = lazy(() => import("./pages/NovedadesReportes"));
+const RegistrosSesion = lazy(() => import("./pages/RegistrosSesion"));
 const Servicios = lazy(() => import("./pages/Servicios"));
 const GestionRH = lazy(() => import("./pages/GestionRH"));
 const Notificaciones = lazy(() => import("./pages/Notificaciones"));
@@ -60,6 +61,7 @@ import RondinAlarmMonitor from "./components/RondinAlarmMonitor";
 import GlobalAlertSound from "./components/GlobalAlertSound";
 import ProtectedRoute from "./components/ProtectedRoute";
 import ConnectionBanner from "./components/ConnectionBanner";
+import SessionCaptureGate from "./components/SessionCaptureGate";
 import SoporteChat from "./components/SoporteChat";
 import OfflineQueueIndicator from "./components/OfflineQueueIndicator";
 import { initOfflineQueue } from "./lib/offline-queue";
@@ -113,6 +115,7 @@ const App = () => (
         <BrowserRouter>
           <RondinAlarmMonitor />
           <SoporteChat />
+          <SessionCaptureGate />
           <Suspense fallback={<RouteFallback />}>
           <Routes>
             {/* Public */}
@@ -142,6 +145,7 @@ const App = () => (
             <Route path="/mapa" element={<ProtectedRoute roles={['supervisor', 'admin']}><MapaSupervisor /></ProtectedRoute>} />
             <Route path="/metricas" element={<ProtectedRoute roles={['supervisor', 'admin']}><Metricas /></ProtectedRoute>} />
             <Route path="/novedades" element={<ProtectedRoute roles={['supervisor', 'admin']}><NovedadesReportes /></ProtectedRoute>} />
+            <Route path="/registros-sesion" element={<ProtectedRoute roles={['supervisor', 'admin']}><RegistrosSesion /></ProtectedRoute>} />
             <Route path="/reportes-supervisor" element={<ProtectedRoute roles={['supervisor', 'admin']}><ReportesSupervisor /></ProtectedRoute>} />
             <Route path="/dashboard-operativo" element={<ProtectedRoute roles={['supervisor', 'admin']}><DashboardOperativo /></ProtectedRoute>} />
             <Route path="/gestion-rh" element={<ProtectedRoute roles={['supervisor', 'admin']}><GestionRH /></ProtectedRoute>} />
