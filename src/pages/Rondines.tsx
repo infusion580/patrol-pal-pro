@@ -149,7 +149,6 @@ const Rondines = () => {
     const first = mapped.find(p => p.lat && p.lng);
     if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
   };
-  };
 
   const handleCheckIn = async () => {
     if (!user || !selectedServicio) return;
