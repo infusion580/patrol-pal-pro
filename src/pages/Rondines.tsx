@@ -519,17 +519,17 @@ const Rondines = () => {
       </div>
 
       {/* Scan dialog */}
-      <Dialog open={!!scanTarget} onOpenChange={(o) => { if (!o) { setScanTarget(null); setScanFile(null); setScanPreview(null); } }}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!scanTarget} onOpenChange={(o) => { if (!o) { setScanTarget(null); setScanFile(null); setScanPreview(null); setScanObservacion(''); setScanEstado('sin_novedad'); } }}>
+        <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="w-5 h-5 text-primary" />
-              Evidencia del punto
+              Reporte del punto
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Toma una foto del punto <span className="font-semibold text-foreground">{scanTarget?.name}</span> para confirmarlo.
+              Registra la evidencia del punto <span className="font-semibold text-foreground">{scanTarget?.name}</span>. Se guardará con fecha, hora y ubicación.
             </p>
             {scanPreview ? (
               <div className="relative">
@@ -555,11 +555,45 @@ const Rondines = () => {
                 />
               </label>
             )}
+
+            <div>
+              <p className="text-xs font-semibold text-foreground mb-2">Estado del punto</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScanEstado('sin_novedad')}
+                  className={`h-11 rounded-lg text-sm font-bold border transition-colors ${scanEstado === 'sin_novedad' ? 'bg-success text-success-foreground border-success' : 'bg-background text-muted-foreground border-border'}`}
+                >
+                  SIN NOVEDAD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScanEstado('con_novedad')}
+                  className={`h-11 rounded-lg text-sm font-bold border transition-colors ${scanEstado === 'con_novedad' ? 'bg-emergency text-emergency-foreground border-emergency' : 'bg-background text-muted-foreground border-border'}`}
+                >
+                  CON NOVEDAD
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-foreground mb-1">
+                Observación {scanEstado === 'con_novedad' ? '(obligatoria)' : '(opcional)'}
+              </p>
+              <Textarea
+                value={scanObservacion}
+                onChange={(e) => setScanObservacion(e.target.value)}
+                placeholder={scanEstado === 'con_novedad' ? 'Describe la novedad detectada en este punto...' : 'Observaciones del punto (opcional)'}
+                rows={3}
+                maxLength={800}
+              />
+              <p className="text-[10px] text-muted-foreground text-right">{scanObservacion.length}/800</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setScanTarget(null)} disabled={scanning}>Cancelar</Button>
             <Button onClick={confirmScan} disabled={scanning || !scanFile}>
-              {scanning ? 'Guardando...' : 'Confirmar punto'}
+              {scanning ? 'Guardando...' : 'Guardar punto'}
             </Button>
           </DialogFooter>
         </DialogContent>
