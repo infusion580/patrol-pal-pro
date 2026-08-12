@@ -9,6 +9,7 @@ import {
   AlertTriangle,
   Bell,
   CheckCircle2,
+  ClipboardList,
   Clock,
   DoorOpen,
   FileText,
@@ -22,7 +23,7 @@ import {
 } from 'lucide-react';
 
 export type NotifSeveridad = 'critica' | 'alta' | 'media' | 'info';
-export type NotifCategoria = 'emergencia' | 'operacion' | 'turnos' | 'visitas' | 'accesos' | 'sistema';
+export type NotifCategoria = 'emergencia' | 'operacion' | 'novedades' | 'turnos' | 'visitas' | 'accesos' | 'sistema';
 
 export interface NotifMeta {
   label: string;
@@ -36,6 +37,7 @@ export interface NotifMeta {
 export const CATEGORIA_LABEL: Record<NotifCategoria, string> = {
   emergencia: 'Emergencias',
   operacion: 'Operación',
+  novedades: 'Novedades',
   turnos: 'Turnos',
   visitas: 'Visitas',
   accesos: 'Accesos',
@@ -77,6 +79,14 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
   sin_ubicacion: {
     label: 'Guardia sin ubicación', icon: MapPinOff, color: 'text-emergency', bgColor: 'bg-emergency/10',
     categoria: 'emergencia', severidad: 'alta',
+  },
+  novedad_importante: {
+    label: 'Novedad Importante', icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10',
+    categoria: 'novedades', severidad: 'alta',
+  },
+  novedad: {
+    label: 'Novedad', icon: ClipboardList, color: 'text-primary', bgColor: 'bg-primary/10',
+    categoria: 'novedades', severidad: 'info',
   },
   incidencia: {
     label: 'Incidencia', icon: AlertTriangle, color: 'text-emergency', bgColor: 'bg-emergency/10',
