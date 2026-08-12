@@ -325,6 +325,83 @@ export type Database = {
         }
         Relationships: []
       }
+      comunicado_lecturas: {
+        Row: {
+          comunicado_id: string
+          created_at: string
+          id: string
+          leido_at: string
+          user_id: string
+        }
+        Insert: {
+          comunicado_id: string
+          created_at?: string
+          id?: string
+          leido_at?: string
+          user_id: string
+        }
+        Update: {
+          comunicado_id?: string
+          created_at?: string
+          id?: string
+          leido_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "comunicado_lecturas_comunicado_id_fkey"
+            columns: ["comunicado_id"]
+            isOneToOne: false
+            referencedRelation: "comunicados"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      comunicados: {
+        Row: {
+          autor_id: string | null
+          autor_nombre: string
+          contenido: string
+          created_at: string
+          estado: string
+          id: string
+          imagen_url: string | null
+          prioridad: string
+          publicado_at: string | null
+          publicar_at: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nombre?: string
+          contenido: string
+          created_at?: string
+          estado?: string
+          id?: string
+          imagen_url?: string | null
+          prioridad?: string
+          publicado_at?: string | null
+          publicar_at?: string | null
+          titulo: string
+          updated_at?: string
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nombre?: string
+          contenido?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          imagen_url?: string | null
+          prioridad?: string
+          publicado_at?: string | null
+          publicar_at?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cuadro_honor: {
         Row: {
           created_at: string
@@ -1709,6 +1786,7 @@ export type Database = {
         }
         Returns: number
       }
+      notificar_comunicado: { Args: { _id: string }; Returns: undefined }
       promote_user: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]
@@ -1716,6 +1794,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      publicar_comunicado: { Args: { _id: string }; Returns: undefined }
+      publicar_comunicados_programados: { Args: never; Returns: number }
       publicar_reconocimiento: { Args: { _id: string }; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
