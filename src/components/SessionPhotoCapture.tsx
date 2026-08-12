@@ -106,12 +106,17 @@ export function SessionPhotoCapture({ evento, onConfirm, onCancel, nombre }: Pro
         )}
       </header>
 
-      <div className="flex flex-1 items-center justify-center overflow-hidden bg-muted/40 p-4">
-        <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card">
+      {/* min-h-0 evita que la vista previa empuje el botón de confirmar fuera de pantalla */}
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/40 p-4">
+        <div className="relative flex max-h-full w-full max-w-md items-center justify-center overflow-hidden rounded-2xl border border-border bg-card">
           {preview ? (
-            <img src={preview.url} alt="Fotografía de validación" className="w-full object-cover" />
+            <img
+              src={preview.url}
+              alt="Fotografía de validación"
+              className="max-h-full w-full object-contain"
+            />
           ) : (
-            <video ref={videoRef} playsInline muted className="w-full bg-black object-cover" />
+            <video ref={videoRef} playsInline muted className="max-h-full w-full bg-black object-contain" />
           )}
         </div>
       </div>
