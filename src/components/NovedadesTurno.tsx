@@ -36,7 +36,6 @@ export default function NovedadesTurno() {
 
   const [descripcion, setDescripcion] = useState('');
   const [ubicacion, setUbicacion] = useState('');
-  const [importancia, setImportancia] = useState<NivelImportancia>('normal');
   const [foto, setFoto] = useState<{ file: File; preview: string } | null>(null);
   const [servicio, setServicio] = useState<{ id: string; nombre: string } | null>(null);
 
@@ -62,7 +61,6 @@ export default function NovedadesTurno() {
     if (foto) URL.revokeObjectURL(foto.preview);
     setDescripcion('');
     setUbicacion('');
-    setImportancia('normal');
     setFoto(null);
   };
 
@@ -203,7 +201,7 @@ export default function NovedadesTurno() {
             <Button
               variant="destructive"
               disabled={saving}
-              onClick={() => { setImportancia('importante'); guardar('importante'); }}
+              onClick={() => guardar('importante')}
             >
               <AlertTriangle className="w-4 h-4 mr-2" /> Importante
             </Button>
