@@ -103,7 +103,31 @@ export async function registrarSesion({ userId, evento, foto }: RegistrarSesionI
     ubicacion_error: pos.error,
     dispositivo: dispositivo as unknown as Record<string, unknown>,
   } as never);
+
+  // Alerta para supervisor/administrador con la evidencia (foto + GPS).
+  try {
+    const { data: perfil } = await supabase
+      .from('profiles')
+      .select('nombre, apellido, email')
+      .eq('user_id', userId)
+      .maybeSingle();
+    const nombre =
+      `${perfil?.nombre ?? ''} ${perfil?.apellido ?? ''}`.trim() || perfil?.email || 'Guardia';
+    await notifySesionValidacion({
+      userId,
+      userNombre: nombre,
+      evento,
+      fotoPath,
+      lat: pos.lat,
+      lng: pos.lng,
+      precision: pos.precision,
+      ubicacionError: pos.error,
+    });
+  } catch {
+    // La alerta es complementaria: nunca debe impedir el registro de sesión.
+  }
 }
+
 
 export interface SesionFiltros {
   desde?: string | null; // YYYY-MM-DD
