@@ -234,6 +234,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data?.user) {
       const uid = data.user.id;
       const nombreVisible = data.user.email || 'Usuario';
+      // Validación fotográfica de ingreso (la pantalla la muestra SessionCaptureGate).
+      import('./sesion-registros')
+        .then(({ marcarCapturaLoginPendiente }) => marcarCapturaLoginPendiente(uid))
+        .catch(() => {});
       import('./notification-helpers')
         .then(({ notifySesionInicio }) => notifySesionInicio(uid, nombreVisible))
         .catch(() => {});
@@ -263,6 +267,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = useCallback(async () => {
+    // Validación fotográfica de salida (guardias): se ejecuta con la sesión
+    // todavía activa para que RLS acepte la escritura del registro.
+    try {
+      const { getLogoutCaptureHandler } = await import('./sesion-registros');
+      const capture = getLogoutCaptureHandler();
+      if (capture) {
+        const ok = await capture();
+        if (!ok) return; // el usuario canceló el cierre de sesión
+      }
+    } catch { /* si falla la captura no bloqueamos el cierre */ }
+
     // Avisar a admin/supervisores del cierre de sesión ANTES de invalidar el
     // token (de lo contrario la escritura sería rechazada por RLS).
     if (user) {
