@@ -80,10 +80,14 @@ const Rondines = () => {
   const [selectedServicio, setSelectedServicio] = useState<string | null>(null);
   const [zoneCenter, setZoneCenter] = useState<{ lat: number; lng: number; radius: number } | undefined>();
 
+  const [permitirIncompleto, setPermitirIncompleto] = useState(false);
+
   // Scan dialog state
   const [scanTarget, setScanTarget] = useState<CheckpointItem | null>(null);
   const [scanFile, setScanFile] = useState<File | null>(null);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [scanObservacion, setScanObservacion] = useState('');
+  const [scanEstado, setScanEstado] = useState<EstadoPunto>('sin_novedad');
 
   // Checkout dialog state
   const [checkoutOpen, setCheckoutOpen] = useState(false);
