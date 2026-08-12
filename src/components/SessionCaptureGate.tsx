@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth-context';
 import SessionPhotoCapture from '@/components/SessionPhotoCapture';
 import {
+  CAPTURA_LOGIN_EVENT,
   capturaLoginPendiente,
   limpiarCapturaLoginPendiente,
   registrarSesion,
