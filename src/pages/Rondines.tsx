@@ -113,33 +113,42 @@ const Rondines = () => {
     const { data: cps } = await supabase.from('checkpoints').select('*').eq('servicio_id', servicioId).order('created_at');
     if (!user) return;
 
+    const { data: svc } = await supabase.from('servicios').select('permitir_rondin_incompleto').eq('id', servicioId).maybeSingle();
+    setPermitirIncompleto(!!(svc as any)?.permitir_rondin_incompleto);
+
     const { data: activeRondin } = await supabase
       .from('rondines').select('*')
       .eq('guardia_id', user.id).eq('status', 'activo')
       .maybeSingle();
 
-    let scannedMap = new Map<string, { scanned_at: string; foto_url: string | null }>();
+    let scannedMap = new Map<string, any>();
     if (activeRondin) {
       setRondinId(activeRondin.id);
       setCheckedIn(true);
       const { data: scans } = await supabase
-        .from('rondin_scans').select('checkpoint_id, scanned_at, foto_url')
+        .from('rondin_scans').select('checkpoint_id, scanned_at, foto_url, observacion, estado, lat, lng')
         .eq('rondin_id', activeRondin.id);
-      scannedMap = new Map(scans?.map((s: any) => [s.checkpoint_id, { scanned_at: s.scanned_at, foto_url: s.foto_url }]) || []);
+      scannedMap = new Map(scans?.map((s: any) => [s.checkpoint_id, s]) || []);
     }
 
-    const mapped = (cps || []).map((cp: any) => {
+    const mapped: CheckpointItem[] = (cps || []).map((cp: any) => {
       const s = scannedMap.get(cp.id);
       return {
         id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
+        obligatorio: cp.obligatorio ?? true,
         scanned: !!s,
         time: s ? new Date(s.scanned_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : null,
         foto_url: s?.foto_url || null,
+        observacion: s?.observacion || '',
+        estado: (s?.estado as EstadoPunto) || 'sin_novedad',
+        scan_lat: s?.lat ?? null,
+        scan_lng: s?.lng ?? null,
       };
     });
     setPoints(mapped);
     const first = mapped.find(p => p.lat && p.lng);
     if (first) setZoneCenter({ lat: first.lat!, lng: first.lng!, radius: first.radius * 10 });
+  };
   };
 
   const handleCheckIn = async () => {
