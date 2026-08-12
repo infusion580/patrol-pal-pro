@@ -311,6 +311,21 @@ const Servicios = () => {
                       </button>
                     </div>
 
+                    <label className="flex items-start gap-2 bg-accent/50 rounded-lg px-3 py-2 mb-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={servicio.permitir_rondin_incompleto}
+                        onChange={e => togglePermitirIncompleto(servicio.id, e.target.checked)}
+                        className="mt-0.5 w-4 h-4 accent-primary"
+                      />
+                      <span className="text-[11px] text-foreground">
+                        Permitir cerrar rondines incompletos
+                        <span className="block text-[10px] text-muted-foreground">
+                          Si se activa, el guardia podrá finalizar aunque falten puntos obligatorios.
+                        </span>
+                      </span>
+                    </label>
+
                     {showAddCheckpoint === servicio.id && (
                       <div className="bg-accent rounded-lg p-3 space-y-2 mb-2">
                         <Input placeholder="Nombre del punto" value={newCheckpoint.nombre} onChange={e => setNewCheckpoint(p => ({ ...p, nombre: e.target.value }))} className="h-9 text-sm" />
@@ -320,6 +335,10 @@ const Servicios = () => {
                           <Input placeholder="Longitud *" type="number" step="any" value={newCheckpoint.lng} onChange={e => setNewCheckpoint(p => ({ ...p, lng: e.target.value }))} className="h-9 text-sm" />
                         </div>
                         <Input placeholder="Radio permitido (metros)" type="number" value={newCheckpoint.radius} onChange={e => setNewCheckpoint(p => ({ ...p, radius: e.target.value }))} className="h-9 text-sm" />
+                        <label className="flex items-center gap-2 text-[11px] text-foreground cursor-pointer">
+                          <input type="checkbox" checked={newCheckpoint.obligatorio} onChange={e => setNewCheckpoint(p => ({ ...p, obligatorio: e.target.checked }))} className="w-4 h-4 accent-primary" />
+                          Punto obligatorio
+                        </label>
                         <p className="text-[10px] text-muted-foreground">El guardia debe estar dentro del radio para confirmar el escaneo.</p>
                         <Button size="sm" onClick={() => addCheckpoint(servicio.id)} className="w-full h-8 text-xs">Agregar Punto</Button>
                       </div>
@@ -336,6 +355,10 @@ const Servicios = () => {
                               <p className="text-xs font-semibold text-foreground">{cp.nombre}</p>
                               <p className="text-[10px] text-muted-foreground">{cp.ubicacion}</p>
                               {cp.lat && cp.lng && <p className="text-[10px] text-primary font-mono">📍 {cp.lat.toFixed(5)}, {cp.lng.toFixed(5)} (r:{cp.radius_metros}m)</p>}
+                              <label className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5 cursor-pointer">
+                                <input type="checkbox" checked={cp.obligatorio} onChange={e => toggleCheckpointObligatorio(cp.id, e.target.checked)} className="w-3 h-3 accent-primary" />
+                                Obligatorio
+                              </label>
                             </div>
                             <button onClick={() => removeCheckpoint(cp.id)} className="p-1 rounded text-muted-foreground hover:text-emergency transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />
