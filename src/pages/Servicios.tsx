@@ -50,7 +50,7 @@ const Servicios = () => {
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
   const [newService, setNewService] = useState<{ nombre: string; cliente: string; direccion: string; tipo_turno: TipoTurno }>({ nombre: '', cliente: '', direccion: '', tipo_turno: '12h' });
-  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
+  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50', obligatorio: true });
 
   const fetchServicios = async () => {
     const { data: svcs } = await supabase.from('servicios').select('*').order('created_at', { ascending: false });
@@ -129,9 +129,10 @@ const Servicios = () => {
       lat: parseFloat(newCheckpoint.lat),
       lng: parseFloat(newCheckpoint.lng),
       radius_metros: parseInt(newCheckpoint.radius) || 50,
+      obligatorio: newCheckpoint.obligatorio,
     } as any);
     if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el punto de rondín.', variant: 'destructive' }); return; }
-    setNewCheckpoint({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
+    setNewCheckpoint({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50', obligatorio: true });
     setShowAddCheckpoint(null);
     toast({ title: 'Punto de rondín agregado' });
     fetchServicios();
