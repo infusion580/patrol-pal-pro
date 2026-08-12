@@ -50,39 +50,69 @@ const Visitas = () => {
   const [previewPlaca, setPreviewPlaca] = useState('');
   const [previewIne, setPreviewIne] = useState('');
 
-  // Exit photo
-  const [exitingId, setExitingId] = useState<string | null>(null);
-  const [fotoSalida, setFotoSalida] = useState<File | null>(null);
-  const [previewSalida, setPreviewSalida] = useState('');
+  // Salidas: cada visita abierta maneja su propio flujo de salida en paralelo.
+  const [exitingIds, setExitingIds] = useState<string[]>([]);
+  const [fotosSalida, setFotosSalida] = useState<Record<string, File>>({});
+  const [previewsSalida, setPreviewsSalida] = useState<Record<string, string>>({});
+  const [closingId, setClosingId] = useState<string | null>(null);
 
   // Image viewer
   const [viewImage, setViewImage] = useState<string | null>(null);
 
   const placaInputRef = useRef<HTMLInputElement>(null);
   const ineInputRef = useRef<HTMLInputElement>(null);
-  const salidaInputRef = useRef<HTMLInputElement>(null);
+  const salidaInputRefs = useRef<Record<string, HTMLInputElement | null>>({});
 
   useEffect(() => { loadVisitas(); }, [user]);
 
+  /**
+   * Trae TODAS las visitas abiertas (sin importar el día en que entraron, para
+   * que siempre puedan cerrarse individualmente) más el historial del día.
+   * Nunca se obliga a cerrar una visita para registrar o ver otra.
+   */
   const loadVisitas = async () => {
     if (!user) return;
     const today = new Date().toISOString().split('T')[0];
-    const { data } = await supabase
-      .from('visitas')
-      .select('*')
-      .eq('guardia_id', user.id)
-      .gte('created_at', today)
-      .order('hora_entrada', { ascending: false });
-    setVisitas((data as any) || []);
+    const [abiertas, historial] = await Promise.all([
+      supabase
+        .from('visitas')
+        .select('*')
+        .eq('guardia_id', user.id)
+        .is('hora_salida', null)
+        .order('hora_entrada', { ascending: false }),
+      supabase
+        .from('visitas')
+        .select('*')
+        .eq('guardia_id', user.id)
+        .not('hora_salida', 'is', null)
+        .gte('created_at', today)
+        .order('hora_entrada', { ascending: false }),
+    ]);
+    const merged = [...((abiertas.data as any) || []), ...((historial.data as any) || [])];
+    setVisitas(merged);
     setLoading(false);
   };
 
-  const handleFileChange = (file: File | undefined, type: 'placa' | 'ine' | 'salida') => {
+  const handleFileChange = (file: File | undefined, type: 'placa' | 'ine') => {
     if (!file) return;
     const url = URL.createObjectURL(file);
     if (type === 'placa') { setFotoPlaca(file); setPreviewPlaca(url); }
-    else if (type === 'ine') { setFotoIne(file); setPreviewIne(url); }
-    else { setFotoSalida(file); setPreviewSalida(url); }
+    else { setFotoIne(file); setPreviewIne(url); }
+  };
+
+  const handleSalidaFile = (visitaId: string, file: File | undefined) => {
+    if (!file) return;
+    setFotosSalida((prev) => ({ ...prev, [visitaId]: file }));
+    setPreviewsSalida((prev) => ({ ...prev, [visitaId]: URL.createObjectURL(file) }));
+  };
+
+  const abrirSalida = (visitaId: string) =>
+    setExitingIds((prev) => (prev.includes(visitaId) ? prev : [...prev, visitaId]));
+
+  const cancelarSalida = (visitaId: string) => {
+    setExitingIds((prev) => prev.filter((id) => id !== visitaId));
+    setFotosSalida(({ [visitaId]: _f, ...rest }) => rest);
+    setPreviewsSalida(({ [visitaId]: _p, ...rest }) => rest);
   };
 
   const uploadPhoto = async (file: File, folder: string): Promise<string> => {
@@ -164,15 +194,16 @@ const Visitas = () => {
   };
 
   const handleExit = async (visitaId: string) => {
-    if (!fotoSalida) {
+    const foto = fotosSalida[visitaId];
+    if (!foto) {
       toast({ title: 'Error', description: 'Captura la foto de salida.', variant: 'destructive' });
       return;
     }
 
-    setSubmitting(true);
+    setClosingId(visitaId);
     try {
       const visita = visitas.find(v => v.id === visitaId);
-      const salidaPath = await uploadPhoto(fotoSalida, 'salidas');
+      const salidaPath = await uploadPhoto(foto, 'salidas');
       const horaSalidaISO = new Date().toISOString();
       const { error } = await supabase.from('visitas').update({
         hora_salida: horaSalidaISO,
@@ -212,14 +243,12 @@ const Visitas = () => {
       }
 
       toast({ title: '✅ Salida registrada', description: 'Visita finalizada correctamente.' });
-      setExitingId(null);
-      setFotoSalida(null);
-      setPreviewSalida('');
+      cancelarSalida(visitaId);
       loadVisitas();
     } catch (e: any) {
       toast({ title: 'Error', description: e.message, variant: 'destructive' });
     }
-    setSubmitting(false);
+    setClosingId(null);
   };
 
   const resetForm = () => {
@@ -234,7 +263,9 @@ const Visitas = () => {
     setPreviewIne('');
   };
 
-  const dentroCount = visitas.filter(v => v.status === 'dentro').length;
+  const abiertas = visitas.filter(v => !v.hora_salida);
+  const cerradas = visitas.filter(v => !!v.hora_salida);
+  const dentroCount = abiertas.length;
 
   if (loading) {
     return (
@@ -253,7 +284,9 @@ const Visitas = () => {
             <ArrowLeft className="w-4 h-4" /> Regresar
           </button>
           <h1 className="text-xl font-display font-bold">Control de Visitas</h1>
-          <p className="text-sm opacity-70 mt-1">{dentroCount} visitante{dentroCount !== 1 ? 's' : ''} dentro</p>
+          <p className="text-sm opacity-70 mt-1">
+            {dentroCount} visita{dentroCount !== 1 ? 's' : ''} abierta{dentroCount !== 1 ? 's' : ''} · puedes registrar más sin cerrarlas
+          </p>
         </div>
       </div>
 
@@ -368,11 +401,13 @@ const Visitas = () => {
         )}
 
         {/* Active visitors */}
-        {visitas.filter(v => v.status === 'dentro').length > 0 && (
+        {abiertas.length > 0 && (
           <>
-            <h2 className="text-sm font-semibold text-muted-foreground mb-2">Visitantes Dentro</h2>
+            <h2 className="text-sm font-semibold text-muted-foreground mb-2">
+              Visitas abiertas ({abiertas.length})
+            </h2>
             <div className="space-y-2 mb-4">
-              {visitas.filter(v => v.status === 'dentro').map(v => (
+              {abiertas.map(v => (
                 <div key={v.id} className="bg-card rounded-xl p-4 shadow-card">
                   <div className="flex items-start justify-between mb-2">
                     <div className="min-w-0 flex-1 pr-2">
@@ -390,7 +425,11 @@ const Visitas = () => {
                       <p className="text-xs text-muted-foreground mt-0.5">{v.motivo || 'Sin motivo especificado'}</p>
                       <p className="text-[10px] text-primary flex items-center gap-1 mt-1">
                         <Clock className="w-3 h-3" />
-                        Entrada: {new Date(v.hora_entrada).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
+                        Entrada: {new Date(v.hora_entrada).toLocaleString('es-MX', {
+                          day: new Date(v.hora_entrada).toDateString() === new Date().toDateString() ? undefined : '2-digit',
+                          month: new Date(v.hora_entrada).toDateString() === new Date().toDateString() ? undefined : 'short',
+                          hour: '2-digit', minute: '2-digit',
+                        })}
                       </p>
                     </div>
                     <div className="bg-success/10 px-2 py-0.5 rounded-full">
@@ -415,30 +454,33 @@ const Visitas = () => {
                   </div>
 
                   {/* Exit flow */}
-                  {exitingId === v.id ? (
+                  {exitingIds.includes(v.id) ? (
                     <div className="space-y-2">
-                      <input ref={salidaInputRef} type="file" accept="image/*" capture="environment" className="hidden"
-                        onChange={(e) => handleFileChange(e.target.files?.[0], 'salida')} />
-                      {previewSalida ? (
+                      <input
+                        ref={(el) => { salidaInputRefs.current[v.id] = el; }}
+                        type="file" accept="image/*" capture="environment" className="hidden"
+                        onChange={(e) => handleSalidaFile(v.id, e.target.files?.[0])}
+                      />
+                      {previewsSalida[v.id] ? (
                         <div className="relative">
-                          <img src={previewSalida} alt="Salida" className="w-full h-24 object-cover rounded-lg" />
+                          <img src={previewsSalida[v.id]} alt="Salida" className="w-full h-24 object-cover rounded-lg" />
                           <Button size="sm" variant="outline" className="absolute top-1 right-1 h-7 text-xs"
-                            onClick={() => salidaInputRef.current?.click()}>Cambiar</Button>
+                            onClick={() => salidaInputRefs.current[v.id]?.click()}>Cambiar</Button>
                         </div>
                       ) : (
-                        <Button variant="outline" className="w-full h-16 border-dashed text-xs" onClick={() => salidaInputRef.current?.click()}>
+                        <Button variant="outline" className="w-full h-16 border-dashed text-xs" onClick={() => salidaInputRefs.current[v.id]?.click()}>
                           <Camera className="w-4 h-4 mr-1" /> Capturar foto de salida
                         </Button>
                       )}
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm" onClick={() => { setExitingId(null); setFotoSalida(null); setPreviewSalida(''); }} className="flex-1">Cancelar</Button>
-                        <Button size="sm" onClick={() => handleExit(v.id)} disabled={submitting} className="flex-1 bg-emergency text-emergency-foreground">
-                          {submitting ? 'Guardando...' : 'Confirmar Salida'}
+                        <Button variant="outline" size="sm" onClick={() => cancelarSalida(v.id)} className="flex-1">Cancelar</Button>
+                        <Button size="sm" onClick={() => handleExit(v.id)} disabled={closingId === v.id} className="flex-1 bg-emergency text-emergency-foreground">
+                          {closingId === v.id ? 'Guardando...' : 'Confirmar Salida'}
                         </Button>
                       </div>
                     </div>
                   ) : (
-                    <Button size="sm" variant="outline" onClick={() => setExitingId(v.id)} className="w-full text-xs">
+                    <Button size="sm" variant="outline" onClick={() => abrirSalida(v.id)} className="w-full text-xs">
                       <LogOut className="w-4 h-4 mr-1" /> Registrar Salida
                     </Button>
                   )}
@@ -449,11 +491,11 @@ const Visitas = () => {
         )}
 
         {/* Completed visitors */}
-        {visitas.filter(v => v.status === 'salió').length > 0 && (
+        {cerradas.length > 0 && (
           <>
             <h2 className="text-sm font-semibold text-muted-foreground mb-2">Historial de Hoy</h2>
             <div className="space-y-2">
-              {visitas.filter(v => v.status === 'salió').map(v => (
+              {cerradas.map(v => (
                 <div key={v.id} className="bg-card rounded-xl p-3 shadow-card opacity-70">
                   <div className="flex items-center justify-between">
                     <div>
