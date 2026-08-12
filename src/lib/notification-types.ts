@@ -18,6 +18,7 @@ import {
   MapPin,
   MapPinOff,
   Shield,
+  ShieldCheck,
   UserX,
   type LucideIcon,
 } from 'lucide-react';
@@ -119,6 +120,14 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
   visita: {
     label: 'Visita', icon: DoorOpen, color: 'text-primary', bgColor: 'bg-primary/10',
     categoria: 'visitas', severidad: 'media',
+  },
+  validacion_puesto: {
+    label: 'Validación de puesto', icon: ShieldCheck, color: 'text-success', bgColor: 'bg-success/10',
+    categoria: 'turnos', severidad: 'info',
+  },
+  validacion_puesto_fallida: {
+    label: 'Validación de puesto fuera de área', icon: MapPinOff, color: 'text-emergency', bgColor: 'bg-emergency/10',
+    categoria: 'turnos', severidad: 'alta',
   },
   sesion: {
     label: 'Sesión', icon: LogIn, color: 'text-muted-foreground', bgColor: 'bg-muted',

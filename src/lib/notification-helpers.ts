@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente' | 'novedad' | 'novedad_importante';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente' | 'novedad' | 'novedad_importante' | 'validacion_puesto' | 'validacion_puesto_fallida';
 
 interface NotifParams {
   tipo: NotifType;
@@ -453,6 +453,78 @@ export async function notifyNovedad(params: {
       ubicacion: params.ubicacion || null,
       lat: params.lat ?? null,
       lng: params.lng ?? null,
+      fecha: iso,
+    },
+  });
+}
+
+/**
+ * Alerta programada de validación de puesto: informa al supervisor asignado y
+ * a la administración con foto, coordenadas, precisión y resultado del cotejo
+ * contra el punto esperado del servicio.
+ */
+export async function notifyValidacionPuesto(params: {
+  guardiaId: string;
+  guardiaNombre: string;
+  servicioNombre?: string | null;
+  puntoNombre?: string | null;
+  programado: Date;
+  resultado: 'valida' | 'fuera_area' | 'sin_ubicacion';
+  distancia: number | null;
+  lat: number | null;
+  lng: number | null;
+  precision: number | null;
+  fotoUrl?: string | null;
+}) {
+  const { fecha, hora, iso } = fechaHoraLarga();
+  const programadaTxt = params.programado.toLocaleTimeString('es-MX', {
+    hour: '2-digit', minute: '2-digit', hour12: true,
+  });
+  const estado =
+    params.resultado === 'valida'
+      ? '✅ EN SU PUESTO'
+      : params.resultado === 'fuera_area'
+        ? '⚠️ FUERA DEL ÁREA ASIGNADA'
+        : '⚠️ SIN UBICACIÓN GPS';
+
+  const mensaje =
+    `${estado} — VALIDACIÓN DE PUESTO\n` +
+    `Empleado: ${params.guardiaNombre}\n` +
+    `Servicio: ${params.servicioNombre || 'N/A'}\n` +
+    `Punto esperado: ${params.puntoNombre || 'N/A'}\n` +
+    `Hora programada: ${programadaTxt}\n` +
+    `Fecha: ${fecha}\nHora de respuesta: ${hora}\n` +
+    `Ubicación: ${params.lat?.toFixed(6) ?? 'N/A'}, ${params.lng?.toFixed(6) ?? 'N/A'}` +
+    `${params.precision != null ? ` (±${params.precision}m)` : ''}` +
+    `${params.distancia != null ? `\nDistancia al punto: ${params.distancia}m` : ''}`;
+
+  // El supervisor asignado recibe la alerta directamente; la administración la
+  // ve en el centro de alertas y en el módulo de validaciones.
+  let supervisorId: string | null = null;
+  try {
+    const { data } = await supabase.rpc('get_assigned_supervisor', { _user_id: params.guardiaId });
+    supervisorId = (data as string | null) || null;
+  } catch {
+    supervisorId = null;
+  }
+
+  await createNotification({
+    tipo: params.resultado === 'valida' ? 'validacion_puesto' : 'validacion_puesto_fallida',
+    mensaje,
+    guardia_id: params.guardiaId,
+    supervisor_id: supervisorId,
+    foto_url: params.fotoUrl || null,
+    metadata: {
+      evento: 'validacion_puesto',
+      guardia: params.guardiaNombre,
+      servicio: params.servicioNombre || null,
+      punto: params.puntoNombre || null,
+      programado: params.programado.toISOString(),
+      resultado: params.resultado,
+      distancia_metros: params.distancia,
+      lat: params.lat,
+      lng: params.lng,
+      precision_metros: params.precision,
       fecha: iso,
     },
   });
