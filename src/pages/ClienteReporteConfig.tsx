@@ -8,6 +8,8 @@ import BottomNav from '@/components/BottomNav';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTab';
 import { ArrowLeft, Save, Eye, Users } from 'lucide-react';
 import {
   REPORT_SECTIONS,
@@ -184,37 +186,58 @@ const ClienteReporteConfig = () => {
                 </Card>
               )}
 
-              {Object.entries(grouped).map(([group, sections]) => (
-                <Card key={group} className="p-4">
-                  <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
-                    {group}
-                  </h4>
-                  <div className="space-y-3">
-                    {sections.map(s => (
-                      <label
-                        key={s.key}
-                        className="flex items-start justify-between gap-3 cursor-pointer p-2 -m-2 rounded-lg hover:bg-accent/40 transition-colors"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground">{s.label}</p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
-                        </div>
-                        <Switch
-                          checked={config[s.key]}
-                          onCheckedChange={() => toggle(s.key)}
-                        />
-                      </label>
-                    ))}
-                  </div>
-                </Card>
-              ))}
+              <Tabs defaultValue="graficas" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="graficas">Gráficas</TabsTrigger>
+                  <TabsTrigger value="reporte">Reporte</TabsTrigger>
+                </TabsList>
 
-              <div className="sticky bottom-20 md:bottom-4">
-                <Button onClick={save} disabled={saving || !selectedId} className="w-full h-12 shadow-elevated">
-                  <Save className="w-4 h-4 mr-2" />
-                  {saving ? 'Guardando…' : 'Guardar configuración'}
-                </Button>
-              </div>
+                <TabsContent value="graficas" className="space-y-3 mt-3">
+                  {Object.entries(grouped).map(([group, sections]) => (
+                    <Card key={group} className="p-4">
+                      <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
+                        {group}
+                      </h4>
+                      <div className="space-y-3">
+                        {sections.map(s => (
+                          <label
+                            key={s.key}
+                            className="flex items-start justify-between gap-3 cursor-pointer p-2 -m-2 rounded-lg hover:bg-accent/40 transition-colors"
+                          >
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-medium text-foreground">{s.label}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{s.description}</p>
+                            </div>
+                            <Switch
+                              checked={config[s.key]}
+                              onCheckedChange={() => toggle(s.key)}
+                            />
+                          </label>
+                        ))}
+                      </div>
+                    </Card>
+                  ))}
+
+                  <div className="sticky bottom-20 md:bottom-4">
+                    <Button onClick={save} disabled={saving || !selectedId} className="w-full h-12 shadow-elevated">
+                      <Save className="w-4 h-4 mr-2" />
+                      {saving ? 'Guardando…' : 'Guardar configuración'}
+                    </Button>
+                  </div>
+                </TabsContent>
+
+                <TabsContent value="reporte" className="mt-3">
+                  {selectedId && selectedCliente && (
+                    <ReportePersonalizadoTab
+                      clienteId={selectedId}
+                      clienteNombre={`${selectedCliente.nombre} ${selectedCliente.apellido}`}
+                      mode="admin"
+                      autorId={user?.id}
+                      autorNombre={`${user?.nombre ?? ''} ${user?.apellido ?? ''}`.trim()}
+                    />
+                  )}
+                </TabsContent>
+              </Tabs>
             </div>
           </div>
         )}
