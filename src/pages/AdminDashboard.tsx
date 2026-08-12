@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette, HelpCircle, Camera } from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette, HelpCircle, Camera, Award,
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -305,6 +306,7 @@ const AdminDashboard = () => {
             { icon: UserCog, label: 'Gestión RH', path: '/gestion-rh' },
             { icon: Target, label: 'Metas', path: '/metas' },
             { icon: Trophy, label: 'Cuadro Honor', path: '/cuadro-honor' },
+            { icon: Award, label: 'Reconocimientos', path: '/reconocimientos' },
             { icon: ClipboardList, label: 'Asistencias', path: '/reporte-asistencias' },
             { icon: ClipboardList, label: 'Pendientes', path: '/pendientes' },
             { icon: KeyRound, label: 'NIPs', path: '/nips' },

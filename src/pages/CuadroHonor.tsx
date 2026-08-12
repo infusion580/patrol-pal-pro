@@ -1,8 +1,9 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Trophy, Medal, Crown, Star } from 'lucide-react';
+import { ArrowLeft, Trophy, Medal, Crown, Star, Gift } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { INSIGNIA_META } from '@/lib/goals-helpers';
+import { Reconocimiento, formatMoneda, listarReconocimientos } from '@/lib/reconocimientos';
 import BottomNav from '@/components/BottomNav';
 
 type Tab = 'hoy' | 'semana' | 'mes';
@@ -38,6 +39,7 @@ const CuadroHonor = () => {
   const [registros, setRegistros] = useState<RegistroHonor[]>([]);
   const [perfiles, setPerfiles] = useState<PerfilLite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reconocimientos, setReconocimientos] = useState<Reconocimiento[]>([]);
 
   useEffect(() => {
     load();
@@ -57,7 +59,16 @@ const CuadroHonor = () => {
       .gte('fecha', startISO)
       .order('puntos', { ascending: false });
 
-    const guardiaIds = Array.from(new Set((regs || []).map(r => r.guardia_id)));
+    let recs: Reconocimiento[] = [];
+    try {
+      recs = await listarReconocimientos(true);
+    } catch {
+      recs = [];
+    }
+
+    const guardiaIds = Array.from(
+      new Set([...(regs || []).map(r => r.guardia_id), ...recs.map(r => r.guardia_id)])
+    );
     let profs: PerfilLite[] = [];
     if (guardiaIds.length > 0) {
       const { data } = await supabase
@@ -67,9 +78,11 @@ const CuadroHonor = () => {
       profs = (data || []) as PerfilLite[];
     }
     setRegistros((regs || []) as RegistroHonor[]);
+    setReconocimientos(recs);
     setPerfiles(profs);
     setLoading(false);
   };
+
 
   // Build ranking
   const ranked: Ranked[] = (() => {
@@ -118,6 +131,47 @@ const CuadroHonor = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
+        {reconocimientos.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <h2 className="text-sm font-semibold text-foreground">Reconocimientos publicados</h2>
+            {reconocimientos.map(r => {
+              const p = perfiles.find(x => x.user_id === r.guardia_id);
+              return (
+                <div
+                  key={r.id}
+                  className="bg-gradient-to-r from-warning/10 to-card border border-warning/30 rounded-xl p-3 shadow-card"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-warning/20 text-warning flex items-center justify-center font-bold">
+                      #{r.posicion}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">
+                        {p ? `${p.nombre} ${p.apellido}` : 'Guardia'}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">{r.periodo}</p>
+                      <p className="text-xs text-foreground mt-1">{r.motivo}</p>
+                      {r.bono > 0 && (
+                        <p className="text-xs font-bold text-success mt-1 flex items-center gap-1">
+                          <Gift className="w-3.5 h-3.5" /> Bono: {formatMoneda(r.bono)}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Publicado el{' '}
+                        {new Date(r.publicado_at || r.created_at).toLocaleDateString('es-MX', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="bg-card rounded-xl p-1 shadow-card flex gap-1 mb-4">
           {(['hoy', 'semana', 'mes'] as Tab[]).map(t => (
             <button

@@ -968,6 +968,48 @@ export type Database = {
         }
         Relationships: []
       }
+      reconocimientos: {
+        Row: {
+          bono: number
+          created_at: string
+          created_by: string | null
+          guardia_id: string
+          id: string
+          motivo: string
+          periodo: string
+          posicion: number
+          publicado: boolean
+          publicado_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          bono?: number
+          created_at?: string
+          created_by?: string | null
+          guardia_id: string
+          id?: string
+          motivo: string
+          periodo: string
+          posicion?: number
+          publicado?: boolean
+          publicado_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bono?: number
+          created_at?: string
+          created_by?: string | null
+          guardia_id?: string
+          id?: string
+          motivo?: string
+          periodo?: string
+          posicion?: number
+          publicado?: boolean
+          publicado_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       registration_nips: {
         Row: {
           code: string
@@ -1674,6 +1716,7 @@ export type Database = {
         }
         Returns: undefined
       }
+      publicar_reconocimiento: { Args: { _id: string }; Returns: undefined }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
