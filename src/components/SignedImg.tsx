@@ -17,12 +17,18 @@ interface SignedImgProps extends React.ImgHTMLAttributes<HTMLImageElement> {
 export function SignedImg({ bucket, path, fallback, ...imgProps }: SignedImgProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [cargando, setCargando] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
     setFailed(false);
-    if (!path) { setUrl(null); return; }
-    getSignedUrl(bucket, path).then((u) => { if (!cancelled) setUrl(u); });
+    if (!path) { setUrl(null); setCargando(false); return; }
+    setCargando(true);
+    getSignedUrl(bucket, path).then((u) => {
+      if (cancelled) return;
+      setUrl(u);
+      setCargando(false);
+    });
     return () => { cancelled = true; };
   }, [bucket, path]);
 
@@ -38,7 +44,9 @@ export function SignedImg({ bucket, path, fallback, ...imgProps }: SignedImgProp
   );
 
   if (!path) return <>{fallback ?? null}</>;
+  if (cargando) return <div className={`${imgProps.className ?? ''} animate-pulse bg-muted`} />;
   if (!url || failed) return <>{vacio}</>;
+
 
 
   return <img src={url} onError={() => setFailed(true)} {...imgProps} />;
