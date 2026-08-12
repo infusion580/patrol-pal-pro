@@ -8,6 +8,8 @@ import BottomNav from '@/components/BottomNav';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTab';
 import { ArrowLeft, Save, Eye, Users } from 'lucide-react';
 import {
   REPORT_SECTIONS,
