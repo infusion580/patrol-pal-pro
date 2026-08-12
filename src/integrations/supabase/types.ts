@@ -301,6 +301,54 @@ export type Database = {
         }
         Relationships: []
       }
+      cliente_reportes: {
+        Row: {
+          autor_id: string | null
+          autor_nombre: string
+          cliente_id: string
+          created_at: string
+          estado: string
+          id: string
+          periodo_fin: string
+          periodo_inicio: string
+          publicado_at: string | null
+          secciones: Json
+          servicio_id: string | null
+          titulo: string
+          updated_at: string
+        }
+        Insert: {
+          autor_id?: string | null
+          autor_nombre?: string
+          cliente_id: string
+          created_at?: string
+          estado?: string
+          id?: string
+          periodo_fin: string
+          periodo_inicio: string
+          publicado_at?: string | null
+          secciones?: Json
+          servicio_id?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Update: {
+          autor_id?: string | null
+          autor_nombre?: string
+          cliente_id?: string
+          created_at?: string
+          estado?: string
+          id?: string
+          periodo_fin?: string
+          periodo_inicio?: string
+          publicado_at?: string | null
+          secciones?: Json
+          servicio_id?: string | null
+          titulo?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       cliente_servicios: {
         Row: {
           cliente_id: string
