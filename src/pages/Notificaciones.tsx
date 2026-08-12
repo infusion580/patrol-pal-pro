@@ -26,7 +26,7 @@ interface Notificacion {
   foto_url?: string | null;
 }
 
-const CATEGORIAS: NotifCategoria[] = ['emergencia', 'turnos', 'operacion', 'visitas', 'accesos', 'sistema'];
+const CATEGORIAS: NotifCategoria[] = ['emergencia', 'novedades', 'turnos', 'operacion', 'visitas', 'accesos', 'sistema'];
 
 
 const Notificaciones = () => {
