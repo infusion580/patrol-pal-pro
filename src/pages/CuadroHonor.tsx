@@ -59,7 +59,16 @@ const CuadroHonor = () => {
       .gte('fecha', startISO)
       .order('puntos', { ascending: false });
 
-    const guardiaIds = Array.from(new Set((regs || []).map(r => r.guardia_id)));
+    let recs: Reconocimiento[] = [];
+    try {
+      recs = await listarReconocimientos(true);
+    } catch {
+      recs = [];
+    }
+
+    const guardiaIds = Array.from(
+      new Set([...(regs || []).map(r => r.guardia_id), ...recs.map(r => r.guardia_id)])
+    );
     let profs: PerfilLite[] = [];
     if (guardiaIds.length > 0) {
       const { data } = await supabase
@@ -69,9 +78,11 @@ const CuadroHonor = () => {
       profs = (data || []) as PerfilLite[];
     }
     setRegistros((regs || []) as RegistroHonor[]);
+    setReconocimientos(recs);
     setPerfiles(profs);
     setLoading(false);
   };
+
 
   // Build ranking
   const ranked: Ranked[] = (() => {
