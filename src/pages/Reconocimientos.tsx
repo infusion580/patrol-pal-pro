@@ -2,8 +2,11 @@
  * Administración del Cuadro de Honor
  * ----------------------------------
  * Admin y supervisor pueden registrar reconocimientos (guardia, posición,
- * periodo, motivo y bono), publicarlos —lo que notifica a todos los guardias—
- * y eliminarlos. Solo la posición #1 recibe bono económico.
+ * periodo y motivo), publicarlos —lo que notifica a todos los guardias y
+ * genera un anuncio en Comunicados— y eliminarlos.
+ *
+ * El bono NO lo decide una persona: el sistema lo otorga únicamente al guardia
+ * en la posición #1 que además tenga el 100% de sus metas cumplidas.
  */
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
@@ -16,8 +19,10 @@ import {
   Reconocimiento,
   crearReconocimiento,
   eliminarReconocimiento,
+  esElegibleBono,
   formatMoneda,
   listarReconocimientos,
+  obtenerCumplimiento,
   periodoActual,
   publicarReconocimiento,
 } from '@/lib/reconocimientos';
@@ -41,10 +46,31 @@ const Reconocimientos = () => {
   const [periodo, setPeriodo] = useState(periodoActual());
   const [motivo, setMotivo] = useState('');
   const [bono, setBono] = useState<string>('1000');
+  const [cumplimiento, setCumplimiento] = useState<number | null>(null);
+  const [cargandoCumpl, setCargandoCumpl] = useState(false);
 
   useEffect(() => {
     load();
   }, []);
+
+  // El cumplimiento de metas lo calcula el sistema, no se captura a mano.
+  useEffect(() => {
+    if (!guardiaId) {
+      setCumplimiento(null);
+      return;
+    }
+    let activo = true;
+    setCargandoCumpl(true);
+    obtenerCumplimiento(guardiaId)
+      .then((v) => activo && setCumplimiento(v))
+      .catch(() => activo && setCumplimiento(0))
+      .finally(() => activo && setCargandoCumpl(false));
+    return () => {
+      activo = false;
+    };
+  }, [guardiaId]);
+
+  const elegible = esElegibleBono(posicion, cumplimiento ?? 0);
 
   const load = async () => {
     setLoading(true);
@@ -191,10 +217,26 @@ const Reconocimientos = () => {
             />
           </div>
 
-          <div>
-            <label className="text-xs text-muted-foreground">Bono económico</label>
-            {posicion === 1 ? (
-              <>
+          <div className="rounded-lg border border-border p-3">
+            <div className="flex items-center justify-between">
+              <label className="text-xs text-muted-foreground">Cumplimiento de metas (automático)</label>
+              <span
+                className={`text-sm font-bold ${
+                  (cumplimiento ?? 0) >= 100 ? 'text-success' : 'text-muted-foreground'
+                }`}
+              >
+                {!guardiaId ? '—' : cargandoCumpl ? '…' : `${cumplimiento ?? 0}%`}
+              </span>
+            </div>
+
+            <p className="text-[11px] text-muted-foreground mt-1">
+              El bono lo determina el sistema: se otorga únicamente al lugar #1 con el 100% de sus metas
+              cumplidas (rondines y reportes de los últimos 30 días). No puede asignarse manualmente.
+            </p>
+
+            {elegible ? (
+              <div className="mt-3">
+                <label className="text-xs text-muted-foreground">Monto del bono autorizado</label>
                 <div className="flex gap-2 mt-1">
                   {BONOS_SUGERIDOS.map((m) => (
                     <button
@@ -219,13 +261,16 @@ const Reconocimientos = () => {
                   placeholder="Otro monto autorizado"
                   className="w-full mt-2 h-11 rounded-lg border border-border bg-background px-3 text-sm"
                 />
-              </>
+              </div>
             ) : (
-              <p className="text-xs text-muted-foreground mt-1">
-                Solo el primer lugar recibe bono, por haber cumplido sus metas.
+              <p className="text-xs text-warning mt-2 font-medium">
+                {posicion !== 1
+                  ? 'Sin bono: solo el primer lugar es elegible.'
+                  : 'Sin bono: este guardia aún no tiene sus metas al 100%.'}
               </p>
             )}
           </div>
+
 
           <button
             onClick={handleCrear}

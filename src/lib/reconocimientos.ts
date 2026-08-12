@@ -31,12 +31,28 @@ export interface ReconocimientoInput {
   bono: number;
 }
 
-/** Montos sugeridos; el administrador puede capturar cualquier otro monto. */
+/** Montos sugeridos para el bono del primer lugar. */
 export const BONOS_SUGERIDOS = [500, 1000, 2000];
 
-/** Solo la posición 1 conserva bono. */
-export const normalizarBono = (posicion: number, bono: number) =>
-  posicion === 1 ? Math.max(0, Number(bono) || 0) : 0;
+/**
+ * El sistema decide quién recibe bono: solo la posición #1 con el 100% de sus
+ * metas cumplidas. Ni el administrador ni el supervisor pueden otorgarlo a otro.
+ */
+export const esElegibleBono = (posicion: number, cumplimiento: number) =>
+  posicion === 1 && cumplimiento >= 100;
+
+export const normalizarBono = (posicion: number, bono: number, cumplimiento = 0) =>
+  esElegibleBono(posicion, cumplimiento) ? Math.max(0, Number(bono) || 0) : 0;
+
+/** Cumplimiento de metas (0-100) del guardia en los últimos `dias` días. */
+export async function obtenerCumplimiento(guardiaId: string, dias = 30): Promise<number> {
+  const { data, error } = await supabase.rpc('cumplimiento_metas_guardia', {
+    _guardia_id: guardiaId,
+    _dias: dias,
+  });
+  if (error) throw error;
+  return Number(data) || 0;
+}
 
 export const formatMoneda = (monto: number) =>
   new Intl.NumberFormat('es-MX', { style: 'currency', currency: 'MXN', minimumFractionDigits: 0 }).format(monto || 0);
@@ -61,9 +77,10 @@ export async function listarReconocimientos(soloPublicados = false): Promise<Rec
 
 export async function crearReconocimiento(input: ReconocimientoInput) {
   const { data: userData } = await supabase.auth.getUser();
+  const cumplimiento = await obtenerCumplimiento(input.guardia_id);
   const { error } = await supabase.from('reconocimientos').insert({
     ...input,
-    bono: normalizarBono(input.posicion, input.bono),
+    bono: normalizarBono(input.posicion, input.bono, cumplimiento),
     created_by: userData.user?.id ?? null,
   });
   if (error) throw error;
@@ -71,8 +88,9 @@ export async function crearReconocimiento(input: ReconocimientoInput) {
 
 export async function actualizarReconocimiento(id: string, input: Partial<ReconocimientoInput>) {
   const patch: Record<string, unknown> = { ...input };
-  if (input.posicion !== undefined) {
-    patch.bono = normalizarBono(input.posicion, (input.bono ?? 0) as number);
+  if (input.posicion !== undefined && input.guardia_id) {
+    const cumplimiento = await obtenerCumplimiento(input.guardia_id);
+    patch.bono = normalizarBono(input.posicion, (input.bono ?? 0) as number, cumplimiento);
   }
   const { error } = await supabase.from('reconocimientos').update(patch).eq('id', id);
   if (error) throw error;

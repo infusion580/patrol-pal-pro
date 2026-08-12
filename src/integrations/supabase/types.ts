@@ -1790,6 +1790,10 @@ export type Database = {
         Args: { _code: string; _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"]
       }
+      cumplimiento_metas_guardia: {
+        Args: { _dias?: number; _guardia_id: string }
+        Returns: number
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
