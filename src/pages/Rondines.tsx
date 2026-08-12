@@ -427,19 +427,24 @@ const Rondines = () => {
           <div className="bg-card rounded-xl p-4 shadow-card mb-6">
             <Button
               onClick={handleCheckIn}
-              disabled={checkedIn && (points.length === 0 || scannedCount < points.length)}
+              disabled={checkedIn && !permitirIncompleto && (points.length === 0 || faltantesObligatorios > 0)}
               className={`w-full h-14 text-base font-bold rounded-xl ${
                 checkedIn ? 'bg-emergency text-emergency-foreground hover:bg-emergency/90' : 'bg-success text-success-foreground hover:bg-success/90'
               }`}
             >
               <MapPin className="w-5 h-5 mr-2" />
               {checkedIn
-                ? (scannedCount < points.length
-                    ? `Faltan ${points.length - scannedCount} punto(s)`
+                ? (!permitirIncompleto && faltantesObligatorios > 0
+                    ? `Faltan ${faltantesObligatorios} punto(s) obligatorio(s)`
                     : 'Hacer Check-out y enviar reporte')
                 : 'Hacer Check-in'}
             </Button>
             {checkedIn && <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>}
+            {checkedIn && permitirIncompleto && faltantesObligatorios > 0 && (
+              <p className="text-[11px] text-muted-foreground text-center mt-1">
+                El administrador permite cerrar el rondín con puntos pendientes.
+              </p>
+            )}
           </div>
         )}
 
@@ -458,30 +463,52 @@ const Rondines = () => {
             <h2 className="text-sm font-semibold text-muted-foreground mb-3">Puntos de Control</h2>
             <div className="space-y-2">
               {points.map((point) => (
-                <div key={point.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${point.scanned ? 'bg-success/10' : 'bg-accent'}`}>
-                    {point.scanned ? <CheckCircle2 className="w-5 h-5 text-success" /> : <QrCode className="w-5 h-5 text-muted-foreground" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>{point.name}</p>
-                    {point.time && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {point.time}
+                <div key={point.id} className="bg-card rounded-xl p-4 shadow-card">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${point.scanned ? (point.estado === 'con_novedad' ? 'bg-emergency/10' : 'bg-success/10') : 'bg-accent'}`}>
+                      {point.scanned
+                        ? (point.estado === 'con_novedad'
+                            ? <AlertTriangle className="w-5 h-5 text-emergency" />
+                            : <CheckCircle2 className="w-5 h-5 text-success" />)
+                        : <QrCode className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {point.name}
+                        {!point.obligatorio && <span className="ml-1 text-[10px] font-normal text-muted-foreground">(opcional)</span>}
                       </p>
+                      {point.time && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {point.time}
+                          {point.scan_lat != null && point.scan_lng != null && (
+                            <span className="font-mono text-[10px]">• {point.scan_lat.toFixed(5)}, {point.scan_lng.toFixed(5)}</span>
+                          )}
+                        </p>
+                      )}
+                      {point.lat && point.lng && !point.scanned && (
+                        <p className="text-[10px] text-primary flex items-center gap-1">
+                          <Navigation className="w-3 h-3" /> GPS + foto requeridos (r:{point.radius}m)
+                        </p>
+                      )}
+                    </div>
+                    {point.scanned && point.foto_url && (
+                      <SignedImg bucket="evidencias" path={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
                     )}
-                    {point.lat && point.lng && !point.scanned && (
-                      <p className="text-[10px] text-primary flex items-center gap-1">
-                        <Navigation className="w-3 h-3" /> GPS + foto requeridos (r:{point.radius}m)
-                      </p>
+                    {!point.scanned && checkedIn && (
+                      <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">
+                        <Camera className="w-3 h-3 mr-1" /> Registrar
+                      </Button>
                     )}
                   </div>
-                  {point.scanned && point.foto_url && (
-                    <SignedImg bucket="evidencias" path={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
-                  )}
-                  {!point.scanned && checkedIn && (
-                    <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">
-                      <Camera className="w-3 h-3 mr-1" /> Verificar
-                    </Button>
+                  {point.scanned && (
+                    <div className="mt-2 pl-13">
+                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${point.estado === 'con_novedad' ? 'bg-emergency/10 text-emergency' : 'bg-success/10 text-success'}`}>
+                        {point.estado === 'con_novedad' ? 'CON NOVEDAD' : 'SIN NOVEDAD'}
+                      </span>
+                      {point.observacion && (
+                        <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{point.observacion}</p>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
