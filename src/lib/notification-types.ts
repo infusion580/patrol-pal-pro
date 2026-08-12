@@ -17,6 +17,7 @@ import {
   LogOut,
   MapPin,
   MapPinOff,
+  Megaphone,
   Shield,
   ShieldCheck,
   Trophy,
@@ -137,6 +138,10 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
   sesion_cierre: {
     label: 'Cierre de Sesión', icon: LogOut, color: 'text-muted-foreground', bgColor: 'bg-muted',
     categoria: 'accesos', severidad: 'info',
+  },
+  comunicado: {
+    label: 'Comunicado', icon: Megaphone, color: 'text-primary', bgColor: 'bg-primary/10',
+    categoria: 'sistema', severidad: 'media',
   },
   reconocimiento: {
     label: 'Cuadro de Honor', icon: Trophy, color: 'text-warning', bgColor: 'bg-warning/10',
