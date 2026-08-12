@@ -267,6 +267,8 @@ const Rondines = () => {
     setScanTarget(checkpoint);
     setScanFile(null);
     setScanPreview(null);
+    setScanObservacion('');
+    setScanEstado('sin_novedad');
   };
 
   const onSelectPhoto = (file: File | null) => {
