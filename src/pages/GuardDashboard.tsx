@@ -8,6 +8,7 @@ import EmergencyButton from '@/components/EmergencyButton';
 import ShiftControl from '@/components/ShiftControl';
 import DailyProgress from '@/components/DailyProgress';
 import PendientesList from '@/components/PendientesList';
+import NotaRelevoEntrante from '@/components/NotaRelevoEntrante';
 import AppHeader from '@/components/AppHeader';
 import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
 import UnreadAlertsBanner from '@/components/UnreadAlertsBanner';
@@ -98,6 +99,8 @@ const GuardDashboard = () => {
         <UnreadMessagesBanner />
 
         <UnreadAlertsBanner />
+
+        <NotaRelevoEntrante />
 
         <ShiftControl />
 

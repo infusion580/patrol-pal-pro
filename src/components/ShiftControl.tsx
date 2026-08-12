@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Clock, LogIn, LogOut, UserCheck, AlertTriangle } from 'lucide-react';
+import { Clock, LogIn, LogOut, UserCheck, AlertTriangle, StickyNote } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
@@ -7,6 +7,7 @@ import { useToast } from '@/hooks/use-toast';
 import { notifyTurnoInicio, notifyTurnoFin } from '@/lib/notification-helpers';
 import { TipoTurno, tipoTurnoLabel, tipoTurnoHoras, generarAsistenciasCorridoFaltantes } from '@/lib/asistencias-helpers';
 import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
+import { crearNotaRelevo } from '@/lib/notas-relevo';
 
 interface Turno {
   id: string;
@@ -31,6 +32,9 @@ const ShiftControl = () => {
   const [showHandoff, setShowHandoff] = useState(false);
   const [guardiaEntrante, setGuardiaEntrante] = useState('');
   const [comentario, setComentario] = useState('');
+  const [notaPendientes, setNotaPendientes] = useState('');
+  const [notaInstrucciones, setNotaInstrucciones] = useState('');
+  const [notaImportante, setNotaImportante] = useState(false);
   const [servicios, setServicios] = useState<Servicio[]>([]);
   const [selectedServicio, setSelectedServicio] = useState<string>('');
 
@@ -149,11 +153,28 @@ const ShiftControl = () => {
       } as any).eq('id', activeAsistenciaId);
     }
 
+    // Nota para el próximo relevo (fecha/hora y turno quedan registrados)
+    const notaGuardada = await crearNotaRelevo({
+      servicioId: activeTurno.servicio_id || null,
+      turnoId: activeTurno.id,
+      autorId: user.id,
+      autorNombre: `${user.nombre} ${user.apellido}`.trim(),
+      pendientes: notaPendientes,
+      instrucciones: notaInstrucciones,
+      importante: notaImportante,
+    });
+
     setActiveTurno(null);
     setActiveAsistenciaId(null);
     setShowHandoff(false);
     setComentario('');
     setGuardiaEntrante('');
+    setNotaPendientes('');
+    setNotaInstrucciones('');
+    setNotaImportante(false);
+    if (notaGuardada) {
+      toast({ title: '📝 Nota enviada al próximo relevo' });
+    }
     toast({
       title: completado ? (horasExtra > 0 ? '✅ Turno completo + horas extra' : '✅ Turno completo') : '⚠️ Turno incompleto',
       description: completado
@@ -257,6 +278,45 @@ const ShiftControl = () => {
                   rows={2}
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
                 />
+              </div>
+
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <StickyNote className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-semibold text-foreground">Nota para el próximo relevo</p>
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Pendientes</label>
+                  <textarea
+                    value={notaPendientes}
+                    onChange={(e) => setNotaPendientes(e.target.value)}
+                    placeholder="Ej. Revisar puerta 5, entregar llaves al almacén..."
+                    rows={2}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Instrucciones importantes</label>
+                  <textarea
+                    value={notaInstrucciones}
+                    onChange={(e) => setNotaInstrucciones(e.target.value)}
+                    placeholder="Indicaciones que el guardia entrante debe seguir"
+                    rows={2}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-[11px] text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={notaImportante}
+                    onChange={(e) => setNotaImportante(e.target.checked)}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  Marcar la nota como <strong>importante</strong>
+                </label>
+                <p className="text-[10px] text-muted-foreground">
+                  Se guardan fecha, hora y turno. La verá el siguiente guardia de este servicio.
+                </p>
               </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setShowHandoff(false)} className="flex-1">Cancelar</Button>
