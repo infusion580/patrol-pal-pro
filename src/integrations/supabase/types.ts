@@ -604,6 +604,59 @@ export type Database = {
           },
         ]
       }
+      notas_relevo: {
+        Row: {
+          autor_id: string
+          autor_nombre: string
+          created_at: string
+          id: string
+          importante: boolean
+          instrucciones: string
+          leida_at: string | null
+          leida_por: string | null
+          pendientes: string
+          servicio_id: string | null
+          turno_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          autor_id: string
+          autor_nombre?: string
+          created_at?: string
+          id?: string
+          importante?: boolean
+          instrucciones?: string
+          leida_at?: string | null
+          leida_por?: string | null
+          pendientes?: string
+          servicio_id?: string | null
+          turno_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          autor_id?: string
+          autor_nombre?: string
+          created_at?: string
+          id?: string
+          importante?: boolean
+          instrucciones?: string
+          leida_at?: string | null
+          leida_por?: string | null
+          pendientes?: string
+          servicio_id?: string | null
+          turno_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notas_relevo_servicio_id_fkey"
+            columns: ["servicio_id"]
+            isOneToOne: false
+            referencedRelation: "servicios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notificaciones: {
         Row: {
           created_at: string
