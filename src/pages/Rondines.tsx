@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation, Camera, X, FileText } from 'lucide-react';
+import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation, Camera, X, FileText, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -380,6 +380,7 @@ const Rondines = () => {
   };
 
   const scannedCount = points.filter(p => p.scanned).length;
+  const faltantesObligatorios = points.filter(p => !p.scanned && p.obligatorio).length;
 
   if (loading) {
     return (
