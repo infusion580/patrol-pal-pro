@@ -16,6 +16,7 @@ interface Checkpoint {
   lat: number | null;
   lng: number | null;
   radius_metros: number;
+  obligatorio: boolean;
 }
 
 type TipoTurno = '12h' | '24h' | 'corrido';
@@ -28,6 +29,7 @@ interface Servicio {
   tipo_turno: TipoTurno;
   rondin_intervalo_minutos: number | null;
   rondin_tolerancia_minutos: number;
+  permitir_rondin_incompleto: boolean;
   checkpoints: Checkpoint[];
 }
 
@@ -48,7 +50,7 @@ const Servicios = () => {
   const [showAddService, setShowAddService] = useState(false);
   const [showAddCheckpoint, setShowAddCheckpoint] = useState<string | null>(null);
   const [newService, setNewService] = useState<{ nombre: string; cliente: string; direccion: string; tipo_turno: TipoTurno }>({ nombre: '', cliente: '', direccion: '', tipo_turno: '12h' });
-  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
+  const [newCheckpoint, setNewCheckpoint] = useState({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50', obligatorio: true });
 
   const fetchServicios = async () => {
     const { data: svcs } = await supabase.from('servicios').select('*').order('created_at', { ascending: false });
@@ -65,7 +67,8 @@ const Servicios = () => {
         tipo_turno: ((s as any).tipo_turno || '12h') as TipoTurno,
         rondin_intervalo_minutos: (s as any).rondin_intervalo_minutos ?? null,
         rondin_tolerancia_minutos: (s as any).rondin_tolerancia_minutos ?? 10,
-        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50 })),
+        permitir_rondin_incompleto: (s as any).permitir_rondin_incompleto ?? false,
+        checkpoints: (cps || []).map(c => ({ id: c.id, nombre: c.nombre, ubicacion: c.ubicacion, lat: (c as any).lat, lng: (c as any).lng, radius_metros: (c as any).radius_metros || 50, obligatorio: (c as any).obligatorio ?? true })),
       });
     }
     setServicios(serviciosWithCps);
@@ -126,9 +129,10 @@ const Servicios = () => {
       lat: parseFloat(newCheckpoint.lat),
       lng: parseFloat(newCheckpoint.lng),
       radius_metros: parseInt(newCheckpoint.radius) || 50,
+      obligatorio: newCheckpoint.obligatorio,
     } as any);
     if (error) { console.error(error); toast({ title: 'Error', description: 'No se pudo agregar el punto de rondín.', variant: 'destructive' }); return; }
-    setNewCheckpoint({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50' });
+    setNewCheckpoint({ nombre: '', ubicacion: '', lat: '', lng: '', radius: '50', obligatorio: true });
     setShowAddCheckpoint(null);
     toast({ title: 'Punto de rondín agregado' });
     fetchServicios();
@@ -136,6 +140,19 @@ const Servicios = () => {
 
   const removeCheckpoint = async (checkpointId: string) => {
     await supabase.from('checkpoints').delete().eq('id', checkpointId);
+    fetchServicios();
+  };
+
+  const toggleCheckpointObligatorio = async (checkpointId: string, obligatorio: boolean) => {
+    const { error } = await supabase.from('checkpoints').update({ obligatorio } as any).eq('id', checkpointId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo actualizar el punto.', variant: 'destructive' }); return; }
+    fetchServicios();
+  };
+
+  const togglePermitirIncompleto = async (servicioId: string, permitir: boolean) => {
+    const { error } = await supabase.from('servicios').update({ permitir_rondin_incompleto: permitir } as any).eq('id', servicioId);
+    if (error) { toast({ title: 'Error', description: 'No se pudo guardar la configuración.', variant: 'destructive' }); return; }
+    toast({ title: permitir ? 'Se permite cerrar rondines incompletos' : 'Puntos obligatorios requeridos' });
     fetchServicios();
   };
 
@@ -294,6 +311,21 @@ const Servicios = () => {
                       </button>
                     </div>
 
+                    <label className="flex items-start gap-2 bg-accent/50 rounded-lg px-3 py-2 mb-2 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={servicio.permitir_rondin_incompleto}
+                        onChange={e => togglePermitirIncompleto(servicio.id, e.target.checked)}
+                        className="mt-0.5 w-4 h-4 accent-primary"
+                      />
+                      <span className="text-[11px] text-foreground">
+                        Permitir cerrar rondines incompletos
+                        <span className="block text-[10px] text-muted-foreground">
+                          Si se activa, el guardia podrá finalizar aunque falten puntos obligatorios.
+                        </span>
+                      </span>
+                    </label>
+
                     {showAddCheckpoint === servicio.id && (
                       <div className="bg-accent rounded-lg p-3 space-y-2 mb-2">
                         <Input placeholder="Nombre del punto" value={newCheckpoint.nombre} onChange={e => setNewCheckpoint(p => ({ ...p, nombre: e.target.value }))} className="h-9 text-sm" />
@@ -303,6 +335,10 @@ const Servicios = () => {
                           <Input placeholder="Longitud *" type="number" step="any" value={newCheckpoint.lng} onChange={e => setNewCheckpoint(p => ({ ...p, lng: e.target.value }))} className="h-9 text-sm" />
                         </div>
                         <Input placeholder="Radio permitido (metros)" type="number" value={newCheckpoint.radius} onChange={e => setNewCheckpoint(p => ({ ...p, radius: e.target.value }))} className="h-9 text-sm" />
+                        <label className="flex items-center gap-2 text-[11px] text-foreground cursor-pointer">
+                          <input type="checkbox" checked={newCheckpoint.obligatorio} onChange={e => setNewCheckpoint(p => ({ ...p, obligatorio: e.target.checked }))} className="w-4 h-4 accent-primary" />
+                          Punto obligatorio
+                        </label>
                         <p className="text-[10px] text-muted-foreground">El guardia debe estar dentro del radio para confirmar el escaneo.</p>
                         <Button size="sm" onClick={() => addCheckpoint(servicio.id)} className="w-full h-8 text-xs">Agregar Punto</Button>
                       </div>
@@ -319,6 +355,10 @@ const Servicios = () => {
                               <p className="text-xs font-semibold text-foreground">{cp.nombre}</p>
                               <p className="text-[10px] text-muted-foreground">{cp.ubicacion}</p>
                               {cp.lat && cp.lng && <p className="text-[10px] text-primary font-mono">📍 {cp.lat.toFixed(5)}, {cp.lng.toFixed(5)} (r:{cp.radius_metros}m)</p>}
+                              <label className="text-[10px] text-muted-foreground flex items-center gap-1 mt-0.5 cursor-pointer">
+                                <input type="checkbox" checked={cp.obligatorio} onChange={e => toggleCheckpointObligatorio(cp.id, e.target.checked)} className="w-3 h-3 accent-primary" />
+                                Obligatorio
+                              </label>
                             </div>
                             <button onClick={() => removeCheckpoint(cp.id)} className="p-1 rounded text-muted-foreground hover:text-emergency transition-colors">
                               <Trash2 className="w-3.5 h-3.5" />

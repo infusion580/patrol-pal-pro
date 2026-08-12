@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation, Camera, X, FileText } from 'lucide-react';
+import { ArrowLeft, MapPin, QrCode, CheckCircle2, Clock, Navigation, Camera, X, FileText, AlertTriangle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -14,6 +14,8 @@ import { notifyRondinCheckIn, notifyRondinPunto, notifyRondinCheckOut } from '@/
 import { SignedImg } from '@/components/SignedImg';
 import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
 
+type EstadoPunto = 'sin_novedad' | 'con_novedad';
+
 interface CheckpointItem {
   id: string;
   name: string;
@@ -22,7 +24,12 @@ interface CheckpointItem {
   lat: number | null;
   lng: number | null;
   radius: number;
+  obligatorio: boolean;
   foto_url?: string | null;
+  observacion?: string;
+  estado?: EstadoPunto;
+  scan_lat?: number | null;
+  scan_lng?: number | null;
 }
 
 function getDistanceMeters(lat1: number, lng1: number, lat2: number, lng2: number): number {
@@ -73,10 +80,14 @@ const Rondines = () => {
   const [selectedServicio, setSelectedServicio] = useState<string | null>(null);
   const [zoneCenter, setZoneCenter] = useState<{ lat: number; lng: number; radius: number } | undefined>();
 
+  const [permitirIncompleto, setPermitirIncompleto] = useState(false);
+
   // Scan dialog state
   const [scanTarget, setScanTarget] = useState<CheckpointItem | null>(null);
   const [scanFile, setScanFile] = useState<File | null>(null);
   const [scanPreview, setScanPreview] = useState<string | null>(null);
+  const [scanObservacion, setScanObservacion] = useState('');
+  const [scanEstado, setScanEstado] = useState<EstadoPunto>('sin_novedad');
 
   // Checkout dialog state
   const [checkoutOpen, setCheckoutOpen] = useState(false);
@@ -102,28 +113,36 @@ const Rondines = () => {
     const { data: cps } = await supabase.from('checkpoints').select('*').eq('servicio_id', servicioId).order('created_at');
     if (!user) return;
 
+    const { data: svc } = await supabase.from('servicios').select('permitir_rondin_incompleto').eq('id', servicioId).maybeSingle();
+    setPermitirIncompleto(!!(svc as any)?.permitir_rondin_incompleto);
+
     const { data: activeRondin } = await supabase
       .from('rondines').select('*')
       .eq('guardia_id', user.id).eq('status', 'activo')
       .maybeSingle();
 
-    let scannedMap = new Map<string, { scanned_at: string; foto_url: string | null }>();
+    let scannedMap = new Map<string, any>();
     if (activeRondin) {
       setRondinId(activeRondin.id);
       setCheckedIn(true);
       const { data: scans } = await supabase
-        .from('rondin_scans').select('checkpoint_id, scanned_at, foto_url')
+        .from('rondin_scans').select('checkpoint_id, scanned_at, foto_url, observacion, estado, lat, lng')
         .eq('rondin_id', activeRondin.id);
-      scannedMap = new Map(scans?.map((s: any) => [s.checkpoint_id, { scanned_at: s.scanned_at, foto_url: s.foto_url }]) || []);
+      scannedMap = new Map(scans?.map((s: any) => [s.checkpoint_id, s]) || []);
     }
 
-    const mapped = (cps || []).map((cp: any) => {
+    const mapped: CheckpointItem[] = (cps || []).map((cp: any) => {
       const s = scannedMap.get(cp.id);
       return {
         id: cp.id, name: cp.nombre, lat: cp.lat, lng: cp.lng, radius: cp.radius_metros || 50,
+        obligatorio: cp.obligatorio ?? true,
         scanned: !!s,
         time: s ? new Date(s.scanned_at).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }) : null,
         foto_url: s?.foto_url || null,
+        observacion: s?.observacion || '',
+        estado: (s?.estado as EstadoPunto) || 'sin_novedad',
+        scan_lat: s?.lat ?? null,
+        scan_lng: s?.lng ?? null,
       };
     });
     setPoints(mapped);
@@ -134,13 +153,14 @@ const Rondines = () => {
   const handleCheckIn = async () => {
     if (!user || !selectedServicio) return;
     if (checkedIn && rondinId) {
-      // Bloquear checkout hasta escanear TODOS los puntos
-      const faltantes = points.filter(p => !p.scanned);
-      if (points.length === 0 || faltantes.length > 0) {
+      // Bloquear checkout si faltan puntos OBLIGATORIOS,
+      // salvo que el administrador permita cerrar rondines incompletos.
+      const faltantes = points.filter(p => !p.scanned && p.obligatorio);
+      if (!permitirIncompleto && (points.length === 0 || faltantes.length > 0)) {
         toast({
           title: 'Rondín incompleto',
           description: faltantes.length > 0
-            ? `Faltan ${faltantes.length} punto(s): ${faltantes.map(p => p.name).join(', ')}`
+            ? `Faltan ${faltantes.length} punto(s) obligatorio(s): ${faltantes.map(p => p.name).join(', ')}`
             : 'No hay puntos configurados para este servicio.',
           variant: 'destructive',
         });
@@ -219,7 +239,7 @@ const Rondines = () => {
     setCheckedIn(false);
     setRondinId(null);
     setReporte('');
-    setPoints(prev => prev.map(p => ({ ...p, scanned: false, time: null, foto_url: null })));
+    setPoints(prev => prev.map(p => ({ ...p, scanned: false, time: null, foto_url: null, observacion: '', estado: 'sin_novedad' as EstadoPunto, scan_lat: null, scan_lng: null })));
     toast({ title: '✅ Rondín completado', description: 'Reporte guardado correctamente.' });
   };
 
@@ -247,6 +267,8 @@ const Rondines = () => {
     setScanTarget(checkpoint);
     setScanFile(null);
     setScanPreview(null);
+    setScanObservacion('');
+    setScanEstado('sin_novedad');
   };
 
   const onSelectPhoto = (file: File | null) => {
@@ -276,7 +298,12 @@ const Rondines = () => {
       toast({ title: 'Foto requerida', description: 'Debes adjuntar una foto de evidencia del punto.', variant: 'destructive' });
       return;
     }
+    if (scanEstado === 'con_novedad' && scanObservacion.trim().length < 10) {
+      toast({ title: 'Observación requerida', description: 'Describe la novedad con al menos 10 caracteres.', variant: 'destructive' });
+      return;
+    }
     setScanning(true);
+
 
     // GPS check
     let lat: number | null = null, lng: number | null = null;
@@ -309,29 +336,51 @@ const Rondines = () => {
     }
     const foto_url = path;
 
+    const observacion = scanObservacion.trim();
     const { error } = await supabase.from('rondin_scans').insert({
       rondin_id: rondinId,
       checkpoint_id: scanTarget.id,
       lat, lng,
       foto_url,
-    });
+      observacion,
+      estado: scanEstado,
+    } as any);
     setScanning(false);
     if (error) {
       toast({ title: 'Error', description: 'No se pudo guardar el escaneo.', variant: 'destructive' });
       return;
     }
     setPoints(prev => prev.map(p => p.id === scanTarget.id
-      ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), foto_url }
+      ? {
+          ...p,
+          scanned: true,
+          time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+          foto_url,
+          observacion,
+          estado: scanEstado,
+          scan_lat: lat,
+          scan_lng: lng,
+        }
       : p));
     const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
-    notifyRondinPunto(user.id, `${user.nombre} ${user.apellido}`, scanTarget.name, svcName, foto_url);
-    toast({ title: '✅ Punto confirmado', description: `${scanTarget.name} con evidencia guardada.` });
+    const estadoLabel = scanEstado === 'con_novedad' ? '⚠️ CON NOVEDAD' : 'Sin novedad';
+    notifyRondinPunto(
+      user.id,
+      `${user.nombre} ${user.apellido}`,
+      `${scanTarget.name} — ${estadoLabel}${observacion ? `: ${observacion}` : ''}`,
+      svcName,
+      foto_url,
+    );
+    toast({ title: '✅ Punto registrado', description: `${scanTarget.name} — ${estadoLabel}.` });
     setScanTarget(null);
     setScanFile(null);
     setScanPreview(null);
+    setScanObservacion('');
+    setScanEstado('sin_novedad');
   };
 
   const scannedCount = points.filter(p => p.scanned).length;
+  const faltantesObligatorios = points.filter(p => !p.scanned && p.obligatorio).length;
 
   if (loading) {
     return (
@@ -379,19 +428,24 @@ const Rondines = () => {
           <div className="bg-card rounded-xl p-4 shadow-card mb-6">
             <Button
               onClick={handleCheckIn}
-              disabled={checkedIn && (points.length === 0 || scannedCount < points.length)}
+              disabled={checkedIn && !permitirIncompleto && (points.length === 0 || faltantesObligatorios > 0)}
               className={`w-full h-14 text-base font-bold rounded-xl ${
                 checkedIn ? 'bg-emergency text-emergency-foreground hover:bg-emergency/90' : 'bg-success text-success-foreground hover:bg-success/90'
               }`}
             >
               <MapPin className="w-5 h-5 mr-2" />
               {checkedIn
-                ? (scannedCount < points.length
-                    ? `Faltan ${points.length - scannedCount} punto(s)`
+                ? (!permitirIncompleto && faltantesObligatorios > 0
+                    ? `Faltan ${faltantesObligatorios} punto(s) obligatorio(s)`
                     : 'Hacer Check-out y enviar reporte')
                 : 'Hacer Check-in'}
             </Button>
             {checkedIn && <p className="text-xs text-success text-center mt-2 font-semibold">✅ Check-in activo — GPS registrado</p>}
+            {checkedIn && permitirIncompleto && faltantesObligatorios > 0 && (
+              <p className="text-[11px] text-muted-foreground text-center mt-1">
+                El administrador permite cerrar el rondín con puntos pendientes.
+              </p>
+            )}
           </div>
         )}
 
@@ -410,30 +464,52 @@ const Rondines = () => {
             <h2 className="text-sm font-semibold text-muted-foreground mb-3">Puntos de Control</h2>
             <div className="space-y-2">
               {points.map((point) => (
-                <div key={point.id} className="bg-card rounded-xl p-4 shadow-card flex items-center gap-3">
-                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${point.scanned ? 'bg-success/10' : 'bg-accent'}`}>
-                    {point.scanned ? <CheckCircle2 className="w-5 h-5 text-success" /> : <QrCode className="w-5 h-5 text-muted-foreground" />}
-                  </div>
-                  <div className="flex-1">
-                    <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>{point.name}</p>
-                    {point.time && (
-                      <p className="text-xs text-muted-foreground flex items-center gap-1">
-                        <Clock className="w-3 h-3" /> {point.time}
+                <div key={point.id} className="bg-card rounded-xl p-4 shadow-card">
+                  <div className="flex items-center gap-3">
+                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${point.scanned ? (point.estado === 'con_novedad' ? 'bg-emergency/10' : 'bg-success/10') : 'bg-accent'}`}>
+                      {point.scanned
+                        ? (point.estado === 'con_novedad'
+                            ? <AlertTriangle className="w-5 h-5 text-emergency" />
+                            : <CheckCircle2 className="w-5 h-5 text-success" />)
+                        : <QrCode className="w-5 h-5 text-muted-foreground" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className={`text-sm font-semibold ${point.scanned ? 'text-foreground' : 'text-muted-foreground'}`}>
+                        {point.name}
+                        {!point.obligatorio && <span className="ml-1 text-[10px] font-normal text-muted-foreground">(opcional)</span>}
                       </p>
+                      {point.time && (
+                        <p className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Clock className="w-3 h-3" /> {point.time}
+                          {point.scan_lat != null && point.scan_lng != null && (
+                            <span className="font-mono text-[10px]">• {point.scan_lat.toFixed(5)}, {point.scan_lng.toFixed(5)}</span>
+                          )}
+                        </p>
+                      )}
+                      {point.lat && point.lng && !point.scanned && (
+                        <p className="text-[10px] text-primary flex items-center gap-1">
+                          <Navigation className="w-3 h-3" /> GPS + foto requeridos (r:{point.radius}m)
+                        </p>
+                      )}
+                    </div>
+                    {point.scanned && point.foto_url && (
+                      <SignedImg bucket="evidencias" path={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
                     )}
-                    {point.lat && point.lng && !point.scanned && (
-                      <p className="text-[10px] text-primary flex items-center gap-1">
-                        <Navigation className="w-3 h-3" /> GPS + foto requeridos (r:{point.radius}m)
-                      </p>
+                    {!point.scanned && checkedIn && (
+                      <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">
+                        <Camera className="w-3 h-3 mr-1" /> Registrar
+                      </Button>
                     )}
                   </div>
-                  {point.scanned && point.foto_url && (
-                    <SignedImg bucket="evidencias" path={point.foto_url} alt="Evidencia" className="w-10 h-10 rounded object-cover border border-border" />
-                  )}
-                  {!point.scanned && checkedIn && (
-                    <Button size="sm" onClick={() => openScanDialog(point)} className="text-xs h-8">
-                      <Camera className="w-3 h-3 mr-1" /> Verificar
-                    </Button>
+                  {point.scanned && (
+                    <div className="mt-2 pl-[52px]">
+                      <span className={`inline-block text-[10px] font-bold px-2 py-0.5 rounded-full ${point.estado === 'con_novedad' ? 'bg-emergency/10 text-emergency' : 'bg-success/10 text-success'}`}>
+                        {point.estado === 'con_novedad' ? 'CON NOVEDAD' : 'SIN NOVEDAD'}
+                      </span>
+                      {point.observacion && (
+                        <p className="text-xs text-muted-foreground mt-1 whitespace-pre-wrap">{point.observacion}</p>
+                      )}
+                    </div>
                   )}
                 </div>
               ))}
@@ -443,17 +519,17 @@ const Rondines = () => {
       </div>
 
       {/* Scan dialog */}
-      <Dialog open={!!scanTarget} onOpenChange={(o) => { if (!o) { setScanTarget(null); setScanFile(null); setScanPreview(null); } }}>
-        <DialogContent className="max-w-md">
+      <Dialog open={!!scanTarget} onOpenChange={(o) => { if (!o) { setScanTarget(null); setScanFile(null); setScanPreview(null); setScanObservacion(''); setScanEstado('sin_novedad'); } }}>
+        <DialogContent className="max-w-md max-h-[85dvh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Camera className="w-5 h-5 text-primary" />
-              Evidencia del punto
+              Reporte del punto
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-3">
             <p className="text-sm text-muted-foreground">
-              Toma una foto del punto <span className="font-semibold text-foreground">{scanTarget?.name}</span> para confirmarlo.
+              Registra la evidencia del punto <span className="font-semibold text-foreground">{scanTarget?.name}</span>. Se guardará con fecha, hora y ubicación.
             </p>
             {scanPreview ? (
               <div className="relative">
@@ -479,11 +555,45 @@ const Rondines = () => {
                 />
               </label>
             )}
+
+            <div>
+              <p className="text-xs font-semibold text-foreground mb-2">Estado del punto</p>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setScanEstado('sin_novedad')}
+                  className={`h-11 rounded-lg text-sm font-bold border transition-colors ${scanEstado === 'sin_novedad' ? 'bg-success text-success-foreground border-success' : 'bg-background text-muted-foreground border-border'}`}
+                >
+                  SIN NOVEDAD
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setScanEstado('con_novedad')}
+                  className={`h-11 rounded-lg text-sm font-bold border transition-colors ${scanEstado === 'con_novedad' ? 'bg-emergency text-emergency-foreground border-emergency' : 'bg-background text-muted-foreground border-border'}`}
+                >
+                  CON NOVEDAD
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold text-foreground mb-1">
+                Observación {scanEstado === 'con_novedad' ? '(obligatoria)' : '(opcional)'}
+              </p>
+              <Textarea
+                value={scanObservacion}
+                onChange={(e) => setScanObservacion(e.target.value)}
+                placeholder={scanEstado === 'con_novedad' ? 'Describe la novedad detectada en este punto...' : 'Observaciones del punto (opcional)'}
+                rows={3}
+                maxLength={800}
+              />
+              <p className="text-[10px] text-muted-foreground text-right">{scanObservacion.length}/800</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setScanTarget(null)} disabled={scanning}>Cancelar</Button>
             <Button onClick={confirmScan} disabled={scanning || !scanFile}>
-              {scanning ? 'Guardando...' : 'Confirmar punto'}
+              {scanning ? 'Guardando...' : 'Guardar punto'}
             </Button>
           </DialogFooter>
         </DialogContent>
