@@ -52,6 +52,7 @@ export const RETENTION_TARGETS: RetentionTarget[] = [
   // Turnos y asistencia
   { table: 'asistencias', dateColumn: 'created_at' },
   { table: 'faltas', dateColumn: 'created_at' },
+  { table: 'notas_relevo', dateColumn: 'created_at' },
   { table: 'turnos', dateColumn: 'created_at' },
   { table: 'cuadro_honor', dateColumn: 'created_at' },
 
