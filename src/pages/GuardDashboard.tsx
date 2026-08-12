@@ -99,6 +99,8 @@ const GuardDashboard = () => {
 
         <UnreadAlertsBanner />
 
+        <NotaRelevoEntrante />
+
         <ShiftControl />
 
         <PendientesList />
