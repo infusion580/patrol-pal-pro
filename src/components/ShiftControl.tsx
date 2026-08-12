@@ -279,6 +279,45 @@ const ShiftControl = () => {
                   className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
                 />
               </div>
+
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center gap-2">
+                  <StickyNote className="w-4 h-4 text-primary" />
+                  <p className="text-xs font-semibold text-foreground">Nota para el próximo relevo</p>
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Pendientes</label>
+                  <textarea
+                    value={notaPendientes}
+                    onChange={(e) => setNotaPendientes(e.target.value)}
+                    placeholder="Ej. Revisar puerta 5, entregar llaves al almacén..."
+                    rows={2}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[11px] font-semibold text-muted-foreground block mb-1">Instrucciones importantes</label>
+                  <textarea
+                    value={notaInstrucciones}
+                    onChange={(e) => setNotaInstrucciones(e.target.value)}
+                    placeholder="Indicaciones que el guardia entrante debe seguir"
+                    rows={2}
+                    className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground resize-none"
+                  />
+                </div>
+                <label className="flex items-center gap-2 text-[11px] text-foreground">
+                  <input
+                    type="checkbox"
+                    checked={notaImportante}
+                    onChange={(e) => setNotaImportante(e.target.checked)}
+                    className="h-4 w-4 rounded border-border"
+                  />
+                  Marcar la nota como <strong>importante</strong>
+                </label>
+                <p className="text-[10px] text-muted-foreground">
+                  Se guardan fecha, hora y turno. La verá el siguiente guardia de este servicio.
+                </p>
+              </div>
               <div className="flex gap-2">
                 <Button variant="outline" onClick={() => setShowHandoff(false)} className="flex-1">Cancelar</Button>
                 <Button onClick={() => endShift()} className="flex-1 bg-emergency text-emergency-foreground hover:bg-emergency/90">
