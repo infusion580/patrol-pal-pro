@@ -66,7 +66,7 @@ export function capturarUbicacion(): Promise<PosicionCapturada> {
 /** Sube la foto de sesión al bucket privado `evidencias` y devuelve su ruta. */
 export async function subirFotoSesion(userId: string, evento: SesionEvento, blob: Blob): Promise<string | null> {
   try {
-    const comprimida = await compressImage(blob, { maxWidth: 1024, quality: 0.7 });
+    const comprimida = await compressImage(blob, { maxSide: 1024, quality: 0.7 });
     const path = `${userId}/sesiones/${evento}-${Date.now()}.jpg`;
     const { error } = await supabase.storage
       .from('evidencias')
