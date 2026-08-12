@@ -336,26 +336,47 @@ const Rondines = () => {
     }
     const foto_url = path;
 
+    const observacion = scanObservacion.trim();
     const { error } = await supabase.from('rondin_scans').insert({
       rondin_id: rondinId,
       checkpoint_id: scanTarget.id,
       lat, lng,
       foto_url,
-    });
+      observacion,
+      estado: scanEstado,
+    } as any);
     setScanning(false);
     if (error) {
       toast({ title: 'Error', description: 'No se pudo guardar el escaneo.', variant: 'destructive' });
       return;
     }
     setPoints(prev => prev.map(p => p.id === scanTarget.id
-      ? { ...p, scanned: true, time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }), foto_url }
+      ? {
+          ...p,
+          scanned: true,
+          time: new Date().toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+          foto_url,
+          observacion,
+          estado: scanEstado,
+          scan_lat: lat,
+          scan_lng: lng,
+        }
       : p));
     const svcName = servicios.find(s => s.id === selectedServicio)?.nombre;
-    notifyRondinPunto(user.id, `${user.nombre} ${user.apellido}`, scanTarget.name, svcName, foto_url);
-    toast({ title: '✅ Punto confirmado', description: `${scanTarget.name} con evidencia guardada.` });
+    const estadoLabel = scanEstado === 'con_novedad' ? '⚠️ CON NOVEDAD' : 'Sin novedad';
+    notifyRondinPunto(
+      user.id,
+      `${user.nombre} ${user.apellido}`,
+      `${scanTarget.name} — ${estadoLabel}${observacion ? `: ${observacion}` : ''}`,
+      svcName,
+      foto_url,
+    );
+    toast({ title: '✅ Punto registrado', description: `${scanTarget.name} — ${estadoLabel}.` });
     setScanTarget(null);
     setScanFile(null);
     setScanPreview(null);
+    setScanObservacion('');
+    setScanEstado('sin_novedad');
   };
 
   const scannedCount = points.filter(p => p.scanned).length;
