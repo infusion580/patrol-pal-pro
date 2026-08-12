@@ -89,7 +89,8 @@ export function SessionPhotoCapture({ evento, onConfirm, onCancel, nombre }: Pro
   const titulo = evento === 'login' ? 'Validación de ingreso' : 'Validación de cierre de sesión';
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-background">
+    // z-[200]: por encima de los toasts/alertas, que tapaban el botón de la cámara.
+    <div className="fixed inset-0 z-[200] flex flex-col bg-background">
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
