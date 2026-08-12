@@ -39,6 +39,7 @@ const CuadroHonor = () => {
   const [registros, setRegistros] = useState<RegistroHonor[]>([]);
   const [perfiles, setPerfiles] = useState<PerfilLite[]>([]);
   const [loading, setLoading] = useState(true);
+  const [reconocimientos, setReconocimientos] = useState<Reconocimiento[]>([]);
 
   useEffect(() => {
     load();
