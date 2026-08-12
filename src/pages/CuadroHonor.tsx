@@ -131,6 +131,47 @@ const CuadroHonor = () => {
       </div>
 
       <div className="max-w-lg mx-auto px-4 -mt-4">
+        {reconocimientos.length > 0 && (
+          <div className="mb-4 space-y-2">
+            <h2 className="text-sm font-semibold text-foreground">Reconocimientos publicados</h2>
+            {reconocimientos.map(r => {
+              const p = perfiles.find(x => x.user_id === r.guardia_id);
+              return (
+                <div
+                  key={r.id}
+                  className="bg-gradient-to-r from-warning/10 to-card border border-warning/30 rounded-xl p-3 shadow-card"
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-full bg-warning/20 text-warning flex items-center justify-center font-bold">
+                      #{r.posicion}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground truncate">
+                        {p ? `${p.nombre} ${p.apellido}` : 'Guardia'}
+                      </p>
+                      <p className="text-[11px] text-muted-foreground">{r.periodo}</p>
+                      <p className="text-xs text-foreground mt-1">{r.motivo}</p>
+                      {r.bono > 0 && (
+                        <p className="text-xs font-bold text-success mt-1 flex items-center gap-1">
+                          <Gift className="w-3.5 h-3.5" /> Bono: {formatMoneda(r.bono)}
+                        </p>
+                      )}
+                      <p className="text-[10px] text-muted-foreground mt-1">
+                        Publicado el{' '}
+                        {new Date(r.publicado_at || r.created_at).toLocaleDateString('es-MX', {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric',
+                        })}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         <div className="bg-card rounded-xl p-1 shadow-card flex gap-1 mb-4">
           {(['hoy', 'semana', 'mes'] as Tab[]).map(t => (
             <button
