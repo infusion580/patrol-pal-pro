@@ -1216,6 +1216,45 @@ export type Database = {
         }
         Relationships: []
       }
+      sesion_registros: {
+        Row: {
+          created_at: string
+          dispositivo: Json | null
+          evento: string
+          foto_url: string | null
+          id: string
+          lat: number | null
+          lng: number | null
+          precision_metros: number | null
+          ubicacion_error: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dispositivo?: Json | null
+          evento: string
+          foto_url?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          precision_metros?: number | null
+          ubicacion_error?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dispositivo?: Json | null
+          evento?: string
+          foto_url?: string | null
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          precision_metros?: number | null
+          ubicacion_error?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       suppressed_emails: {
         Row: {
           created_at: string
