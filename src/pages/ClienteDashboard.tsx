@@ -420,11 +420,12 @@ const ClienteDashboard = () => {
           const showServiciosTab = config.show_lista_servicios || config.show_semaforo;
           const showGuardiasTab = config.show_lista_guardias;
           const showHistorialTab = config.show_reportes_incidencias;
-          const tabs: Array<{ value: string; label: string }> = [{ value: 'resumen', label: 'Resumen' }];
+          const tabs: Array<{ value: string; label: string }> = [{ value: 'resumen', label: 'Gráficas' }];
           if (showServiciosTab) tabs.push({ value: 'servicios', label: 'Servicios' });
           if (showGuardiasTab) tabs.push({ value: 'guardias', label: 'Guardias' });
           if (showHistorialTab) tabs.push({ value: 'historial', label: 'Historial' });
-          const gridColsClass = ['', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4'][tabs.length];
+          tabs.push({ value: 'reporte', label: 'Reporte' });
+          const gridColsClass = ['', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5'][tabs.length];
           return (
             <Tabs defaultValue="resumen" className="w-full">
               <TabsList className={cn('grid w-full', gridColsClass)}>
