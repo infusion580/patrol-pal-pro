@@ -234,6 +234,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (data?.user) {
       const uid = data.user.id;
       const nombreVisible = data.user.email || 'Usuario';
+      // Validación fotográfica de ingreso (la pantalla la muestra SessionCaptureGate).
+      import('./sesion-registros')
+        .then(({ marcarCapturaLoginPendiente }) => marcarCapturaLoginPendiente(uid))
+        .catch(() => {});
       import('./notification-helpers')
         .then(({ notifySesionInicio }) => notifySesionInicio(uid, nombreVisible))
         .catch(() => {});
