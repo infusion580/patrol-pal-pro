@@ -1,36 +1,109 @@
 /**
  * purge-retention
  * ---------------
- * Data retention job (LFPDPPP compliance).
+ * Proceso automático de retención de datos (se ejecuta a diario por cron).
  *
- * Personal data captured at access control (visitor ID / plate photos) cannot
- * be kept indefinitely. This scheduled function:
+ * Elimina toda la información operativa con más de `RETENTION_DAYS` días:
+ * fotografías, asistencias, coordenadas, reportes, alertas, evidencias,
+ * registros de rondines y datos temporales asociados.
  *
- *  1. Deletes visitor photos (INE, plate, exit) from the `visitas` bucket once
- *     the visit is older than VISITAS_RETENTION_DAYS, and blanks the columns.
- *     The visit record itself (name, time, area) is kept for the logbook.
- *  2. Deletes rondín evidence photos older than EVIDENCIAS_RETENTION_DAYS.
- *
- * Every purge run appends a summary to the immutable audit log.
+ * La regla está centralizada en `../_shared/retention.ts`. No se toca nada
+ * estructural (usuarios, roles, servicios, catálogos, configuración) ni la
+ * bitácora inmutable `audit_log`.
  */
 
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.4';
+import {
+  RETENTION_DAYS,
+  RETENTION_TARGETS,
+  cutoffISO,
+  toStoragePath,
+  type RetentionTarget,
+} from '../_shared/retention.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const VISITAS_RETENTION_DAYS = 90;
-const EVIDENCIAS_RETENTION_DAYS = 365;
+const PAGE_SIZE = 500;
 
-/** Turn a stored value (full URL or bare path) into a storage object path. */
-function toPath(bucket: string, value: string | null): string | null {
-  if (!value) return null;
-  const marker = `/${bucket}/`;
-  const i = value.indexOf(marker);
-  if (i >= 0) return decodeURIComponent(value.slice(i + marker.length).split('?')[0]);
-  return value.startsWith('http') ? null : value;
+type Client = ReturnType<typeof createClient>;
+
+interface TargetResult {
+  tabla: string;
+  filas_eliminadas: number;
+  fotos_eliminadas: number;
+  error?: string;
+}
+
+/** Borra de Storage las fotos de un lote de filas. */
+async function removePhotos(
+  supabase: Client,
+  target: RetentionTarget,
+  rows: Record<string, unknown>[],
+): Promise<number> {
+  if (!target.photos?.length) return 0;
+  let removed = 0;
+
+  for (const { bucket, column } of target.photos) {
+    const paths = rows
+      .map((r) => toStoragePath(bucket, r[column] as string | null))
+      .filter((p): p is string => !!p);
+    if (!paths.length) continue;
+
+    for (let i = 0; i < paths.length; i += 100) {
+      const chunk = paths.slice(i, i + 100);
+      const { error } = await supabase.storage.from(bucket).remove(chunk);
+      if (!error) removed += chunk.length;
+      else console.error(`[purge-retention] storage ${bucket}:`, error.message);
+    }
+  }
+
+  return removed;
+}
+
+/** Depura una tabla: borra sus fotos y luego las filas vencidas. */
+async function purgeTarget(supabase: Client, target: RetentionTarget): Promise<TargetResult> {
+  const cutoff = cutoffISO(target);
+  const result: TargetResult = { tabla: target.table, filas_eliminadas: 0, fotos_eliminadas: 0 };
+
+  try {
+    // Se pagina para no cargar en memoria periodos con mucho volumen.
+    for (;;) {
+      const selectCols = ['id', ...(target.photos?.map((p) => p.column) ?? [])].join(', ');
+      const { data: rows, error } = await supabase
+        .from(target.table)
+        .select(selectCols)
+        .lt(target.dateColumn, cutoff)
+        .limit(PAGE_SIZE);
+      if (error) throw error;
+      if (!rows?.length) break;
+
+      const typedRows = rows as unknown as Record<string, unknown>[];
+      result.fotos_eliminadas += await removePhotos(supabase, target, typedRows);
+
+      const ids = typedRows.map((r) => r.id as string);
+
+      if (target.onlyPhotos) {
+        const blanked = Object.fromEntries((target.photos ?? []).map((p) => [p.column, null]));
+        const { error: upErr } = await supabase.from(target.table).update(blanked).in('id', ids);
+        if (upErr) throw upErr;
+        break; // sin borrado de filas no hay avance de paginación
+      }
+
+      const { error: delErr } = await supabase.from(target.table).delete().in('id', ids);
+      if (delErr) throw delErr;
+      result.filas_eliminadas += ids.length;
+
+      if (ids.length < PAGE_SIZE) break;
+    }
+  } catch (e) {
+    result.error = (e as Error).message;
+    console.error(`[purge-retention] ${target.table}:`, result.error);
+  }
+
+  return result;
 }
 
 Deno.serve(async (req) => {
@@ -42,73 +115,23 @@ Deno.serve(async (req) => {
   );
 
   try {
-    const now = Date.now();
-    const visitasCutoff = new Date(now - VISITAS_RETENTION_DAYS * 86400_000).toISOString();
-    const evidenciasCutoff = new Date(now - EVIDENCIAS_RETENTION_DAYS * 86400_000).toISOString();
-
-    // ---- 1. Visitor photos -------------------------------------------------
-    const { data: visitas, error: vErr } = await supabase
-      .from('visitas')
-      .select('id, foto_ine_url, foto_placa_url, foto_salida_url, hora_entrada')
-      .lt('hora_entrada', visitasCutoff)
-      .or('foto_ine_url.neq.,foto_placa_url.neq.,foto_salida_url.neq.');
-    if (vErr) throw vErr;
-
-    const visitaPaths: string[] = [];
-    const visitaIds: string[] = [];
-    for (const v of visitas ?? []) {
-      const paths = [v.foto_ine_url, v.foto_placa_url, v.foto_salida_url]
-        .map((p) => toPath('visitas', p))
-        .filter((p): p is string => !!p);
-      if (paths.length) {
-        visitaPaths.push(...paths);
-        visitaIds.push(v.id);
-      }
-    }
-
-    if (visitaPaths.length) {
-      await supabase.storage.from('visitas').remove(visitaPaths);
-      await supabase
-        .from('visitas')
-        .update({ foto_ine_url: '', foto_placa_url: '', foto_salida_url: '' })
-        .in('id', visitaIds);
-    }
-
-    // ---- 2. Rondín evidence ------------------------------------------------
-    const { data: scans, error: sErr } = await supabase
-      .from('rondin_scans')
-      .select('id, foto_url, scanned_at')
-      .lt('scanned_at', evidenciasCutoff)
-      .neq('foto_url', '');
-    if (sErr) throw sErr;
-
-    const scanPaths: string[] = [];
-    const scanIds: string[] = [];
-    for (const s of scans ?? []) {
-      const p = toPath('evidencias', s.foto_url);
-      if (p) {
-        scanPaths.push(p);
-        scanIds.push(s.id);
-      }
-    }
-
-    if (scanPaths.length) {
-      await supabase.storage.from('evidencias').remove(scanPaths);
-      await supabase.from('rondin_scans').update({ foto_url: '' }).in('id', scanIds);
+    const detalle: TargetResult[] = [];
+    for (const target of RETENTION_TARGETS) {
+      detalle.push(await purgeTarget(supabase, target));
     }
 
     const summary = {
-      visitas_purgadas: visitaIds.length,
-      fotos_visitas_borradas: visitaPaths.length,
-      scans_purgados: scanIds.length,
-      fotos_evidencia_borradas: scanPaths.length,
-      retencion_visitas_dias: VISITAS_RETENTION_DAYS,
-      retencion_evidencias_dias: EVIDENCIAS_RETENTION_DAYS,
+      retencion_dias: RETENTION_DAYS,
+      ejecutado_en: new Date().toISOString(),
+      filas_eliminadas: detalle.reduce((a, d) => a + d.filas_eliminadas, 0),
+      fotos_eliminadas: detalle.reduce((a, d) => a + d.fotos_eliminadas, 0),
+      tablas_con_error: detalle.filter((d) => d.error).map((d) => d.tabla),
+      detalle,
     };
 
     await supabase.from('audit_log').insert({
       accion: 'retencion_purga',
-      tabla: 'storage',
+      tabla: 'sistema',
       datos_despues: summary,
     });
 
