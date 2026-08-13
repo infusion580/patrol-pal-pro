@@ -45,7 +45,18 @@ export async function createNotification(params: NotifParams) {
   const targets = [params.guardia_id, params.supervisor_id].filter(Boolean) as string[];
   const title = mensajeConDispositivo.split('\n')[0] || 'Defender';
   const body = mensajeConDispositivo.split('\n').slice(1).join(' · ').slice(0, 300);
-  void sendPushTo(targets, title, body, '/notificaciones');
+  // Si la alerta trae evidencia fotográfica, se firma la URL para que la
+  // notificación del sistema muestre la imagen (bucket privado).
+  let imagen: string | null = null;
+  if (params.foto_url) {
+    try {
+      const { getSignedUrl } = await import('./storage-helpers');
+      imagen = await getSignedUrl('evidencias', params.foto_url, 60 * 60 * 24);
+    } catch {
+      imagen = null;
+    }
+  }
+  void sendPushTo(targets, title, body, '/notificaciones', imagen);
 }
 
 /**
