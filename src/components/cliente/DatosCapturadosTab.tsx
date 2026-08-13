@@ -49,7 +49,7 @@ const DatosCapturadosTab = ({ clienteId, clienteNombre, config, desde, hasta, se
         title: 'Datos capturados en el periodo',
         subtitle: clienteNombre,
         logoUrl: logoUrl ?? undefined,
-        primaryHsl: colors?.primary,
+        primaryHsl: colors?.primary_hsl,
         meta: [
           { label: 'Cliente', value: clienteNombre },
           { label: 'Periodo', value: `${format(desde, 'dd/MM/yyyy')} al ${format(hasta, 'dd/MM/yyyy')}` },
