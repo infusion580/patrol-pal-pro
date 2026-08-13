@@ -392,11 +392,16 @@ const ValidacionPuesto = () => {
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {c.horarios.map((h) => (
-                    <span key={h} className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      {horaCorta(h)}
-                    </span>
-                  ))}
+                  {c.horarios.map((h) => {
+                    const periodo = periodoDelDia(h);
+                    return (
+                      <span key={h} className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                        {horaCorta(h)}
+                        <span className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full ${periodo === 'día' ? 'bg-warning' : 'bg-primary'}`} aria-hidden="true" />
+                        <span className="ml-1 text-[10px] font-normal uppercase text-muted-foreground">{periodo}</span>
+                      </span>
+                    );
+                  })}
                 </div>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Días: {c.dias.map((d) => DIAS_LABEL[d]).join(', ')} · Tolerancia {c.tolerancia_minutos} min · Radio {c.radio_metros} m
