@@ -302,8 +302,15 @@ const Rondines = () => {
       toast({ title: 'Foto requerida', description: 'Debes adjuntar una foto de evidencia del punto.', variant: 'destructive' });
       return;
     }
-    if (scanEstado === 'con_novedad' && scanObservacion.trim().length < 10) {
-      toast({ title: 'Observación requerida', description: 'Describe la novedad con al menos 10 caracteres.', variant: 'destructive' });
+    // El reporte individual del punto es obligatorio siempre (con o sin novedad).
+    if (scanObservacion.trim().length < 10) {
+      toast({
+        title: 'Reporte del punto requerido',
+        description: scanEstado === 'con_novedad'
+          ? 'Describe la novedad con al menos 10 caracteres.'
+          : 'Escribe el reporte de este punto (mínimo 10 caracteres).',
+        variant: 'destructive',
+      });
       return;
     }
     setScanning(true);
@@ -582,12 +589,12 @@ const Rondines = () => {
 
             <div>
               <p className="text-xs font-semibold text-foreground mb-1">
-                Observación {scanEstado === 'con_novedad' ? '(obligatoria)' : '(opcional)'}
+                Reporte del punto <span className="text-emergency">(obligatorio)</span>
               </p>
               <Textarea
                 value={scanObservacion}
                 onChange={(e) => setScanObservacion(e.target.value)}
-                placeholder={scanEstado === 'con_novedad' ? 'Describe la novedad detectada en este punto...' : 'Observaciones del punto (opcional)'}
+                placeholder={scanEstado === 'con_novedad' ? 'Describe la novedad detectada en este punto...' : 'Describe cómo encontraste este punto (mínimo 10 caracteres)...'}
                 rows={3}
                 maxLength={800}
               />
@@ -596,7 +603,7 @@ const Rondines = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setScanTarget(null)} disabled={scanning}>Cancelar</Button>
-            <Button onClick={confirmScan} disabled={scanning || !scanFile}>
+            <Button onClick={confirmScan} disabled={scanning || !scanFile || scanObservacion.trim().length < 10}>
               {scanning ? 'Guardando...' : 'Guardar punto'}
             </Button>
           </DialogFooter>
