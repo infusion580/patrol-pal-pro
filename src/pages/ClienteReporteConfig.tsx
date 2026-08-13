@@ -13,6 +13,7 @@ import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTa
 import { ArrowLeft, Save, Eye, Users } from 'lucide-react';
 import {
   REPORT_SECTIONS,
+  REPORT_GROUP_ORDER,
   defaultClienteReportConfig,
   loadClienteReportConfig,
   type ClienteReportConfig,
