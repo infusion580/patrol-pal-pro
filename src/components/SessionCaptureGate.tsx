@@ -3,6 +3,7 @@ import { toast } from 'sonner';
 import { useAuth } from '@/lib/auth-context';
 import SessionPhotoCapture from '@/components/SessionPhotoCapture';
 import {
+  CAPTURA_LOGIN_EVENT,
   capturaLoginPendiente,
   limpiarCapturaLoginPendiente,
   registrarSesion,
@@ -22,9 +23,23 @@ export function SessionCaptureGate() {
 
   const esGuardia = user?.role === 'guardia';
 
-  // Captura de ingreso pendiente tras autenticarse.
+  // Captura de ingreso pendiente tras autenticarse. Se revisa al montar/cambiar
+  // de usuario y también cuando el login marca la captura (puede ocurrir después
+  // de que el perfil ya se cargó) o al volver a la app con la captura pendiente.
   useEffect(() => {
-    if (esGuardia && user && capturaLoginPendiente(user.id)) setEvento('login');
+    if (!esGuardia || !user) return;
+    const revisar = () => {
+      if (capturaLoginPendiente(user.id)) setEvento((prev) => prev ?? 'login');
+    };
+    revisar();
+    window.addEventListener(CAPTURA_LOGIN_EVENT, revisar);
+    window.addEventListener('focus', revisar);
+    const t = window.setInterval(revisar, 2000);
+    return () => {
+      window.removeEventListener(CAPTURA_LOGIN_EVENT, revisar);
+      window.removeEventListener('focus', revisar);
+      window.clearInterval(t);
+    };
   }, [esGuardia, user]);
 
   // Captura de cierre: expone el handler que `logout()` invoca.

@@ -89,7 +89,8 @@ export function SessionPhotoCapture({ evento, onConfirm, onCancel, nombre }: Pro
   const titulo = evento === 'login' ? 'Validación de ingreso' : 'Validación de cierre de sesión';
 
   return (
-    <div className="fixed inset-0 z-[100] flex flex-col bg-background">
+    // z-[200]: por encima de los toasts/alertas, que tapaban el botón de la cámara.
+    <div className="fixed inset-0 z-[200] flex flex-col bg-background">
       <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
         <div className="flex items-center gap-2">
           <ShieldCheck className="h-5 w-5 text-primary" />
@@ -105,12 +106,17 @@ export function SessionPhotoCapture({ evento, onConfirm, onCancel, nombre }: Pro
         )}
       </header>
 
-      <div className="flex flex-1 items-center justify-center overflow-hidden bg-muted/40 p-4">
-        <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-border bg-card">
+      {/* min-h-0 evita que la vista previa empuje el botón de confirmar fuera de pantalla */}
+      <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden bg-muted/40 p-4">
+        <div className="relative flex max-h-full w-full max-w-md items-center justify-center overflow-hidden rounded-2xl border border-border bg-card">
           {preview ? (
-            <img src={preview.url} alt="Fotografía de validación" className="w-full object-cover" />
+            <img
+              src={preview.url}
+              alt="Fotografía de validación"
+              className="max-h-full w-full object-contain"
+            />
           ) : (
-            <video ref={videoRef} playsInline muted className="w-full bg-black object-cover" />
+            <video ref={videoRef} playsInline muted className="max-h-full w-full bg-black object-contain" />
           )}
         </div>
       </div>
