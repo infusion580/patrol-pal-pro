@@ -39,7 +39,20 @@ const GlobalAlertSound = () => {
 
           const titulo = `${meta.label} · ${SEVERIDAD_LABEL[meta.severidad]}`;
           const detalle = (n.mensaje || '').split('\n').slice(0, 3).join(' · ');
-          toast(titulo, { description: detalle, duration: meta.severidad === 'critica' ? 12000 : 6000 });
+          // Destino según el tipo de alerta (los comunicados abren su módulo).
+          const destino = n.tipo === 'comunicado' ? '/comunicados' : '/notificaciones';
+
+          toast(titulo, {
+            description: detalle,
+            // Toda alerta se auto-cierra y además puede cerrarse con la "X".
+            duration: meta.severidad === 'critica' ? 12000 : 6000,
+            dismissible: true,
+            closeButton: true,
+            action: {
+              label: 'Ver',
+              onClick: () => { window.location.href = destino; },
+            },
+          });
         },
       )
       .subscribe();
