@@ -14,7 +14,7 @@ const BottomNav = () => {
   const guardItems = [
     { path: '/dashboard', icon: Home, label: 'Inicio' },
     { path: '/rondines', icon: MapPin, label: 'Rondines' },
-    { path: '/comunicados', icon: Megaphone, label: 'Avisos' },
+    { path: '/comunicados', icon: Megaphone, label: 'Comunicados' },
     { path: '/historial', icon: History, label: 'Historial' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
@@ -23,7 +23,7 @@ const BottomNav = () => {
   const supervisorItems = [
     { path: '/dashboard', icon: Home, label: 'Panel' },
     { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
-    { path: '/comunicados', icon: Megaphone, label: 'Avisos' },
+    { path: '/comunicados', icon: Megaphone, label: 'Comunicados' },
     { path: '/reportes', icon: FileText, label: 'Reportes' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
@@ -32,7 +32,7 @@ const BottomNav = () => {
   const adminItems = [
     { path: '/dashboard', icon: Home, label: 'Panel' },
     { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
-    { path: '/comunicados', icon: Megaphone, label: 'Avisos' },
+    { path: '/comunicados', icon: Megaphone, label: 'Comunicados' },
     { path: '/servicios', icon: Settings, label: 'Servicios' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
@@ -76,7 +76,7 @@ const BottomNav = () => {
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-0.5 bg-primary rounded-b" />
               )}
               <item.icon className={`w-5 h-5 ${isActive ? 'stroke-[2.5]' : ''}`} />
-              <span className="text-[9px] font-semibold uppercase tracking-wide truncate max-w-full">{item.label}</span>
+              <span className="w-full px-0.5 text-[8px] sm:text-[9px] font-semibold uppercase tracking-wide truncate">{item.label}</span>
               {isChat && unreadTotal > 0 && (
                 <span className="absolute top-1.5 right-2 min-w-4 h-4 px-1 rounded-full bg-emergency text-emergency-foreground text-[9px] font-bold flex items-center justify-center">
                   {unreadTotal > 9 ? '9+' : unreadTotal}
