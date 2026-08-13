@@ -21,7 +21,9 @@ import { useBranding } from '@/lib/branding';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
 import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTab';
+import DatosCapturadosTab from '@/components/cliente/DatosCapturadosTab';
 import {
+  DATA_SECTIONS,
   defaultClienteReportConfig,
   loadClienteReportConfig,
   type ClienteReportConfig,
