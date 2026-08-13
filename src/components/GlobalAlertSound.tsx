@@ -27,8 +27,11 @@ const GlobalAlertSound = () => {
         'postgres_changes',
         { event: 'INSERT', schema: 'public', table: 'notificaciones' },
         (payload) => {
-          const n = payload.new as { id: string; tipo: string; mensaje: string };
+          const n = payload.new as { id: string; tipo: string; mensaje: string; guardia_id?: string };
           if (!n?.id || seen.current.has(n.id)) return;
+          // Sólo admin y supervisor escuchan las alertas de todos los guardias.
+          const puedeVerTodas = user.role === 'admin' || user.role === 'supervisor';
+          if (!puedeVerTodas && n.guardia_id !== user.id) return;
           seen.current.add(n.id);
 
           const meta = getNotifMeta(n.tipo);
