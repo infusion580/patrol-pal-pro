@@ -38,7 +38,7 @@ const Notificaciones = () => {
   const [soundOn, setSoundOn] = useState<boolean>(() => isAlertSoundEnabled());
 
 
-  useEffect(() => { loadNotifs(); }, []);
+  useEffect(() => { loadNotifs(); }, [user?.id, user?.role]);
 
   // Canal compartido: el gestor central evita reconexiones duplicadas
   // cuando el celular sale de suspensión.
@@ -46,11 +46,19 @@ const Notificaciones = () => {
 
 
   const loadNotifs = async () => {
-    const { data } = await supabase
+    if (!user) return;
+    // Sólo admin y supervisor ven las alertas de todos los guardias.
+    // Un guardia (o cualquier otro rol) sólo ve las suyas.
+    const puedeVerTodas = user.role === 'admin' || user.role === 'supervisor';
+
+    let query = supabase
       .from('notificaciones')
       .select('*')
       .order('created_at', { ascending: false })
       .limit(100);
+    if (!puedeVerTodas) query = query.eq('guardia_id', user.id);
+
+    const { data } = await query;
 
     if (data && data.length > 0) {
       const guardiaIds = [...new Set(data.map(n => n.guardia_id))];
