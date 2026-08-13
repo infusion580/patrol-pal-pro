@@ -195,7 +195,7 @@ const ClienteReporteConfig = () => {
                 </TabsList>
 
                 <TabsContent value="graficas" className="space-y-3 mt-3">
-                  {Object.entries(grouped).map(([group, sections]) => (
+                  {grouped.map(([group, sections]) => (
                     <Card key={group} className="p-4">
                       <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                         {group}
