@@ -24,7 +24,7 @@ const BottomNav = () => {
     { path: '/dashboard', icon: Home, label: 'Panel' },
     { path: '/dashboard-operativo', icon: BarChart3, label: 'Operativo' },
     { path: '/comunicados', icon: Megaphone, label: 'Comunicados' },
-    { path: '/reportes', icon: FileText, label: 'Reportes' },
+    { path: '/reportes', icon: FileText, label: 'Novedades' },
     { path: '/chat', icon: MessageCircle, label: 'Chat' },
     { path: '/perfil', icon: User, label: 'Perfil' },
   ];

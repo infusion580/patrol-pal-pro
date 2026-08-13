@@ -20,7 +20,7 @@ const Register = lazy(() => import("./pages/Register"));
 const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const Rondines = lazy(() => import("./pages/Rondines"));
-const ReporteTurno = lazy(() => import("./pages/ReporteTurno"));
+const ReporteNovedades = lazy(() => import("./pages/ReporteNovedades"));
 const Chat = lazy(() => import("./pages/Chat"));
 const DashboardOperativo = lazy(() => import("./pages/DashboardOperativo"));
 const ChatRH = lazy(() => import("./pages/ChatRH"));
@@ -135,7 +135,7 @@ const App = () => (
             {/* Authenticated — any role */}
             <Route path="/dashboard" element={<Auth><Dashboard /></Auth>} />
             <Route path="/rondines" element={<Auth><Rondines /></Auth>} />
-            <Route path="/reportes" element={<Auth><ReporteTurno /></Auth>} />
+            <Route path="/reportes" element={<Auth><ReporteNovedades /></Auth>} />
             <Route path="/chat" element={<Auth><Chat /></Auth>} />
             <Route path="/chat-rh" element={<Auth><ChatRH /></Auth>} />
             <Route path="/perfil" element={<Auth><Perfil /></Auth>} />

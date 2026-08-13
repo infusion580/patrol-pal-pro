@@ -64,7 +64,7 @@ const GuardDashboard = () => {
 
   const quickActions = [
   { icon: MapPin, label: 'Iniciar Rondín', desc: 'Check-in con GPS', color: 'bg-primary', path: '/rondines' },
-  { icon: FileText, label: 'Reporte de Turno', desc: 'Bitácora digital', color: 'bg-secondary', path: '/reportes' },
+  { icon: FileText, label: 'Reporte de Novedades', desc: 'Registra las novedades del turno', color: 'bg-secondary', path: '/reportes' },
   { icon: ClipboardList, label: 'Visitas', desc: 'Control de acceso', color: 'bg-warning', path: '/visitas' },
   { icon: MessageCircle, label: 'Chat Supervisor', desc: 'Mensajes directos', color: 'bg-success', path: '/chat' },
   { icon: History, label: 'Mi Historial', desc: 'Actividad completa', color: 'bg-accent', path: '/historial' },
