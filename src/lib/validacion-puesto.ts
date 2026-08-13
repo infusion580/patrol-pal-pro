@@ -80,6 +80,12 @@ export function horaCorta(hhmmss: string): string {
   return hhmmss.slice(0, 5);
 }
 
+/** Indica si una hora "HH:MM" corresponde al día (06:00–17:59) o a la noche (18:00–05:59). */
+export function periodoDelDia(hhmmss: string): 'día' | 'noche' {
+  const hour = Number(hhmmss.split(':')[0]);
+  return hour >= 6 && hour < 18 ? 'día' : 'noche';
+}
+
 /** Convierte "HH:MM[:SS]" del día indicado a una fecha local. */
 export function horarioADate(base: Date, hhmm: string): Date {
   const [h, m] = hhmm.split(':').map(Number);
