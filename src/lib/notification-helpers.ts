@@ -63,13 +63,14 @@ export async function createNotification(params: NotifParams) {
  * Registra el inicio de sesión de un usuario e incluye el dispositivo usado.
  * Se dispara desde el auth-context al iniciar sesión correctamente.
  */
-export async function notifySesionInicio(userId: string, userNombre: string) {
+export async function notifySesionInicio(userId: string, userNombre: string, fotoPath?: string | null) {
   const { fecha, hora } = fechaHoraLarga();
-  const mensaje = `🔐 INICIO DE SESIÓN\nUsuario: ${userNombre}\nFecha: ${fecha}\nHora: ${hora}`;
+  const mensaje = `🔐 INICIO DE SESIÓN\nUsuario: ${userNombre}\nFecha: ${fecha}\nHora: ${hora}${fotoPath ? '\nFotografía: adjunta' : ''}`;
   await createNotification({
     tipo: 'sesion',
     mensaje,
     guardia_id: userId,
+    foto_url: fotoPath || null,
     metadata: { usuario: userNombre },
   });
 }
@@ -79,13 +80,14 @@ export async function notifySesionInicio(userId: string, userNombre: string) {
  * en la central de notificaciones). Se dispara antes de cerrar la sesión,
  * mientras el token sigue siendo válido para escribir en la base.
  */
-export async function notifySesionCierre(userId: string, userNombre: string, rol?: string) {
+export async function notifySesionCierre(userId: string, userNombre: string, rol?: string, fotoPath?: string | null) {
   const { fecha, hora, iso } = fechaHoraLarga();
-  const mensaje = `🚪 CIERRE DE SESIÓN\nUsuario: ${userNombre}${rol ? `\nPerfil: ${rol}` : ''}\nFecha: ${fecha}\nHora: ${hora}`;
+  const mensaje = `🚪 CIERRE DE SESIÓN\nUsuario: ${userNombre}${rol ? `\nPerfil: ${rol}` : ''}\nFecha: ${fecha}\nHora: ${hora}${fotoPath ? '\nFotografía: adjunta' : ''}`;
   await createNotification({
     tipo: 'sesion',
     mensaje,
     guardia_id: userId,
+    foto_url: fotoPath || null,
     metadata: { usuario: userNombre, rol: rol || null, evento: 'logout', fecha: iso },
   });
 }
@@ -99,16 +101,18 @@ export async function notifySesionCierreEnTurno(
   userNombre: string,
   servicioNombre?: string,
   inicioTurno?: string,
+  fotoPath?: string | null,
 ) {
   const { fecha, hora, iso } = fechaHoraLarga();
   const desde = inicioTurno
     ? new Date(inicioTurno).toLocaleString('es-MX', { dateStyle: 'short', timeStyle: 'short' })
     : 'N/A';
-  const mensaje = `⚠️ CIERRE DE SESIÓN CON TURNO ACTIVO\nEmpleado: ${userNombre}\nServicio: ${servicioNombre || 'N/A'}\nTurno iniciado: ${desde}\nFecha: ${fecha}\nHora: ${hora}`;
+  const mensaje = `⚠️ CIERRE DE SESIÓN CON TURNO ACTIVO\nEmpleado: ${userNombre}\nServicio: ${servicioNombre || 'N/A'}\nTurno iniciado: ${desde}\nFecha: ${fecha}\nHora: ${hora}${fotoPath ? '\nFotografía: adjunta' : ''}`;
   await createNotification({
     tipo: 'sesion_en_turno',
     mensaje,
     guardia_id: userId,
+    foto_url: fotoPath || null,
     metadata: {
       usuario: userNombre,
       evento: 'logout_en_turno',
