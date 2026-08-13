@@ -589,12 +589,12 @@ const Rondines = () => {
 
             <div>
               <p className="text-xs font-semibold text-foreground mb-1">
-                Observación {scanEstado === 'con_novedad' ? '(obligatoria)' : '(opcional)'}
+                Reporte del punto <span className="text-emergency">(obligatorio)</span>
               </p>
               <Textarea
                 value={scanObservacion}
                 onChange={(e) => setScanObservacion(e.target.value)}
-                placeholder={scanEstado === 'con_novedad' ? 'Describe la novedad detectada en este punto...' : 'Observaciones del punto (opcional)'}
+                placeholder={scanEstado === 'con_novedad' ? 'Describe la novedad detectada en este punto...' : 'Describe cómo encontraste este punto (mínimo 10 caracteres)...'}
                 rows={3}
                 maxLength={800}
               />
