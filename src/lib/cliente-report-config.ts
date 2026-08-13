@@ -213,7 +213,7 @@ export async function loadClienteReportConfig(clienteId: string): Promise<Client
   if (error || !data) return defaultClienteReportConfig();
 
   const base = defaultClienteReportConfig();
-  const row = data as Record<string, unknown>;
+  const row = data as unknown as Record<string, unknown>;
   // Solo se toman las claves conocidas del catálogo (tolerante a versiones).
   REPORT_SECTIONS.forEach(s => {
     if (typeof row[s.key] === 'boolean') base[s.key] = row[s.key] as boolean;
