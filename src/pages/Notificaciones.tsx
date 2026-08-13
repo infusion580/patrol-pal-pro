@@ -38,7 +38,7 @@ const Notificaciones = () => {
   const [soundOn, setSoundOn] = useState<boolean>(() => isAlertSoundEnabled());
 
 
-  useEffect(() => { loadNotifs(); }, []);
+  useEffect(() => { loadNotifs(); }, [user?.id, user?.role]);
 
   // Canal compartido: el gestor central evita reconexiones duplicadas
   // cuando el celular sale de suspensión.
