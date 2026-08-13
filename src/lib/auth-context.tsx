@@ -284,7 +284,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const nombre = `${user.nombre} ${user.apellido}`.trim() || user.email;
       try {
         const { notifySesionCierre, notifySesionCierreEnTurno } = await import('./notification-helpers');
-        await notifySesionCierre(user.id, nombre, user.role);
+        const { getUltimaFotoSesion } = await import('./sesion-registros');
+        const fotoSalida = getUltimaFotoSesion('logout');
+        await notifySesionCierre(user.id, nombre, user.role, fotoSalida);
 
         // Si el usuario tiene un turno activo, se genera una alerta adicional.
         const { data: turnoActivo } = await supabase
@@ -298,7 +300,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (turnoActivo) {
           const servicioNombre = (turnoActivo as any).servicios?.nombre as string | undefined;
-          await notifySesionCierreEnTurno(user.id, nombre, servicioNombre, turnoActivo.inicio);
+          await notifySesionCierreEnTurno(user.id, nombre, servicioNombre, turnoActivo.inicio, fotoSalida);
         }
       } catch { /* fire-and-forget */ }
       import('./audit')

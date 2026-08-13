@@ -104,6 +104,16 @@ function conLimite<T>(promesa: Promise<T>, ms: number, alFallar: T): Promise<T> 
   });
 }
 
+/**
+ * Última fotografía de sesión capturada por evento. Permite que las alertas
+ * de inicio/cierre de sesión adjunten la misma evidencia fotográfica.
+ */
+const ultimaFoto: Partial<Record<SesionEvento, string | null>> = {};
+
+export function getUltimaFotoSesion(evento: SesionEvento): string | null {
+  return ultimaFoto[evento] ?? null;
+}
+
 /** Registra el evento de sesión completo (foto + ubicación + dispositivo). */
 export async function registrarSesion({ userId, evento, foto }: RegistrarSesionInput): Promise<void> {
   const [fotoPath, pos] = await Promise.all([
@@ -116,6 +126,7 @@ export async function registrarSesion({ userId, evento, foto }: RegistrarSesionI
     }),
   ]);
 
+  ultimaFoto[evento] = fotoPath;
   const dispositivo = getDeviceInfo();
 
   await supabase.from('sesion_registros').insert({
