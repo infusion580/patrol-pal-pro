@@ -13,6 +13,7 @@ import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTa
 import { ArrowLeft, Save, Eye, Users } from 'lucide-react';
 import {
   REPORT_SECTIONS,
+  REPORT_GROUP_ORDER,
   defaultClienteReportConfig,
   loadClienteReportConfig,
   type ClienteReportConfig,
@@ -107,7 +108,8 @@ const ClienteReporteConfig = () => {
     REPORT_SECTIONS.forEach(s => {
       (map[s.group] ||= []).push(s);
     });
-    return map;
+    // Se respeta el orden declarado del catálogo para que el editor sea predecible.
+    return REPORT_GROUP_ORDER.filter(g => map[g]?.length).map(g => [g, map[g]] as const);
   }, []);
 
   const selectedCliente = clientes.find(c => c.user_id === selectedId);
@@ -188,12 +190,12 @@ const ClienteReporteConfig = () => {
 
               <Tabs defaultValue="graficas" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="graficas">Gráficas</TabsTrigger>
+                  <TabsTrigger value="graficas">Datos visibles</TabsTrigger>
                   <TabsTrigger value="reporte">Reporte</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="graficas" className="space-y-3 mt-3">
-                  {Object.entries(grouped).map(([group, sections]) => (
+                  {grouped.map(([group, sections]) => (
                     <Card key={group} className="p-4">
                       <h4 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">
                         {group}

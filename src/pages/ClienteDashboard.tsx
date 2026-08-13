@@ -21,7 +21,9 @@ import { useBranding } from '@/lib/branding';
 import BottomNav from '@/components/BottomNav';
 import AppHeader from '@/components/AppHeader';
 import ReportePersonalizadoTab from '@/components/cliente/ReportePersonalizadoTab';
+import DatosCapturadosTab from '@/components/cliente/DatosCapturadosTab';
 import {
+  DATA_SECTIONS,
   defaultClienteReportConfig,
   loadClienteReportConfig,
   type ClienteReportConfig,
@@ -425,8 +427,10 @@ const ClienteDashboard = () => {
           if (showServiciosTab) tabs.push({ value: 'servicios', label: 'Servicios' });
           if (showGuardiasTab) tabs.push({ value: 'guardias', label: 'Guardias' });
           if (showHistorialTab) tabs.push({ value: 'historial', label: 'Historial' });
+          const showDatosTab = DATA_SECTIONS.some(s => config[s.key]);
+          if (showDatosTab) tabs.push({ value: 'datos', label: 'Datos' });
           tabs.push({ value: 'reporte', label: 'Reporte' });
-          const gridColsClass = ['', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5'][tabs.length];
+          const gridColsClass = ['', 'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-3', 'grid-cols-3', 'grid-cols-3'][tabs.length] ?? 'grid-cols-3';
           return (
             <Tabs defaultValue="resumen" className="w-full">
               <TabsList className={cn('grid w-full', gridColsClass)}>
@@ -640,6 +644,18 @@ const ClienteDashboard = () => {
               </Card>
             </TabsContent>
           )}
+              {showDatosTab && user && (
+                <TabsContent value="datos" className="mt-3">
+                  <DatosCapturadosTab
+                    clienteId={user.id}
+                    clienteNombre={`${user.nombre ?? ''} ${user.apellido ?? ''}`.trim()}
+                    config={config}
+                    desde={fechaInicio}
+                    hasta={fechaFin}
+                    servicioFiltro={servicioFiltro}
+                  />
+                </TabsContent>
+              )}
               <TabsContent value="reporte" className="mt-3">
                 {user && (
                   <ReportePersonalizadoTab
