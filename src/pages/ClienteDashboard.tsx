@@ -644,6 +644,18 @@ const ClienteDashboard = () => {
               </Card>
             </TabsContent>
           )}
+              {showDatosTab && user && (
+                <TabsContent value="datos" className="mt-3">
+                  <DatosCapturadosTab
+                    clienteId={user.id}
+                    clienteNombre={`${user.nombre ?? ''} ${user.apellido ?? ''}`.trim()}
+                    config={config}
+                    desde={fechaInicio}
+                    hasta={fechaFin}
+                    servicioFiltro={servicioFiltro}
+                  />
+                </TabsContent>
+              )}
               <TabsContent value="reporte" className="mt-3">
                 {user && (
                   <ReportePersonalizadoTab
