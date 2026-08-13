@@ -20,6 +20,8 @@ self.addEventListener('push', (event) => {
     tag: data.tag || 'defender-notif',
     data: { url: data.url || '/dashboard' },
     // Vibration + timestamp help make the notification feel native.
+    // Evidencia fotográfica (foto de ingreso/cierre, rondín, novedad…)
+    image: data.image || undefined,
     vibrate: [80, 40, 80],
     timestamp: Date.now(),
   };
