@@ -251,52 +251,142 @@ export type Database = {
         Row: {
           cliente_id: string
           created_at: string
+          show_alertas: boolean
+          show_asistencias: boolean
           show_chart_distribucion_turnos: boolean
           show_chart_rondines_dia: boolean
           show_chart_rondines_servicio: boolean
+          show_checkpoints: boolean
+          show_comunicados: boolean
+          show_cumplimiento_guardia: boolean
+          show_emergencias: boolean
           show_export_excel: boolean
+          show_export_pdf: boolean
+          show_faltas: boolean
+          show_horas_extra: boolean
           show_kpi_cumplimiento: boolean
           show_kpi_guardias: boolean
           show_kpi_incidencias: boolean
           show_kpi_rondines: boolean
           show_lista_guardias: boolean
           show_lista_servicios: boolean
+          show_metas_servicio: boolean
+          show_notas_relevo: boolean
+          show_novedades: boolean
+          show_novedades_importantes: boolean
+          show_pendientes: boolean
+          show_pendientes_cumplimiento: boolean
+          show_reconocimientos: boolean
           show_reportes_incidencias: boolean
+          show_reportes_turno: boolean
+          show_rondin_coordenadas: boolean
+          show_rondin_fotos: boolean
+          show_rondin_puntos: boolean
           show_semaforo: boolean
+          show_sesiones: boolean
+          show_sesiones_fotos: boolean
+          show_sesiones_ubicacion: boolean
+          show_turnos_detalle: boolean
+          show_validaciones_fotos: boolean
+          show_validaciones_puesto: boolean
+          show_validaciones_ubicacion: boolean
+          show_visitas: boolean
+          show_visitas_detalle: boolean
+          show_visitas_fotos: boolean
           updated_at: string
         }
         Insert: {
           cliente_id: string
           created_at?: string
+          show_alertas?: boolean
+          show_asistencias?: boolean
           show_chart_distribucion_turnos?: boolean
           show_chart_rondines_dia?: boolean
           show_chart_rondines_servicio?: boolean
+          show_checkpoints?: boolean
+          show_comunicados?: boolean
+          show_cumplimiento_guardia?: boolean
+          show_emergencias?: boolean
           show_export_excel?: boolean
+          show_export_pdf?: boolean
+          show_faltas?: boolean
+          show_horas_extra?: boolean
           show_kpi_cumplimiento?: boolean
           show_kpi_guardias?: boolean
           show_kpi_incidencias?: boolean
           show_kpi_rondines?: boolean
           show_lista_guardias?: boolean
           show_lista_servicios?: boolean
+          show_metas_servicio?: boolean
+          show_notas_relevo?: boolean
+          show_novedades?: boolean
+          show_novedades_importantes?: boolean
+          show_pendientes?: boolean
+          show_pendientes_cumplimiento?: boolean
+          show_reconocimientos?: boolean
           show_reportes_incidencias?: boolean
+          show_reportes_turno?: boolean
+          show_rondin_coordenadas?: boolean
+          show_rondin_fotos?: boolean
+          show_rondin_puntos?: boolean
           show_semaforo?: boolean
+          show_sesiones?: boolean
+          show_sesiones_fotos?: boolean
+          show_sesiones_ubicacion?: boolean
+          show_turnos_detalle?: boolean
+          show_validaciones_fotos?: boolean
+          show_validaciones_puesto?: boolean
+          show_validaciones_ubicacion?: boolean
+          show_visitas?: boolean
+          show_visitas_detalle?: boolean
+          show_visitas_fotos?: boolean
           updated_at?: string
         }
         Update: {
           cliente_id?: string
           created_at?: string
+          show_alertas?: boolean
+          show_asistencias?: boolean
           show_chart_distribucion_turnos?: boolean
           show_chart_rondines_dia?: boolean
           show_chart_rondines_servicio?: boolean
+          show_checkpoints?: boolean
+          show_comunicados?: boolean
+          show_cumplimiento_guardia?: boolean
+          show_emergencias?: boolean
           show_export_excel?: boolean
+          show_export_pdf?: boolean
+          show_faltas?: boolean
+          show_horas_extra?: boolean
           show_kpi_cumplimiento?: boolean
           show_kpi_guardias?: boolean
           show_kpi_incidencias?: boolean
           show_kpi_rondines?: boolean
           show_lista_guardias?: boolean
           show_lista_servicios?: boolean
+          show_metas_servicio?: boolean
+          show_notas_relevo?: boolean
+          show_novedades?: boolean
+          show_novedades_importantes?: boolean
+          show_pendientes?: boolean
+          show_pendientes_cumplimiento?: boolean
+          show_reconocimientos?: boolean
           show_reportes_incidencias?: boolean
+          show_reportes_turno?: boolean
+          show_rondin_coordenadas?: boolean
+          show_rondin_fotos?: boolean
+          show_rondin_puntos?: boolean
           show_semaforo?: boolean
+          show_sesiones?: boolean
+          show_sesiones_fotos?: boolean
+          show_sesiones_ubicacion?: boolean
+          show_turnos_detalle?: boolean
+          show_validaciones_fotos?: boolean
+          show_validaciones_puesto?: boolean
+          show_validaciones_ubicacion?: boolean
+          show_visitas?: boolean
+          show_visitas_detalle?: boolean
+          show_visitas_fotos?: boolean
           updated_at?: string
         }
         Relationships: []
@@ -1782,6 +1872,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cliente_has_guardia: {
+        Args: { _cliente_id: string; _guardia_id: string }
+        Returns: boolean
+      }
       cliente_has_servicio: {
         Args: { _servicio_id: string; _user_id: string }
         Returns: boolean
