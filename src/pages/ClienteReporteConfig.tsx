@@ -107,7 +107,8 @@ const ClienteReporteConfig = () => {
     REPORT_SECTIONS.forEach(s => {
       (map[s.group] ||= []).push(s);
     });
-    return map;
+    // Se respeta el orden declarado del catálogo para que el editor sea predecible.
+    return REPORT_GROUP_ORDER.filter(g => map[g]?.length).map(g => [g, map[g]] as const);
   }, []);
 
   const selectedCliente = clientes.find(c => c.user_id === selectedId);
