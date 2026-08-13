@@ -17,10 +17,14 @@ const UnreadAlertsBanner = () => {
 
   const refresh = useCallback(async () => {
     if (!user) return;
-    const { count } = await supabase
+    // Admin y supervisor cuentan las alertas de todos; el resto sólo las suyas.
+    const puedeVerTodas = user.role === 'admin' || user.role === 'supervisor';
+    let query = supabase
       .from('notificaciones')
       .select('*', { count: 'exact', head: true })
       .eq('leida', false);
+    if (!puedeVerTodas) query = query.eq('guardia_id', user.id);
+    const { count } = await query;
     setUnread(count || 0);
   }, [user]);
 
