@@ -117,11 +117,11 @@ export async function disablePush(): Promise<void> {
  * Fire a push to a set of users. Fire-and-forget — errors are logged
  * but never rethrown so notification creation stays resilient.
  */
-export async function sendPushTo(userIds: string[], title: string, body: string, url?: string) {
+export async function sendPushTo(userIds: string[], title: string, body: string, url?: string, image?: string | null) {
   if (!userIds.length) return;
   try {
     await supabase.functions.invoke('send-push', {
-      body: { user_ids: userIds, title, body, url },
+      body: { user_ids: userIds, title, body, url, image: image || undefined },
     });
   } catch (e) {
     console.warn('sendPushTo failed', e);

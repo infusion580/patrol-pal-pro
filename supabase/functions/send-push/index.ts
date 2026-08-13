@@ -7,7 +7,7 @@
  * is closed.
  *
  * Request body:
- *   { user_ids: string[]; title: string; body: string; url?: string; tag?: string }
+ *   { user_ids: string[]; title: string; body: string; url?: string; tag?: string; image?: string }
  *
  * Behavior:
  *   - Requires the caller to be authenticated (verify_jwt is true by
@@ -29,6 +29,7 @@ const BodySchema = z.object({
   body: z.string().min(1).max(500),
   url: z.string().min(1).max(500).optional(),
   tag: z.string().max(60).optional(),
+  image: z.string().min(1).max(2000).optional(),
 });
 
 const VAPID_PUBLIC = Deno.env.get('VAPID_PUBLIC_KEY') ?? '';
@@ -58,7 +59,7 @@ Deno.serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   }
-  const { user_ids, title, body, url, tag } = parsed.data;
+  const { user_ids, title, body, url, tag, image } = parsed.data;
 
   const admin = createClient(SUPABASE_URL, SERVICE_ROLE, { auth: { persistSession: false } });
   const { data: subs, error } = await admin
@@ -73,7 +74,7 @@ Deno.serve(async (req) => {
     );
   }
 
-  const payload = JSON.stringify({ title, body, url: url ?? '/dashboard', tag });
+  const payload = JSON.stringify({ title, body, url: url ?? '/dashboard', tag, image });
   const stale: string[] = [];
   let sent = 0;
 
