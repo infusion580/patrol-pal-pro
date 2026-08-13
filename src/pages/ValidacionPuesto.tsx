@@ -510,8 +510,10 @@ const ValidacionPuesto = () => {
                         {r.checkpoint_id ? ` · ${checkpointPorId[r.checkpoint_id] || 'Punto'}` : ''}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Programada: {prog.toLocaleDateString('es-MX')} {prog.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        {' · '}Respuesta: {resp.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        Programada: {prog.toLocaleDateString('es-MX')} {prog.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}{' '}
+                        <span className="rounded bg-muted px-1 py-0 text-[10px] uppercase">{periodoDelDia(`${prog.getHours().toString().padStart(2, '0')}:${prog.getMinutes().toString().padStart(2, '0')}`)}</span>
+                        {' · '}Respuesta: {resp.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}{' '}
+                        <span className="rounded bg-muted px-1 py-0 text-[10px] uppercase">{periodoDelDia(`${resp.getHours().toString().padStart(2, '0')}:${resp.getMinutes().toString().padStart(2, '0')}`)}</span>
                       </p>
                       <p className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5" />
