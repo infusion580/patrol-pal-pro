@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/lib/auth-context';
 import { loadServiciosParaUsuario } from '@/lib/guardia-servicios';
 import { notifyValidacionPuesto } from '@/lib/notification-helpers';
+import { playAlertSound } from '@/lib/alert-sound';
 import {
   listConfigsDelGuardia,
   registrarValidacion,
@@ -22,7 +23,7 @@ import {
  * GPS, precisión y usuario se capturan automáticamente.
  */
 
-const POLL_MS = 30_000;
+const POLL_MS = 10_000;
 
 interface Punto {
   nombre: string;
@@ -38,6 +39,7 @@ export function ValidacionPuestoGate() {
   const [slot, setSlot] = useState<SlotPendiente | null>(null);
   const [servicio, setServicio] = useState<{ id: string; nombre: string } | null>(null);
   const [punto, setPunto] = useState<Punto | null>(null);
+  const [servicioIds, setServicioIds] = useState<string[]>([]);
   const respondidos = useRef<Set<string>>(new Set());
 
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -46,15 +48,28 @@ export function ValidacionPuestoGate() {
   const [preview, setPreview] = useState<{ url: string; blob: Blob } | null>(null);
   const [saving, setSaving] = useState(false);
 
-  /* ---------------- Servicio del guardia ---------------- */
+  /* ---------------- Servicios del guardia ----------------
+   * Se usa el principal para mostrar el nombre, pero la búsqueda de
+   * programaciones considera todos sus servicios asignados. */
   useEffect(() => {
     if (!esGuardia || !user) return;
     let vivo = true;
-    loadServiciosParaUsuario(user.id, 'guardia')
-      .then((svcs) => {
-        if (vivo && svcs[0]) setServicio({ id: svcs[0].id, nombre: svcs[0].nombre });
-      })
-      .catch(() => undefined);
+    (async () => {
+      try {
+        const svcs = await loadServiciosParaUsuario(user.id, 'guardia');
+        if (!vivo) return;
+        if (svcs[0]) setServicio({ id: svcs[0].id, nombre: svcs[0].nombre });
+        const { data } = await supabase
+          .from('guardia_servicios')
+          .select('servicio_id')
+          .eq('guardia_id', user.id);
+        if (!vivo) return;
+        const ids = (data || []).map((r: { servicio_id: string }) => r.servicio_id);
+        setServicioIds(ids.length ? ids : svcs.map((s) => s.id));
+      } catch {
+        /* se reintenta al recargar */
+      }
+    })();
     return () => {
       vivo = false;
     };
@@ -62,10 +77,10 @@ export function ValidacionPuestoGate() {
 
   /* ---------------- Detección del horario programado ---------------- */
   const revisar = useCallback(async () => {
-    if (!user || !servicio || slot) return;
+    if (!user || !servicioIds.length || slot) return;
     try {
       const [configs, hechos] = await Promise.all([
-        listConfigsDelGuardia(user.id, servicio.id),
+        listConfigsDelGuardia(user.id, servicioIds),
         respondidos.current.size ? Promise.resolve(respondidos.current) : respondidosHoy(user.id),
       ]);
       respondidos.current = hechos;
@@ -92,17 +107,40 @@ export function ValidacionPuestoGate() {
       }
       setPunto(p);
       setSlot(vigente);
+
+      // Aviso audible + notificación del sistema por si la app está en segundo plano.
+      playAlertSound('alta');
+      try {
+        if ('Notification' in window && Notification.permission === 'granted') {
+          new Notification('Validación de puesto', {
+            body: `${vigente.config.nombre}: confirma con una fotografía que estás en tu puesto.`,
+            tag: `validacion-${vigente.config.id}`,
+          });
+        }
+      } catch {
+        /* el navegador puede bloquear las notificaciones */
+      }
     } catch {
       /* red intermitente: se reintenta en el siguiente ciclo */
     }
-  }, [servicio, slot, user]);
+  }, [servicioIds, slot, user]);
 
   useEffect(() => {
-    if (!esGuardia || !servicio) return;
+    if (!esGuardia || !servicioIds.length) return;
     revisar();
     const id = window.setInterval(revisar, POLL_MS);
-    return () => window.clearInterval(id);
-  }, [esGuardia, servicio, revisar]);
+    // Al volver a la app (pestaña o celular suspendido) se revisa de inmediato.
+    const onWake = () => { if (document.visibilityState === 'visible') revisar(); };
+    document.addEventListener('visibilitychange', onWake);
+    window.addEventListener('focus', onWake);
+    window.addEventListener('online', onWake);
+    return () => {
+      window.clearInterval(id);
+      document.removeEventListener('visibilitychange', onWake);
+      window.removeEventListener('focus', onWake);
+      window.removeEventListener('online', onWake);
+    };
+  }, [esGuardia, servicioIds, revisar]);
 
   /* ---------------- Cámara en vivo ---------------- */
   const stopStream = useCallback(() => {
