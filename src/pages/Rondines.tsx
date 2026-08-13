@@ -302,8 +302,15 @@ const Rondines = () => {
       toast({ title: 'Foto requerida', description: 'Debes adjuntar una foto de evidencia del punto.', variant: 'destructive' });
       return;
     }
-    if (scanEstado === 'con_novedad' && scanObservacion.trim().length < 10) {
-      toast({ title: 'Observación requerida', description: 'Describe la novedad con al menos 10 caracteres.', variant: 'destructive' });
+    // El reporte individual del punto es obligatorio siempre (con o sin novedad).
+    if (scanObservacion.trim().length < 10) {
+      toast({
+        title: 'Reporte del punto requerido',
+        description: scanEstado === 'con_novedad'
+          ? 'Describe la novedad con al menos 10 caracteres.'
+          : 'Escribe el reporte de este punto (mínimo 10 caracteres).',
+        variant: 'destructive',
+      });
       return;
     }
     setScanning(true);
