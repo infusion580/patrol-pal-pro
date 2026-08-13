@@ -77,7 +77,9 @@ export function ValidacionPuestoGate() {
 
   /* ---------------- Detección del horario programado ---------------- */
   const revisar = useCallback(async () => {
-    if (!user || !servicioIds.length || slot) return;
+    // Un guardia elegido explícitamente en la programación debe recibirla
+    // aunque todavía no tenga un servicio principal/asignado.
+    if (!user || slot) return;
     try {
       const [configs, hechos] = await Promise.all([
         listConfigsDelGuardia(user.id, servicioIds),
@@ -126,7 +128,7 @@ export function ValidacionPuestoGate() {
   }, [servicioIds, slot, user]);
 
   useEffect(() => {
-    if (!esGuardia || !servicioIds.length) return;
+    if (!esGuardia || !user) return;
     revisar();
     const id = window.setInterval(revisar, POLL_MS);
     // Al volver a la app (pestaña o celular suspendido) se revisa de inmediato.
@@ -140,7 +142,7 @@ export function ValidacionPuestoGate() {
       window.removeEventListener('focus', onWake);
       window.removeEventListener('online', onWake);
     };
-  }, [esGuardia, servicioIds, revisar]);
+  }, [esGuardia, user, revisar]);
 
   /* ---------------- Cámara en vivo ---------------- */
   const stopStream = useCallback(() => {
