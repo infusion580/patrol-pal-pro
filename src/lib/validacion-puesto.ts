@@ -135,14 +135,23 @@ export async function listConfigs(servicioId?: string | null): Promise<Validacio
   return (data as unknown as ValidacionConfig[]) || [];
 }
 
-/** Programaciones que aplican a un guardia concreto en su servicio. */
+/**
+ * Programaciones que aplican a un guardia.
+ * Aplica si el guardia está listado explícitamente (sin importar el servicio,
+ * porque el admin ya lo eligió) o si la programación es abierta y corresponde
+ * a alguno de los servicios que tiene asignados.
+ */
 export async function listConfigsDelGuardia(
   guardiaId: string,
-  servicioId: string,
+  servicioIds: string | string[],
 ): Promise<ValidacionConfig[]> {
-  const configs = await listConfigs(servicioId);
+  const ids = (Array.isArray(servicioIds) ? servicioIds : [servicioIds]).filter(Boolean);
+  const configs = await listConfigs();
   return configs.filter(
-    (c) => c.activo && (c.guardia_ids.length === 0 || c.guardia_ids.includes(guardiaId)),
+    (c) =>
+      c.activo &&
+      (c.guardia_ids?.includes(guardiaId) ||
+        ((c.guardia_ids?.length ?? 0) === 0 && ids.includes(c.servicio_id))),
   );
 }
 
