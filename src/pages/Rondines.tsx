@@ -603,7 +603,7 @@ const Rondines = () => {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setScanTarget(null)} disabled={scanning}>Cancelar</Button>
-            <Button onClick={confirmScan} disabled={scanning || !scanFile}>
+            <Button onClick={confirmScan} disabled={scanning || !scanFile || scanObservacion.trim().length < 10}>
               {scanning ? 'Guardando...' : 'Guardar punto'}
             </Button>
           </DialogFooter>
