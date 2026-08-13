@@ -26,6 +26,7 @@ import {
   horaCorta,
   listConfigs,
   listValidaciones,
+  periodoDelDia,
   saveConfig,
   type ValidacionConfig,
   type ValidacionRegistro,
@@ -391,11 +392,16 @@ const ValidacionPuesto = () => {
                   </div>
                 </div>
                 <div className="mt-2 flex flex-wrap gap-1.5">
-                  {c.horarios.map((h) => (
-                    <span key={h} className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
-                      {horaCorta(h)}
-                    </span>
-                  ))}
+                  {c.horarios.map((h) => {
+                    const periodo = periodoDelDia(h);
+                    return (
+                      <span key={h} className="rounded bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">
+                        {horaCorta(h)}
+                        <span className={`ml-1.5 inline-block h-1.5 w-1.5 rounded-full ${periodo === 'día' ? 'bg-warning' : 'bg-primary'}`} aria-hidden="true" />
+                        <span className="ml-1 text-[10px] font-normal uppercase text-muted-foreground">{periodo}</span>
+                      </span>
+                    );
+                  })}
                 </div>
                 <p className="mt-2 text-[11px] text-muted-foreground">
                   Días: {c.dias.map((d) => DIAS_LABEL[d]).join(', ')} · Tolerancia {c.tolerancia_minutos} min · Radio {c.radio_metros} m
@@ -504,8 +510,10 @@ const ValidacionPuesto = () => {
                         {r.checkpoint_id ? ` · ${checkpointPorId[r.checkpoint_id] || 'Punto'}` : ''}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Programada: {prog.toLocaleDateString('es-MX')} {prog.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
-                        {' · '}Respuesta: {resp.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}
+                        Programada: {prog.toLocaleDateString('es-MX')} {prog.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}{' '}
+                        <span className="rounded bg-muted px-1 py-0 text-[10px] uppercase">{periodoDelDia(`${prog.getHours().toString().padStart(2, '0')}:${prog.getMinutes().toString().padStart(2, '0')}`)}</span>
+                        {' · '}Respuesta: {resp.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: true })}{' '}
+                        <span className="rounded bg-muted px-1 py-0 text-[10px] uppercase">{periodoDelDia(`${resp.getHours().toString().padStart(2, '0')}:${resp.getMinutes().toString().padStart(2, '0')}`)}</span>
                       </p>
                       <p className="flex items-center gap-1 text-xs text-muted-foreground">
                         <MapPin className="h-3.5 w-3.5" />
