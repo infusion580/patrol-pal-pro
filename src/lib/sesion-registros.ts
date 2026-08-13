@@ -85,11 +85,35 @@ export interface RegistrarSesionInput {
   foto: Blob | null;
 }
 
+/**
+ * Evita que la pantalla de validación quede bloqueada indefinidamente si el GPS
+ * o la subida de la foto nunca responden (red intermitente, permiso colgado).
+ */
+function conLimite<T>(promesa: Promise<T>, ms: number, alFallar: T): Promise<T> {
+  return new Promise((resolve) => {
+    const t = window.setTimeout(() => resolve(alFallar), ms);
+    promesa
+      .then((v) => {
+        window.clearTimeout(t);
+        resolve(v);
+      })
+      .catch(() => {
+        window.clearTimeout(t);
+        resolve(alFallar);
+      });
+  });
+}
+
 /** Registra el evento de sesión completo (foto + ubicación + dispositivo). */
 export async function registrarSesion({ userId, evento, foto }: RegistrarSesionInput): Promise<void> {
   const [fotoPath, pos] = await Promise.all([
-    foto ? subirFotoSesion(userId, evento, foto) : Promise.resolve(null),
-    capturarUbicacion(),
+    foto ? conLimite(subirFotoSesion(userId, evento, foto), 20000, null) : Promise.resolve(null),
+    conLimite<PosicionCapturada>(capturarUbicacion(), 12000, {
+      lat: null,
+      lng: null,
+      precision: null,
+      error: 'Tiempo de espera agotado al obtener ubicación',
+    }),
   ]);
 
   const dispositivo = getDeviceInfo();
