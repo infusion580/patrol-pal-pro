@@ -190,7 +190,7 @@ const ClienteReporteConfig = () => {
 
               <Tabs defaultValue="graficas" className="w-full">
                 <TabsList className="grid w-full grid-cols-2">
-                  <TabsTrigger value="graficas">Gráficas</TabsTrigger>
+                  <TabsTrigger value="graficas">Datos visibles</TabsTrigger>
                   <TabsTrigger value="reporte">Reporte</TabsTrigger>
                 </TabsList>
 
