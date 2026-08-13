@@ -26,6 +26,7 @@ import {
   horaCorta,
   listConfigs,
   listValidaciones,
+  periodoDelDia,
   saveConfig,
   type ValidacionConfig,
   type ValidacionRegistro,
