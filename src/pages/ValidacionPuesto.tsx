@@ -295,16 +295,62 @@ const ValidacionPuesto = () => {
                 </div>
 
                 <div>
-                  <Label className="text-xs">Horarios (HH:MM separados por coma)</Label>
-                  <Input
-                    value={form.horariosTexto}
-                    onChange={(e) => setForm((f) => ({ ...f, horariosTexto: e.target.value }))}
-                    placeholder="08:00, 12:00, 16:00"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Horarios de validación</Label>
+                    <Button type="button" size="sm" variant="outline" onClick={agregarHorario} className="h-8">
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Agregar
+                    </Button>
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {form.horarios.map((h, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={h.hora}
+                          onChange={(e) => setHorario(i, { hora: e.target.value })}
+                          className="w-16 text-center"
+                          aria-label="Hora"
+                        />
+                        <span className="text-sm font-semibold">:</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          value={h.minuto}
+                          onChange={(e) => setHorario(i, { minuto: e.target.value })}
+                          className="w-16 text-center"
+                          aria-label="Minutos"
+                        />
+                        <select
+                          value={h.meridiano}
+                          onChange={(e) => setHorario(i, { meridiano: e.target.value as 'AM' | 'PM' })}
+                          className="h-10 rounded-md border border-input bg-background px-2 text-sm"
+                          aria-label="AM o PM"
+                        >
+                          <option value="AM">AM (día)</option>
+                          <option value="PM">PM (noche)</option>
+                        </select>
+                        {form.horarios.length > 1 && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => quitarHorario(i)}
+                            aria-label="Quitar horario"
+                          >
+                            <Trash2 className="h-4 w-4 text-emergency" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     La frecuencia se define por la cantidad de horarios del día.
                   </p>
                 </div>
+
 
                 <div>
                   <Label className="text-xs">Días de aplicación</Label>
