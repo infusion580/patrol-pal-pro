@@ -116,6 +116,10 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
     label: 'Rondín', icon: MapPin, color: 'text-primary', bgColor: 'bg-primary/10',
     categoria: 'operacion', severidad: 'media',
   },
+  rondin_alarma: {
+    label: 'Comienzo de rondín', icon: Clock, color: 'text-warning', bgColor: 'bg-warning/10',
+    categoria: 'operacion', severidad: 'alta',
+  },
   reporte: {
     label: 'Reporte', icon: FileText, color: 'text-primary', bgColor: 'bg-primary/10',
     categoria: 'operacion', severidad: 'media',
