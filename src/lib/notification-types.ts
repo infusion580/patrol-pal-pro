@@ -13,6 +13,7 @@ import {
   Clock,
   DoorOpen,
   FileText,
+  HandCoins,
   LogIn,
   LogOut,
   MapPin,
