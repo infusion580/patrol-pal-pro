@@ -64,7 +64,12 @@ const ValidacionPuesto = () => {
     nombre: 'Validación de puesto',
     servicio_id: '',
     checkpoint_id: '',
-    horariosTexto: '08:00, 14:00, 20:00',
+    horarios: [
+      { hora: '8', minuto: '00', meridiano: 'AM' },
+      { hora: '2', minuto: '00', meridiano: 'PM' },
+      { hora: '8', minuto: '00', meridiano: 'PM' },
+    ] as HorarioForm[],
+
     dias: [1, 2, 3, 4, 5] as number[],
     tolerancia: 15,
     radio: 100,
