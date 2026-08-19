@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette, HelpCircle, Camera, Award, Megaphone, HandCoins,} from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette, HelpCircle, Camera, Award, Megaphone, HandCoins, AlarmClock,} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
