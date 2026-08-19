@@ -31,6 +31,7 @@ const ReportesSupervisor = lazy(() => import("./pages/ReportesSupervisor"));
 const NovedadesReportes = lazy(() => import("./pages/NovedadesReportes"));
 const RegistrosSesion = lazy(() => import("./pages/RegistrosSesion"));
 const ValidacionPuesto = lazy(() => import("./pages/ValidacionPuesto"));
+const AlarmasRondin = lazy(() => import("./pages/AlarmasRondin"));
 const Servicios = lazy(() => import("./pages/Servicios"));
 const GestionRH = lazy(() => import("./pages/GestionRH"));
 const Notificaciones = lazy(() => import("./pages/Notificaciones"));
@@ -154,6 +155,7 @@ const App = () => (
             <Route path="/reconocimientos" element={<ProtectedRoute roles={['supervisor', 'admin']}><Reconocimientos /></ProtectedRoute>} />
             <Route path="/comunicados" element={<ProtectedRoute><Comunicados /></ProtectedRoute>} />
             <Route path="/prestamos" element={<ProtectedRoute><Prestamos /></ProtectedRoute>} />
+            <Route path="/alarmas-rondin" element={<ProtectedRoute roles={['supervisor', 'admin']}><AlarmasRondin /></ProtectedRoute>} />
             <Route path="/validacion-puesto" element={<ProtectedRoute roles={['supervisor', 'admin']}><ValidacionPuesto /></ProtectedRoute>} />
             <Route path="/registros-sesion" element={<ProtectedRoute roles={['supervisor', 'admin']}><RegistrosSesion /></ProtectedRoute>} />
             <Route path="/reportes-supervisor" element={<ProtectedRoute roles={['supervisor', 'admin']}><ReportesSupervisor /></ProtectedRoute>} />

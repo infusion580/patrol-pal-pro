@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy, ClipboardList, ShieldCheck, Award, Megaphone, HandCoins,} from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, Clock, MapPin, FileText, BarChart3, Settings, Bell, UserCog, Target, Trophy, ClipboardList, ShieldCheck, Award, Megaphone, HandCoins, AlarmClock,} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import UnreadMessagesBanner from '@/components/UnreadMessagesBanner';
@@ -129,6 +129,7 @@ const SupervisorDashboard = () => {
             { icon: FileText, label: 'Reportes', path: '/reportes-supervisor' },
             { icon: ClipboardList, label: 'Novedades', path: '/novedades' },
             { icon: ShieldCheck, label: 'Validación de puesto', path: '/validacion-puesto' },
+            { icon: AlarmClock, label: 'Programación rondines', path: '/alarmas-rondin' },
             { icon: BarChart3, label: 'Métricas', path: '/metricas' },
             { icon: Settings, label: 'Servicios', path: '/servicios' },
             { icon: Bell, label: 'Alertas', path: '/notificaciones' },

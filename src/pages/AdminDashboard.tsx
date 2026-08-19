@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette, HelpCircle, Camera, Award, Megaphone, HandCoins,} from 'lucide-react';
+import { Users, CheckCircle2, AlertTriangle, MapPin, FileText, BarChart3, Settings, Trash2, Shield, UserCog, Bell, Eye, Target, Trophy, ClipboardList, KeyRound, SlidersHorizontal, ShieldCheck, Palette, HelpCircle, Camera, Award, Megaphone, HandCoins, AlarmClock,} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
@@ -301,6 +301,7 @@ const AdminDashboard = () => {
             { icon: ClipboardList, label: 'Novedades', path: '/novedades' },
             { icon: Camera, label: 'Registros de sesión', path: '/registros-sesion' },
             { icon: ShieldCheck, label: 'Validación de puesto', path: '/validacion-puesto' },
+            { icon: AlarmClock, label: 'Programación rondines', path: '/alarmas-rondin' },
             { icon: Bell, label: 'Alertas', path: '/notificaciones' },
             { icon: UserCog, label: 'Gestión RH', path: '/gestion-rh' },
             { icon: Target, label: 'Metas', path: '/metas' },

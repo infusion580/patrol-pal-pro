@@ -263,45 +263,11 @@ const Servicios = () => {
                     </select>
                   </div>
                   <div className="border-t border-border pt-3">
-                    <h4 className="text-xs font-semibold text-foreground mb-2">⏰ Alarma de rondines</h4>
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[10px] text-muted-foreground block mb-1">Cada (minutos)</label>
-                        <Input
-                          type="number"
-                          min="0"
-                          placeholder="Sin alarma"
-                          defaultValue={servicio.rondin_intervalo_minutos ?? ''}
-                          onBlur={e => {
-                            const v = e.target.value.trim() === '' ? null : Math.max(0, parseInt(e.target.value) || 0);
-                            const newVal = v === 0 ? null : v;
-                            if (newVal !== servicio.rondin_intervalo_minutos) {
-                              updateRondinConfig(servicio.id, newVal, servicio.rondin_tolerancia_minutos);
-                            }
-                          }}
-                          className="h-9 text-sm"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] text-muted-foreground block mb-1">Tolerancia (min)</label>
-                        <Input
-                          type="number"
-                          min="1"
-                          defaultValue={servicio.rondin_tolerancia_minutos}
-                          onBlur={e => {
-                            const v = Math.max(1, parseInt(e.target.value) || 10);
-                            if (v !== servicio.rondin_tolerancia_minutos) {
-                              updateRondinConfig(servicio.id, servicio.rondin_intervalo_minutos, v);
-                            }
-                          }}
-                          className="h-9 text-sm"
-                        />
-                      </div>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mt-1">
-                      El guardia recibirá una alarma en ese intervalo. Si tarda más de la tolerancia en responder, se registra retraso y se avisa al supervisor.
+                    <p className="text-[11px] text-muted-foreground">
+                      ⏰ La programación de alarmas de rondín ahora se configura en el módulo <span className="font-semibold text-foreground">Programación de rondines</span>.
                     </p>
                   </div>
+
 
                   <div className="border-t border-border pt-3">
                     <div className="flex items-center justify-between mb-2">
