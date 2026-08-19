@@ -46,6 +46,20 @@ const hace7ISO = () => new Date(Date.now() - 7 * 86400000).toISOString().slice(0
 interface Servicio { id: string; nombre: string }
 interface Checkpoint { id: string; nombre: string; servicio_id: string }
 interface Guardia { user_id: string; nombre: string }
+/** Horario capturado en formato 12 h con AM (día) / PM (noche). */
+interface HorarioForm { hora: string; minuto: string; meridiano: 'AM' | 'PM' }
+
+/** Convierte 12 h + AM/PM a "HH:MM:SS" de 24 h. Devuelve null si es inválido. */
+function a24(h: HorarioForm): string | null {
+  const hora = Number(h.hora);
+  const min = Number(h.minuto);
+  if (!Number.isFinite(hora) || hora < 1 || hora > 12) return null;
+  if (!Number.isFinite(min) || min < 0 || min > 59) return null;
+  let hh = hora % 12;
+  if (h.meridiano === 'PM') hh += 12;
+  return `${String(hh).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`;
+}
+
 
 const ValidacionPuesto = () => {
   const navigate = useNavigate();
