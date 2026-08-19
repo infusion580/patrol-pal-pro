@@ -82,7 +82,8 @@ const Prestamos = () => {
     setAbierto(id);
     if (!historial[id]) {
       try {
-        setHistorial((h) => ({ ...h, [id]: await historialPrestamo(id) }));
+        const rows = await historialPrestamo(id);
+        setHistorial((h) => ({ ...h, [id]: rows }));
       } catch { /* la bitácora es informativa */ }
     }
   };
