@@ -2,6 +2,10 @@
 
 Última actualización: agosto 2026
 
+> Para mantenimiento y modificaciones día a día, consulta la **[Guía técnica completa](./GUIA-TECNICA.md)**:
+> documenta funcionalidad por funcionalidad (quién la usa, dónde está en la UI, archivos, tablas, RLS y
+> el "mapa de modificación"), los flujos paso a paso, el esquema de base de datos y el catálogo de notificaciones.
+
 ## 1. Panorama
 
 Aplicación web PWA para la operación de una empresa de seguridad privada: control de turnos, rondines con evidencia, visitas, reportes, RH, chat interno y portal para clientes.
