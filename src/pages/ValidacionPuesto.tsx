@@ -199,7 +199,7 @@ const ValidacionPuesto = () => {
       return;
     }
     if (horarios.length === 0) {
-      toast({ title: 'Agrega al menos un horario (formato HH:MM)', variant: 'destructive' });
+      toast({ title: 'Agrega al menos un horario válido (1-12, minutos 0-59)', variant: 'destructive' });
       return;
     }
     if (form.dias.length === 0) {
