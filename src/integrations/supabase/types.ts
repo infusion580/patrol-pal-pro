@@ -501,6 +501,7 @@ export type Database = {
           autor_nombre: string
           contenido: string
           created_at: string
+          destinatario_id: string | null
           estado: string
           id: string
           imagen_url: string | null
@@ -515,6 +516,7 @@ export type Database = {
           autor_nombre?: string
           contenido: string
           created_at?: string
+          destinatario_id?: string | null
           estado?: string
           id?: string
           imagen_url?: string | null
@@ -529,6 +531,7 @@ export type Database = {
           autor_nombre?: string
           contenido?: string
           created_at?: string
+          destinatario_id?: string | null
           estado?: string
           id?: string
           imagen_url?: string | null
@@ -1081,6 +1084,125 @@ export type Database = {
           updated_at?: string
           vigencia_fin?: string | null
           vigencia_inicio?: string
+        }
+        Relationships: []
+      }
+      prestamo_historial: {
+        Row: {
+          accion: string
+          actor_id: string | null
+          actor_nombre: string
+          actor_rol: string
+          comentario: string | null
+          created_at: string
+          estado_anterior: string | null
+          estado_nuevo: string | null
+          id: string
+          motivo: string | null
+          prestamo_id: string
+        }
+        Insert: {
+          accion: string
+          actor_id?: string | null
+          actor_nombre?: string
+          actor_rol?: string
+          comentario?: string | null
+          created_at?: string
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          motivo?: string | null
+          prestamo_id: string
+        }
+        Update: {
+          accion?: string
+          actor_id?: string | null
+          actor_nombre?: string
+          actor_rol?: string
+          comentario?: string | null
+          created_at?: string
+          estado_anterior?: string | null
+          estado_nuevo?: string | null
+          id?: string
+          motivo?: string | null
+          prestamo_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "prestamo_historial_prestamo_id_fkey"
+            columns: ["prestamo_id"]
+            isOneToOne: false
+            referencedRelation: "prestamos"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      prestamos: {
+        Row: {
+          aprobado_admin_at: string | null
+          aprobado_admin_por: string | null
+          aprobado_supervisor_at: string | null
+          aprobado_supervisor_por: string | null
+          created_at: string
+          depositado_at: string | null
+          depositado_por: string | null
+          estado: string
+          folio: string
+          guardia_id: string
+          id: string
+          monto: number
+          motivo: string
+          observaciones: string
+          rechazado_at: string | null
+          rechazado_por: string | null
+          rechazo_comentario: string | null
+          rechazo_motivo: string | null
+          supervisor_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aprobado_admin_at?: string | null
+          aprobado_admin_por?: string | null
+          aprobado_supervisor_at?: string | null
+          aprobado_supervisor_por?: string | null
+          created_at?: string
+          depositado_at?: string | null
+          depositado_por?: string | null
+          estado?: string
+          folio: string
+          guardia_id: string
+          id?: string
+          monto: number
+          motivo?: string
+          observaciones?: string
+          rechazado_at?: string | null
+          rechazado_por?: string | null
+          rechazo_comentario?: string | null
+          rechazo_motivo?: string | null
+          supervisor_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aprobado_admin_at?: string | null
+          aprobado_admin_por?: string | null
+          aprobado_supervisor_at?: string | null
+          aprobado_supervisor_por?: string | null
+          created_at?: string
+          depositado_at?: string | null
+          depositado_por?: string | null
+          estado?: string
+          folio?: string
+          guardia_id?: string
+          id?: string
+          monto?: number
+          motivo?: string
+          observaciones?: string
+          rechazado_at?: string | null
+          rechazado_por?: string | null
+          rechazo_comentario?: string | null
+          rechazo_motivo?: string | null
+          supervisor_id?: string | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -1933,6 +2055,47 @@ export type Database = {
         Returns: number
       }
       notificar_comunicado: { Args: { _id: string }; Returns: undefined }
+      prestamo_aprobar_admin: {
+        Args: { _comentario?: string; _id: string }
+        Returns: undefined
+      }
+      prestamo_aprobar_supervisor: {
+        Args: { _comentario?: string; _id: string }
+        Returns: undefined
+      }
+      prestamo_comunicado_privado: {
+        Args: {
+          _dest: string
+          _mensaje: string
+          _prioridad: string
+          _titulo: string
+        }
+        Returns: undefined
+      }
+      prestamo_confirmar_deposito: {
+        Args: { _comentario?: string; _id: string }
+        Returns: undefined
+      }
+      prestamo_crear: {
+        Args: { _monto: number; _motivo: string; _observaciones: string }
+        Returns: string
+      }
+      prestamo_log: {
+        Args: {
+          _accion: string
+          _antes: string
+          _comentario: string
+          _despues: string
+          _motivo: string
+          _prestamo_id: string
+        }
+        Returns: undefined
+      }
+      prestamo_nombre: { Args: { _user_id: string }; Returns: string }
+      prestamo_rechazar: {
+        Args: { _comentario?: string; _id: string; _motivo: string }
+        Returns: undefined
+      }
       promote_user: {
         Args: {
           _new_role: Database["public"]["Enums"]["app_role"]

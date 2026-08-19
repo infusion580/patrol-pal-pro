@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import { useNavigate } from 'react-router-dom';
-import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle, ClipboardList, History, Trophy, Megaphone} from 'lucide-react';
+import { MapPin, FileText, MessageCircle, Users, Clock, CheckCircle2, AlertTriangle, ClipboardList, History, Trophy, Megaphone, HandCoins} from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import BottomNav from '@/components/BottomNav';
 import EmergencyButton from '@/components/EmergencyButton';
@@ -69,7 +69,8 @@ const GuardDashboard = () => {
   { icon: MessageCircle, label: 'Chat Supervisor', desc: 'Mensajes directos', color: 'bg-success', path: '/chat' },
   { icon: History, label: 'Mi Historial', desc: 'Actividad completa', color: 'bg-accent', path: '/historial' },
   { icon: Trophy, label: 'Cuadro de Honor', desc: 'Top guardias', color: 'bg-warning', path: '/cuadro-honor' },
-  { icon: Megaphone, label: 'Comunicados', desc: 'Avisos de la empresa', color: 'bg-primary', path: '/comunicados' }];
+  { icon: Megaphone, label: 'Comunicados', desc: 'Avisos de la empresa', color: 'bg-primary', path: '/comunicados' },
+  { icon: HandCoins, label: 'Préstamos', desc: 'Solicita y consulta tu préstamo', color: 'bg-success', path: '/prestamos' }];
 
 
   const stats = [

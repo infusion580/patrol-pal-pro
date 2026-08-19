@@ -13,6 +13,7 @@ import {
   Clock,
   DoorOpen,
   FileText,
+  HandCoins,
   LogIn,
   LogOut,
   MapPin,
@@ -146,6 +147,10 @@ export const NOTIF_TYPES: Record<string, NotifMeta> = {
   reconocimiento: {
     label: 'Cuadro de Honor', icon: Trophy, color: 'text-warning', bgColor: 'bg-warning/10',
     categoria: 'sistema', severidad: 'info',
+  },
+  prestamo: {
+    label: 'Préstamo', icon: HandCoins, color: 'text-success', bgColor: 'bg-success/10',
+    categoria: 'sistema', severidad: 'media',
   },
 };
 
