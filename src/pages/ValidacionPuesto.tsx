@@ -176,12 +176,23 @@ const ValidacionPuesto = () => {
         : [...f.guardia_ids, id],
     }));
 
+  const agregarHorario = () =>
+    setForm((f) => ({ ...f, horarios: [...f.horarios, { hora: '8', minuto: '00', meridiano: 'AM' }] }));
+
+  const quitarHorario = (i: number) =>
+    setForm((f) => ({ ...f, horarios: f.horarios.filter((_, idx) => idx !== i) }));
+
+  const setHorario = (i: number, patch: Partial<HorarioForm>) =>
+    setForm((f) => ({
+      ...f,
+      horarios: f.horarios.map((h, idx) => (idx === i ? { ...h, ...patch } : h)),
+    }));
+
   const guardar = async () => {
-    const horarios = form.horariosTexto
-      .split(',')
-      .map((h) => h.trim())
-      .filter((h) => /^\d{1,2}:\d{2}$/.test(h))
-      .map((h) => (h.length === 4 ? `0${h}:00` : `${h}:00`));
+    const horarios = form.horarios
+      .map(a24)
+      .filter((h): h is string => Boolean(h));
+
 
     if (!form.servicio_id) {
       toast({ title: 'Selecciona un servicio', variant: 'destructive' });
