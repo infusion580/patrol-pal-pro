@@ -136,17 +136,19 @@ const App = () => (
 
             {/* Authenticated — any role */}
             <Route path="/dashboard" element={<Auth><Dashboard /></Auth>} />
-            <Route path="/rondines" element={<Auth><Rondines /></Auth>} />
-            <Route path="/reportes" element={<Auth><ReporteNovedades /></Auth>} />
-            <Route path="/chat" element={<Auth><Chat /></Auth>} />
-            <Route path="/chat-rh" element={<Auth><ChatRH /></Auth>} />
             <Route path="/perfil" element={<Auth><Perfil /></Auth>} />
             <Route path="/notificaciones" element={<Auth><Notificaciones /></Auth>} />
-            <Route path="/historial" element={<Auth><Historial /></Auth>} />
-            <Route path="/actividad-guardia" element={<Auth><GuardActivityPage /></Auth>} />
-            <Route path="/cuadro-honor" element={<Auth><CuadroHonor /></Auth>} />
+
+            {/* Operativos (el cliente no tiene acceso) */}
+            <Route path="/rondines" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><Rondines /></ProtectedRoute>} />
+            <Route path="/reportes" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><ReporteNovedades /></ProtectedRoute>} />
+            <Route path="/chat" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><Chat /></ProtectedRoute>} />
+            <Route path="/chat-rh" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><ChatRH /></ProtectedRoute>} />
+            <Route path="/historial" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><Historial /></ProtectedRoute>} />
+            <Route path="/actividad-guardia" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><GuardActivityPage /></ProtectedRoute>} />
+            <Route path="/cuadro-honor" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><CuadroHonor /></ProtectedRoute>} />
+            <Route path="/visitas" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><Visitas /></ProtectedRoute>} />
             <Route path="/pendientes" element={<ProtectedRoute roles={['supervisor', 'admin']}><PendientesPuesto /></ProtectedRoute>} />
-            <Route path="/visitas" element={<Auth><Visitas /></Auth>} />
 
             {/* Role-scoped */}
             <Route path="/mapa" element={<ProtectedRoute roles={['supervisor', 'admin']}><MapaSupervisor /></ProtectedRoute>} />
@@ -154,7 +156,8 @@ const App = () => (
             <Route path="/novedades" element={<ProtectedRoute roles={['supervisor', 'admin']}><NovedadesReportes /></ProtectedRoute>} />
             <Route path="/reconocimientos" element={<ProtectedRoute roles={['supervisor', 'admin']}><Reconocimientos /></ProtectedRoute>} />
             <Route path="/comunicados" element={<ProtectedRoute><Comunicados /></ProtectedRoute>} />
-            <Route path="/prestamos" element={<ProtectedRoute><Prestamos /></ProtectedRoute>} />
+            <Route path="/prestamos" element={<ProtectedRoute roles={['guardia', 'supervisor', 'admin']}><Prestamos /></ProtectedRoute>} />
+
             <Route path="/alarmas-rondin" element={<ProtectedRoute roles={['supervisor', 'admin']}><AlarmasRondin /></ProtectedRoute>} />
             <Route path="/validacion-puesto" element={<ProtectedRoute roles={['supervisor', 'admin']}><ValidacionPuesto /></ProtectedRoute>} />
             <Route path="/registros-sesion" element={<ProtectedRoute roles={['supervisor', 'admin']}><RegistrosSesion /></ProtectedRoute>} />
