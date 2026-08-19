@@ -114,12 +114,12 @@ describe('geocercas · escenarios de GPS', () => {
 const COOLDOWN_MS = 15 * 60 * 1000;
 
 function crearMonitor(zona: { lat: number; lng: number; radius: number }) {
-  let ultima = 0;
+  let ultima = Number.NEGATIVE_INFINITY;
   const alertas: number[] = [];
   return {
     alertas,
     tick(pos: { lat: number; lng: number }, ahora: number) {
-      if (ahora - ultima < COOLDOWN_MS && ultima !== 0) return;
+      if (ahora - ultima < COOLDOWN_MS) return;
       const d = distanciaMetros(pos, zona);
       if (d > zona.radius) {
         ultima = ahora;
