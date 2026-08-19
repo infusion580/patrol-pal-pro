@@ -46,6 +46,20 @@ const hace7ISO = () => new Date(Date.now() - 7 * 86400000).toISOString().slice(0
 interface Servicio { id: string; nombre: string }
 interface Checkpoint { id: string; nombre: string; servicio_id: string }
 interface Guardia { user_id: string; nombre: string }
+/** Horario capturado en formato 12 h con AM (día) / PM (noche). */
+interface HorarioForm { hora: string; minuto: string; meridiano: 'AM' | 'PM' }
+
+/** Convierte 12 h + AM/PM a "HH:MM:SS" de 24 h. Devuelve null si es inválido. */
+function a24(h: HorarioForm): string | null {
+  const hora = Number(h.hora);
+  const min = Number(h.minuto);
+  if (!Number.isFinite(hora) || hora < 1 || hora > 12) return null;
+  if (!Number.isFinite(min) || min < 0 || min > 59) return null;
+  let hh = hora % 12;
+  if (h.meridiano === 'PM') hh += 12;
+  return `${String(hh).padStart(2, '0')}:${String(min).padStart(2, '0')}:00`;
+}
+
 
 const ValidacionPuesto = () => {
   const navigate = useNavigate();
@@ -64,7 +78,12 @@ const ValidacionPuesto = () => {
     nombre: 'Validación de puesto',
     servicio_id: '',
     checkpoint_id: '',
-    horariosTexto: '08:00, 14:00, 20:00',
+    horarios: [
+      { hora: '8', minuto: '00', meridiano: 'AM' },
+      { hora: '2', minuto: '00', meridiano: 'PM' },
+      { hora: '8', minuto: '00', meridiano: 'PM' },
+    ] as HorarioForm[],
+
     dias: [1, 2, 3, 4, 5] as number[],
     tolerancia: 15,
     radio: 100,
@@ -157,19 +176,30 @@ const ValidacionPuesto = () => {
         : [...f.guardia_ids, id],
     }));
 
+  const agregarHorario = () =>
+    setForm((f) => ({ ...f, horarios: [...f.horarios, { hora: '8', minuto: '00', meridiano: 'AM' }] }));
+
+  const quitarHorario = (i: number) =>
+    setForm((f) => ({ ...f, horarios: f.horarios.filter((_, idx) => idx !== i) }));
+
+  const setHorario = (i: number, patch: Partial<HorarioForm>) =>
+    setForm((f) => ({
+      ...f,
+      horarios: f.horarios.map((h, idx) => (idx === i ? { ...h, ...patch } : h)),
+    }));
+
   const guardar = async () => {
-    const horarios = form.horariosTexto
-      .split(',')
-      .map((h) => h.trim())
-      .filter((h) => /^\d{1,2}:\d{2}$/.test(h))
-      .map((h) => (h.length === 4 ? `0${h}:00` : `${h}:00`));
+    const horarios = form.horarios
+      .map(a24)
+      .filter((h): h is string => Boolean(h));
+
 
     if (!form.servicio_id) {
       toast({ title: 'Selecciona un servicio', variant: 'destructive' });
       return;
     }
     if (horarios.length === 0) {
-      toast({ title: 'Agrega al menos un horario (formato HH:MM)', variant: 'destructive' });
+      toast({ title: 'Agrega al menos un horario válido (1-12, minutos 0-59)', variant: 'destructive' });
       return;
     }
     if (form.dias.length === 0) {
@@ -295,16 +325,62 @@ const ValidacionPuesto = () => {
                 </div>
 
                 <div>
-                  <Label className="text-xs">Horarios (HH:MM separados por coma)</Label>
-                  <Input
-                    value={form.horariosTexto}
-                    onChange={(e) => setForm((f) => ({ ...f, horariosTexto: e.target.value }))}
-                    placeholder="08:00, 12:00, 16:00"
-                  />
+                  <div className="flex items-center justify-between">
+                    <Label className="text-xs">Horarios de validación</Label>
+                    <Button type="button" size="sm" variant="outline" onClick={agregarHorario} className="h-8">
+                      <Plus className="mr-1 h-3.5 w-3.5" /> Agregar
+                    </Button>
+                  </div>
+                  <div className="mt-2 space-y-2">
+                    {form.horarios.map((h, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          min={1}
+                          max={12}
+                          value={h.hora}
+                          onChange={(e) => setHorario(i, { hora: e.target.value })}
+                          className="w-16 text-center"
+                          aria-label="Hora"
+                        />
+                        <span className="text-sm font-semibold">:</span>
+                        <Input
+                          type="number"
+                          min={0}
+                          max={59}
+                          value={h.minuto}
+                          onChange={(e) => setHorario(i, { minuto: e.target.value })}
+                          className="w-16 text-center"
+                          aria-label="Minutos"
+                        />
+                        <select
+                          value={h.meridiano}
+                          onChange={(e) => setHorario(i, { meridiano: e.target.value as 'AM' | 'PM' })}
+                          className="h-10 rounded-md border border-input bg-background px-2 text-sm"
+                          aria-label="AM o PM"
+                        >
+                          <option value="AM">AM (día)</option>
+                          <option value="PM">PM (noche)</option>
+                        </select>
+                        {form.horarios.length > 1 && (
+                          <Button
+                            type="button"
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => quitarHorario(i)}
+                            aria-label="Quitar horario"
+                          >
+                            <Trash2 className="h-4 w-4 text-emergency" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
                   <p className="mt-1 text-[10px] text-muted-foreground">
                     La frecuencia se define por la cantidad de horarios del día.
                   </p>
                 </div>
+
 
                 <div>
                   <Label className="text-xs">Días de aplicación</Label>
