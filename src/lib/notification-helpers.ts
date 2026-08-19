@@ -3,7 +3,7 @@ import { queuedInsert } from './offline-queue';
 import { sendPushTo } from './push-notifications';
 import { getDeviceInfo } from './device-info';
 
-type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente' | 'novedad' | 'novedad_importante' | 'validacion_puesto' | 'validacion_puesto_fallida';
+type NotifType = 'turno_inicio' | 'turno_fin' | 'rondin' | 'rondin_alarma' | 'zona' | 'sin_ubicacion' | 'incidencia' | 'emergencia' | 'reporte' | 'sesion' | 'sesion_en_turno' | 'visita' | 'relevo_pendiente' | 'novedad' | 'novedad_importante' | 'validacion_puesto' | 'validacion_puesto_fallida';
 
 interface NotifParams {
   tipo: NotifType;
