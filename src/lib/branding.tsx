@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { applyBrandIcons } from '@/lib/brand-icons';
 import defaultLogo from '@/assets/logo-defender.png';
+
 
 /**
  * Branding — logotipo y paleta de colores configurables por el administrador.
@@ -185,6 +187,12 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     refresh();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Regenera los iconos de la pestaña / PWA cada vez que cambia el logo o el fondo.
+  useEffect(() => {
+    applyBrandIcons(logoUrl, colors.background_hsl);
+  }, [logoUrl, colors.background_hsl]);
+
 
   const value = useMemo(() => ({ colors, logoUrl, logoPath, refresh }), [colors, logoUrl, logoPath, refresh]);
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
