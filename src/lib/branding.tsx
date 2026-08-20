@@ -1,6 +1,8 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { applyBrandIcons } from '@/lib/brand-icons';
 import defaultLogo from '@/assets/logo-defender.png';
+
 
 /**
  * Branding — logotipo y paleta de colores configurables por el administrador.
