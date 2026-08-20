@@ -188,6 +188,12 @@ export function BrandingProvider({ children }: { children: ReactNode }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Regenera los iconos de la pestaña / PWA cada vez que cambia el logo o el fondo.
+  useEffect(() => {
+    applyBrandIcons(logoUrl, colors.background_hsl);
+  }, [logoUrl, colors.background_hsl]);
+
+
   const value = useMemo(() => ({ colors, logoUrl, logoPath, refresh }), [colors, logoUrl, logoPath, refresh]);
   return <BrandingContext.Provider value={value}>{children}</BrandingContext.Provider>;
 }
