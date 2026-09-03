@@ -1,6 +1,6 @@
 services:
   web:
-    image: ghcr.io/infusion580/patrol-pal-pro:configured-v2
+    image: ghcr.io/infusion580/patrol-pal-pro:configured-v3
     ports:
       - "8080:80"
     restart: unless-stopped
