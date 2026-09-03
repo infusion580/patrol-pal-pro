@@ -23,4 +23,12 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build and publish
-        uses: docker/build-push-act
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          no-cache: true
+          tags: ghcr.io/infusion580/patrol-pal-pro:configured-v4
+          build-args: |
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
