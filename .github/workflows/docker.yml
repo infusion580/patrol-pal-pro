@@ -33,9 +33,8 @@ jobs:
         with:
           context: .
           push: true
+          no-cache: true
           tags: ghcr.io/infusion580/patrol-pal-pro:latest
           build-args: |
-              VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
-              VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
-            # rebuild
-
+            VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }}
+            VITE_SUPABASE_PUBLISHABLE_KEY=${{ secrets.VITE_SUPABASE_PUBLISHABLE_KEY }}
